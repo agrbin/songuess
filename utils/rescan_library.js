@@ -1,3 +1,4 @@
+#!/opt/local/bin/node
 /*jslint regexp: true, stupid: true, indent: 2, plusplus: true */
 "use strict";
 
@@ -5,12 +6,14 @@ var
   fs = require('fs'),
   Id3 = require('id3'),
   execSync = require('execSync'),
-  library = require('../library/library.js'),
   newFilesCount = 0,
   modifiedFilesCount = 0,
   totalFilesCount = 0,
   allFilesSet = {},
-  needsRescan = [];
+  needsRescan = [],
+  calledAs = process.argv[1],
+  dirname = calledAs.replace(/\/[^\/]*$/, ''),
+  library = require(dirname + '/../library/library.js');
 
 function checkFile(fullPath, name, stat) {
   var
@@ -85,18 +88,19 @@ function cleanRemoved() {
     p,
     files,
     filesLength,
-    i;
+    i,
+    chunksDir = dirname + '/../chunks/';
 
   for (p in library.filesById) {
     if (library.filesById.hasOwnProperty(p)) {
       if (allFilesSet.hasOwnProperty(p) === false) {
-        files = fs.readdirSync('../chunks/' + p);
+        files = fs.readdirSync(chunksDir + p);
         filesLength = files.length;
         for (i = 0; i < filesLength; ++i) {
-          fs.unlinkSync('../chunks/' + p + '/' + files[i]);
+          fs.unlinkSync(chunksDir + p + '/' + files[i]);
         }
 
-        fs.rmdirSync('../chunks/' + p);
+        fs.rmdirSync(chunksDir + p);
 
         ++result;
       }
@@ -118,7 +122,7 @@ function rescan() {
     file = needsRescan[i];
 
     console.log('resampling and chunkifying: "' + file.name + '"');
-    shellResult = execSync.exec('./resample_and_chunkify.sh "' + file.fullPath + '"');
+    shellResult = execSync.exec(dirname + '/resample_and_chunkify.sh "' + file.fullPath + '"');
     file.numberOfChunks = parseInt(shellResult.stdout, 10);
     console.log('created ' + file.numberOfChunks + ' chunks');
 
@@ -144,7 +148,7 @@ library.loadLibrary(function (filesFound) {
   console.log(filesFound + '\t\tfiles found in library\n');
 
   console.log('traversing folders..');
-  newLibrary = walk('../mp3');
+  newLibrary = walk(dirname + '/../mp3');
 
   console.log(totalFilesCount + '\t\tfiles found in mp3 folder');
   console.log(cleanRemoved() + '\t\tfiles were removed');

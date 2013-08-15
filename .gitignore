@@ -2,5 +2,6 @@
 /chunks/
 /utils/create_chunks
 /node_modules/
+library.json
 *.swp
 

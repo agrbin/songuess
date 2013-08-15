@@ -3,7 +3,11 @@
 
 var
   fs = require('fs'),
-  LIB_NAME = 'library.json';
+  calledAs = process.argv[1],
+  dirname = calledAs.replace(/\/[^\/]*$/, ''),
+  LIB_NAME = 'library.json',
+  libPath = dirname + '/../library/' + LIB_NAME;
+  // previous line means that this script needs to be loaded from project_root/some_folder/some_script.js
 
 function findFiles(node) {
   var
@@ -29,9 +33,9 @@ function findFiles(node) {
 exports.loadLibrary = function (callback) {
   exports.filesById = {};
 
-  fs.exists(LIB_NAME, function (exists) {
+  fs.exists(libPath, function (exists) {
     if (exists) {
-      fs.readFile(LIB_NAME, { encoding: 'utf8' }, function (err, data) {
+      fs.readFile(libPath, { encoding: 'utf8' }, function (err, data) {
         exports.library = JSON.parse(data);
         callback(findFiles(exports.library));
       });
@@ -43,6 +47,6 @@ exports.loadLibrary = function (callback) {
 };
 
 exports.saveLibrary = function (newLibrary, callback) {
-  fs.writeFile(LIB_NAME, JSON.stringify(newLibrary), callback);
+  fs.writeFile(libPath, JSON.stringify(newLibrary), callback);
 };
 
