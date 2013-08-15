@@ -1,0 +1,32 @@
+dependencies:
+- lame
+- mpgcat (found in mpgtx package)
+
+lib.json:
+top level object is an array
+if an object has 'children' property, it's a folder, otherwise it's a file
+example:
+[
+  {
+    name: 'folder_name',
+    children: [
+      {
+        name: 'file_name',
+        length: 184,
+        artist: 'artist',
+        album: 'album',
+        title: 'title',
+        scannedTimestamp: 1376547146
+      },
+      {
+        name: 'file_name_2',
+        length: 190,
+        artist: 'artist',
+        album: 'album',
+        title: 'title',
+        scannedTimestamp: 1376547146
+      }
+    ]
+  }
+]
+
