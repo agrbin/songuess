@@ -8,6 +8,7 @@ stripped_file=$chunks_folder/${basename}_stripped.mp3
 out_file=$chunks_folder/${basename}_resampled.mp3
 
 mkdir "$chunks_folder" 2> /dev/null
+rm "$chunks_folder/*.mp3" 2> /dev/null
 
 set -e
 
