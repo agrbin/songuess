@@ -1,5 +1,6 @@
 /mp3/
 /chunks/
 /utils/create_chunks
+/node_modules/
 *.swp
 

@@ -1,0 +1,10 @@
+{
+  "name": "songuess",
+  "description": "songuess media server",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "id3": "0.0.2",
+    "execSync": "1.0.1-pre"
+  }
+}
