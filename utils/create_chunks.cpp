@@ -119,9 +119,9 @@ int load_frame(FILE *fp, int n, char *frame) {
 }
 
 // lots of open operations, but it isn't botleneck
-void write_to(int chunk_num, int bytes, char *buffer, int n, long long chunk_prefix) {
+void write_to(int chunk_num, int bytes, char *buffer, int n, long long chunk_folder) {
   static char filename[1<<16];
-  snprintf(filename, sizeof filename, "%lld.%d.mp3", chunk_prefix, chunk_num);
+  snprintf(filename, sizeof filename, "%lld/%d.mp3", chunk_folder, chunk_num);
 
   FILE *out = fopen(filename, "a");
   if (fwrite(buffer, bytes, 1, out) != 1) {
@@ -130,7 +130,7 @@ void write_to(int chunk_num, int bytes, char *buffer, int n, long long chunk_pre
   fclose(out);
 }
 
-int chunkify(FILE *fp, long long chunk_prefix) {
+int chunkify(FILE *fp, long long chunk_folder) {
   static char buffer[MAX_FRAME_LENGTH];
   int framelength, n;
 
@@ -138,10 +138,10 @@ int chunkify(FILE *fp, long long chunk_prefix) {
     if ((framelength = load_frame(fp, n, buffer)) == -1) {
       break;
     }
-    write_to(n / FRAMES_IN_CHUNK, framelength, buffer, n, chunk_prefix);
+    write_to(n / FRAMES_IN_CHUNK, framelength, buffer, n, chunk_folder);
     // write overhead
     if (n >= FRAMES_IN_CHUNK && n % FRAMES_IN_CHUNK < FRAMES_OVERHEAD) {
-      write_to(n / FRAMES_IN_CHUNK - 1, framelength, buffer, n, chunk_prefix);
+      write_to(n / FRAMES_IN_CHUNK - 1, framelength, buffer, n, chunk_folder);
     }
   }
 
@@ -149,11 +149,11 @@ int chunkify(FILE *fp, long long chunk_prefix) {
 }
 
 int main(int argc, char **argv) {
-  long long chunk_prefix;
-  sscanf(argv[2], "%lld", &chunk_prefix);
+  long long chunk_folder;
+  sscanf(argv[2], "%lld", &chunk_folder);
 
   FILE *in = fopen(argv[1], "r");
-  printf("%d\n", chunkify(in, chunk_prefix));
+  printf("%d\n", chunkify(in, chunk_folder));
   fclose(in);
   return 0;
 }
