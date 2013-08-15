@@ -1,2 +1,4 @@
 resample_and_chunkify.sh prima putanju do mp3ice
-ta skripta poziva create_chunks, koji prima putanju do resamplane mp3ice i u koji folder da stavlja chunkove
+ta skripta napravi resample, i pozove create_chunks
+create_chunks prima koji fajl da razbije, i u koji folder da stavi dijelove
+folder se kreira kao podfolder od /chunks/
