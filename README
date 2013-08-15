@@ -16,7 +16,9 @@ example:
         artist: 'artist',
         album: 'album',
         title: 'title',
-        scannedTimestamp: 1376547146
+        scannedTimestamp: 1376547146,
+        inode: 12323,
+        numberOfChunks: 100
       },
       {
         name: 'file_name_2',
@@ -24,7 +26,9 @@ example:
         artist: 'artist',
         album: 'album',
         title: 'title',
-        scannedTimestamp: 1376547146
+        scannedTimestamp: 1376547146,
+        inode: 81722,
+        numberOfChunks: 100
       }
     ]
   }

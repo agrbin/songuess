@@ -1,0 +1,2 @@
+resample_and_chunkify.sh prima putanju do mp3ice
+ta skripta poziva create_chunks, koji prima putanju do resamplane mp3ice i prefix koji da koristi za imena chunkova

@@ -19,7 +19,7 @@
 typedef unsigned char uchar;
 
 // this program works only if mp3 is encoded with
-// lame --resample 44.1 --nores --cbr -b 96 inputfile.mp3 outputfile.mp3
+// lame --resample 48 --nores --cbr -b 96 inputfile.mp3 outputfile.mp3
 void err(const char *what, int n) {
   fprintf(stderr, "frames: on frame %d: %s\n", n, what);
   exit(1);
@@ -119,9 +119,9 @@ int load_frame(FILE *fp, int n, char *frame) {
 }
 
 // lots of open operations, but it isn't botleneck
-void write_to(int chunk_num, int bytes, char *buffer, int n) {
-  static char filename[128];
-  snprintf(filename, sizeof filename, "tg.%d.mp3", chunk_num);
+void write_to(int chunk_num, int bytes, char *buffer, int n, long long chunk_prefix) {
+  static char filename[1<<16];
+  snprintf(filename, sizeof filename, "%lld.%d.mp3", chunk_prefix, chunk_num);
 
   FILE *out = fopen(filename, "a");
   if (fwrite(buffer, bytes, 1, out) != 1) {
@@ -130,7 +130,7 @@ void write_to(int chunk_num, int bytes, char *buffer, int n) {
   fclose(out);
 }
 
-void chunkify(FILE *fp) {
+int chunkify(FILE *fp, long long chunk_prefix) {
   static char buffer[MAX_FRAME_LENGTH];
   int framelength, n;
 
@@ -138,19 +138,23 @@ void chunkify(FILE *fp) {
     if ((framelength = load_frame(fp, n, buffer)) == -1) {
       break;
     }
-    write_to(n / FRAMES_IN_CHUNK, framelength, buffer, n);
+    write_to(n / FRAMES_IN_CHUNK, framelength, buffer, n, chunk_prefix);
     // write overhead
     if (n >= FRAMES_IN_CHUNK && n % FRAMES_IN_CHUNK < FRAMES_OVERHEAD) {
-      write_to(n / FRAMES_IN_CHUNK - 1, framelength, buffer, n);
+      write_to(n / FRAMES_IN_CHUNK - 1, framelength, buffer, n, chunk_prefix);
     }
   }
+
+  return n / FRAMES_IN_CHUNK + 1;
 }
 
-// 15567
-// 5487
-int main() {
-  FILE *in = fopen("tg.mp3", "r");
-  chunkify(in);
+int main(int argc, char **argv) {
+  long long chunk_prefix;
+  sscanf(argv[2], "%lld", &chunk_prefix);
+
+  FILE *in = fopen(argv[1], "r");
+  printf("%d\n", chunkify(in, chunk_prefix));
+  fclose(in);
   return 0;
 }
 
