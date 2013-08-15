@@ -148,7 +148,10 @@ library.loadLibrary(function (filesFound) {
   console.log(filesFound + '\t\tfiles found in library\n');
 
   console.log('traversing folders..');
-  newLibrary = walk(dirname + '/../mp3');
+  newLibrary = {
+    name: '',
+    children: walk(dirname + '/../mp3')
+  };
 
   console.log(totalFilesCount + '\t\tfiles found in mp3 folder');
   console.log(cleanRemoved() + '\t\tfiles were removed');

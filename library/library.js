@@ -15,13 +15,11 @@ function findFiles(node) {
     i,
     numberOfFiles = 0;
 
-  if (node instanceof Array) {
-    length = node.length;
+  if (node.children) {
+    length = node.children.length;
     for (i = 0; i < length; ++i) {
-      numberOfFiles += findFiles(node[i]);
+      numberOfFiles += findFiles(node.children[i]);
     }
-  } else if (node.children) {
-    numberOfFiles = findFiles(node.children);
   } else {
     exports.filesById[node.inode] = node;
     numberOfFiles = 1;
