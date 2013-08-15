@@ -1,4 +1,4 @@
-/*jslint indent: 2, plusplus: true */
+/*jslint regexp: true, indent: 2, plusplus: true */
 "use strict";
 
 var
@@ -25,7 +25,7 @@ function findFiles(node) {
     numberOfFiles = 1;
   }
 
-  return numberOfFiles;
+  return (node.filesCount = numberOfFiles);
 }
 
 exports.loadLibrary = function (callback) {
