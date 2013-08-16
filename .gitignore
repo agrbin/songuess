@@ -1,2 +1,4 @@
 node_modules
 app.log
+# use config.js.template to create config.js
+config.js
