@@ -5,7 +5,7 @@
 var
   fs = require('fs'),
   Id3 = require('id3'),
-  execSync = require('execSync'),
+  exec = require('child_process').exec,
   newFilesCount = 0,
   modifiedFilesCount = 0,
   totalFilesCount = 0,
@@ -110,35 +110,51 @@ function cleanRemoved() {
   return result;
 }
 
-function rescan() {
-  var
-    needsRescanLength = needsRescan.length,
-    i,
-    file,
-    shellResult,
-    id3Data;
 
-  for (i = 0; i < needsRescanLength; ++i) {
-    file = needsRescan[i];
+function rescan(done) {
+  var it = 0;
 
-    console.log('resampling and chunkifying: "' + file.name + '"');
-    shellResult = execSync.exec(dirname + '/resample_and_chunkify.sh "' + file.fullPath + '"');
-    file.numberOfChunks = parseInt(shellResult.stdout, 10);
-    console.log('created ' + file.numberOfChunks + ' chunks');
+  function afterChunk(shellResult, file) {
+    var id3Data;
 
-    console.log('reading id3..');
-    id3Data = new Id3(fs.readFileSync(file.fullPath));
-    id3Data.parse();
-    file.artist = id3Data.get('artist');
-    file.album = id3Data.get('album');
-    file.title = id3Data.get('title');
-    file.length = Math.floor(file.numberOfChunks * 2.4);
-    file.scannedTimestamp = (new Date()).getTime();
-    delete file.fullPath;
+    if (file !== undefined) {
+      file.numberOfChunks = parseInt(shellResult, 10);
+      console.log('created ' + file.numberOfChunks + ' chunks');
+      console.log('reading id3..');
+      id3Data = new Id3(fs.readFileSync(file.fullPath));
+      id3Data.parse();
+      file.artist = id3Data.get('artist');
+      file.album = id3Data.get('album');
+      file.title = id3Data.get('title');
+      file.length = Math.floor(file.numberOfChunks * 2.4);
+      file.scannedTimestamp = (new Date()).getTime();
+      delete file.fullPath;
+      console.log(file);
+      console.log('');
+    }
 
-    console.log(file);
-    console.log('');
+    if (it < needsRescan.length) {
+      file = needsRescan[it++];
+      console.log('resampling and chunkifying: "' + file.name + '"');
+      exec(
+        dirname + '/resample_and_chunkify.sh "' + file.fullPath + '"',
+        function (error, stdout, stderr) {
+          if (stderr) {
+            console.log(stderr);
+          }
+          if (error !== null) {
+            done(error);
+          } else {
+            afterChunk(stdout.toString(), file);
+          }
+        }
+      );
+    } else {
+      done(null);
+    }
   }
+
+  afterChunk();
 }
 
 console.log('loading library..');
@@ -159,11 +175,15 @@ library.loadLibrary(function (filesFound) {
   console.log(modifiedFilesCount + '\t\tfiles were modified');
   console.log(needsRescan.length + '\t\tfiles need to be rescanned\n');
 
-  rescan();
-
-  console.log('done rescanning\n');
-  console.log('saving library..');
-  library.saveLibrary(newLibrary, function () {
-    console.log('done!');
+  rescan(function(error) {
+    if (error) {
+      console.log("error while scanning:", error);
+    } else {
+      console.log('done rescanning\n');
+      console.log('saving library..');
+      library.saveLibrary(newLibrary, function () {
+        console.log('done!');
+      });
+    }
   });
 });
