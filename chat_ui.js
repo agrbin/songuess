@@ -12,8 +12,10 @@ function ChatUI(chat, user) {
     input = $(".chat input")[0];
     $(input).focus();
     $(".chat form").submit(function () {
-      chat.handleSend($(input).val());
-      $(input).val("");
+      if ($(input).val().length > 0) {
+        chat.handleSend($(input).val());
+        $(input).val("");
+      }
       return false;
     });
     $("h1").css({
