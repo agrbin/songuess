@@ -1,0 +1,55 @@
+h1 {
+  color: gray;
+};
+
+.layout {
+  width: 100%;
+}
+
+.layout .left {
+  float: left;
+  width: 15%;
+  height: 300px;
+  border-right: 1px solid #ccc;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin-right: 3px;
+}
+
+.layout .container {
+  width: 100%;
+  border: 1px solid #ccc;
+  font-family: monospace;
+}
+
+.layout .right {
+  height: 300px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.layout .bold {
+  font-weight: bold;
+}
+
+.layout input {
+  width: 100%;
+}
+
+/* chat */
+
+.chat .time {
+  color: gray;
+}
+
+.chat .left .full-client {
+  display: block;
+  font-weight: bold;
+  margin-top: 3px;
+  margin-left: 5px;
+}
+
+.chat .sys {
+  color: gray;
+}
+

@@ -1,0 +1,7 @@
+# config.js should export songuess obj to window
+# with master_server field set to ws server.
+# ex:
+# window.songuess = {
+#   master_server : "ws://1.2.3.4:8080/"
+# };
+config.js
