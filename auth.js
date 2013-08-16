@@ -13,7 +13,7 @@ function Auth(storage, onError) {
   var oAuthParams = {
     response_type : 'token',
     client_id     : '156401229517.apps.googleusercontent.com',
-    redirect_uri  : 'http://localhost/p/index.html',
+    redirect_uri  : document.URL,
     scope : 
       'https://www.googleapis.com/auth/userinfo.email' +
       ' https://www.googleapis.com/auth/userinfo.profile',
