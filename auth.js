@@ -7,15 +7,6 @@ var request = require('request'),
   expectedScope = 'https://www.googleapis.com/auth/userinfo.profile '
                   + 'https://www.googleapis.com/auth/userinfo.email';
 
-var SPPED_UP = {
-  id: '1010457635607266359490',
-  email: 'anton.grbin@gmail.com',
-  name: 'Anton',
-  display: 'Anton Grbin',
-  gender: 'male',
-  picture: 'https://lh5.googleusercontent.com/-yb6aeubr2t0/AAAAAAAAAAI/AAAAAAAAFq0/dsJHPmBLFJA/photo.jpg'
-};
-
 function tryDecode(json, done, errmsg) {
   var data;
   try {
@@ -50,12 +41,6 @@ function fetchProfile(token, done) {
 }
 
 exports.verifyToken = function (tokenMessage, done) {
-  var sol = JSON.parse(JSON.stringify(SPPED_UP));
-  sol.id += Math.random().toString();
-  done(sol);
-};
-
-exports.verifyTokenReal = function (tokenMessage, done) {
   var token, url;
   token = tryDecode(tokenMessage.data, done, "token is not json");
   if (token === undefined) {
