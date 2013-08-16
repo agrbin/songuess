@@ -24,7 +24,7 @@
     }
     timer = setTimeout(function() {
       if (socket.readyState != WebSocket.OPEN)
-        fatalError("master server at " + master_url
+        fatalError("master server at " + songuess.master_server
                    + " not responding.");
       socket.onopen = null;
     }, 3000);
