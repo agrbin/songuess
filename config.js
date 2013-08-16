@@ -4,7 +4,7 @@
 var currentEnv = process.env.NODE_ENV || 'developement';
 
 exports.server = {
-  port  : 8081
+  port  : 8080
 };
 
 // server and client have synced clocks. if chunk is to be played less than
@@ -35,11 +35,11 @@ exports.sync = {
 
 exports.media = {
   "media1" : {
-    endpoint  : "http://localhost:8080",
+    endpoint  : "http://localhost:8081",
     desc      : "grbinov media server"
   },
   "media2" : {
-    endpoint  : "http://localhost:8080",
+    endpoint  : "http://localhost:8081",
     desc      : "grbinov klon media server"
   }
 };
