@@ -14,8 +14,8 @@
 
   auth.onReady = function(token) {
     var timer;
-    if (songuess === undefined) {
-      onFatal("config.js not available.");
+    if (!window.hasOwnProperty("songuess")) {
+      return fatalError("config.js not available.");
     }
     socket = new WebSocket(songuess.master_server);
     socket.onopen = function() {
