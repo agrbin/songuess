@@ -3,7 +3,7 @@
 
 var
   fs = require('fs'),
-  calledAs = process.argv[1],
+  calledAs = process.argv[1] || '.',
   dirname = calledAs.replace(/\/[^\/]*$/, ''),
   LIB_NAME = 'library.json',
   libPath = dirname + '/../library/' + LIB_NAME;
@@ -34,12 +34,21 @@ exports.loadLibrary = function (callback) {
   fs.exists(libPath, function (exists) {
     if (exists) {
       fs.readFile(libPath, { encoding: 'utf8' }, function (err, data) {
-        exports.library = JSON.parse(data);
-        callback(findFiles(exports.library));
+        var
+          lib = JSON.parse(data),
+          numFiles = findFiles(lib);
+
+        exports.library = lib;
+
+        if (callback) {
+          callback(numFiles);
+        }
       });
     } else {
-      callback(0);
       exports.library = {};
+      if (callback) {
+        callback(0);
+      }
     }
   });
 };

@@ -2,35 +2,9 @@ dependencies:
 - lame
 - mpgcat (found in mpgtx package)
 
-lib.json:
-top level object is an array
-if an object has 'children' property, it's a folder, otherwise it's a file
-example:
-[
-  {
-    name: 'folder_name',
-    children: [
-      {
-        name: 'file_name',
-        length: 184,
-        artist: 'artist',
-        album: 'album',
-        title: 'title',
-        scannedTimestamp: 1376547146,
-        inode: 12323,
-        numberOfChunks: 100
-      },
-      {
-        name: 'file_name_2',
-        length: 190,
-        artist: 'artist',
-        album: 'album',
-        title: 'title',
-        scannedTimestamp: 1376547146,
-        inode: 81722,
-        numberOfChunks: 100
-      }
-    ]
-  }
-]
+mp3s to host should be put in /mp3 folder.
+utils/rescan_library.js is used to update library.
+every new or modified mp3 must be resampled and chunkified, this lasts 5-6 seconds per song.
+
+chunks are saved in /chunks folder.
 
