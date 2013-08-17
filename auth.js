@@ -2,37 +2,29 @@
  * if mustHaveCookie is set to true, class will onError
  * if cookie is not available trough filesystem API
  */
-function Auth(storage, isOAuthReturn, onError) {
+function Auth(storage, onReady, isOAuthReturn, onError) {
 
-  var that = this;
-  var COOKIE_FILE_NAME = "cookie";
-  var token = null, haveToken, verifyToken;
-  var oAuthParams = {
-    response_type : 'token',
-    client_id     : '156401229517.apps.googleusercontent.com',
-    redirect_uri  : document.URL.replace(/#.*/, ''),
-    scope : 
-      'https://www.googleapis.com/auth/userinfo.email' +
-      ' https://www.googleapis.com/auth/userinfo.profile',
-    state : location.hash || ""
-  };
+  var that = this,
+    COOKIE_FILE_NAME = "cookie",
+    token,
+    oAuthParams = {
+      response_type : 'token',
+      client_id     : '156401229517.apps.googleusercontent.com',
+      redirect_uri  : document.URL.replace(/#.*/, ''),
+      scope :
+        'https://www.googleapis.com/auth/userinfo.email' +
+        ' https://www.googleapis.com/auth/userinfo.profile',
+      state : location.hash || ""
+    };
 
   this.kill = function(done) {
     storage.killFile(COOKIE_FILE_NAME, done);
   };
 
-  this.onReady = function(token) {}
-  this.onVerified = function(user) {}
-
-  haveToken = function() {
-    debug("imam token");
-    that.onReady(token);
-  };
-
-  this.verifyToken = function(ws) {
+  this.verifyToken = function(ws, onVerified) {
     ws.onmessage = function(msg) {
       ws.onclose = null;
-      that.onVerified(JSON.parse(msg.data));
+      onVerified(JSON.parse(msg.data));
     };
     ws.onclose = function(e) {
       that.kill();
@@ -41,13 +33,18 @@ function Auth(storage, isOAuthReturn, onError) {
     ws.send(JSON.stringify(token));
   };
 
+  function haveToken() {
+    debug("token obtained.");
+    onReady(token);
+  };
+
   storage.isFile(COOKIE_FILE_NAME,
     function() {
-      debug("cookie file postoji.");
+      debug("cookie file exists.");
       storage.readFile(COOKIE_FILE_NAME, function(filedata) {
         var data;
         function bailOut() {
-          debug("cookie file nije valjan.");
+          debug("cookie file is not valid.");
           storage.killFile(COOKIE_FILE_NAME, initiateHandshake);
         }
         try {data = JSON.parse(filedata);}
@@ -75,7 +72,7 @@ function Auth(storage, isOAuthReturn, onError) {
       location.hash = token.state || "";
       delete token.state;
       storage.writeFile(COOKIE_FILE_NAME, JSON.stringify(token), haveToken);
-      debug("fragment postoji");
+      debug("fragment exists.");
       return true;
     }
   }
