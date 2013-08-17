@@ -3,7 +3,7 @@
 
 var app = {
   http: require('http'),
-  PORT: 8080,
+  PORT: require('./config.js').port,
   url: require('url'),
   library: require('../library/library.js'),
   handlerNames: [ 'ls', 'expand', 'get_chunks', 'chunk', 'search' ],
