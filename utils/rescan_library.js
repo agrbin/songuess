@@ -56,14 +56,13 @@ function checkFile(fullPath, name, stat) {
 function walk(folderPath) {
   var
     entries = fs.readdirSync(folderPath),
-    entriesLength = entries.length,
     i = 0,
     entryPath,
     entryStat,
     results = [],
     regexp = /.*\.mp3/i;
 
-  for (i = 0; i < entriesLength; ++i) {
+  for (i = 0; i < entries.length; ++i) {
     entryPath = folderPath + '/' + entries[i];
     entryStat = fs.statSync(entryPath);
 
@@ -87,7 +86,6 @@ function cleanRemoved() {
     result = 0,
     p,
     files,
-    filesLength,
     i,
     chunksDir = dirname + '/../chunks/';
 
@@ -95,8 +93,7 @@ function cleanRemoved() {
     if (library.filesById.hasOwnProperty(p)) {
       if (allFilesSet.hasOwnProperty(p) === false) {
         files = fs.readdirSync(chunksDir + p);
-        filesLength = files.length;
-        for (i = 0; i < filesLength; ++i) {
+        for (i = 0; i < files.length; ++i) {
           fs.unlinkSync(chunksDir + p + '/' + files[i]);
         }
 
@@ -126,7 +123,7 @@ function rescan(done) {
       file.artist = id3Data.get('artist');
       file.album = id3Data.get('album');
       file.title = id3Data.get('title');
-      file.length = Math.floor(file.numberOfChunks * 2.4);
+      file.duration = Math.floor(file.numberOfChunks * 2.4);
       file.scannedTimestamp = (new Date()).getTime();
       delete file.fullPath;
       console.log(file);

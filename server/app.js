@@ -10,24 +10,36 @@ var
   chunksTable = {},
   PORT = 8080;
 
+function fixPath(path) {
+  if (path === undefined) {
+    return '/';
+  }
+
+  if (path[path.length - 1] === '/') {
+    path = path.substring(0, path.length - 1);
+  }
+
+  if (path[0] !== '/') {
+    return '/' + path;
+  }
+  return path;
+}
+
 function nodeForPath(path) {
   var
-    pathComponents,
+    pathComponents = fixPath(path).split('/'),
     i,
     j,
-    node = library.library,
-    childrenLength;
+    node = library.library;
 
-  if (path !== undefined) {
-    pathComponents = path.split('/');
-    for (i = 0; i < pathComponents.length; ++i) {
-      childrenLength = node.children.length;
-      for (j = 0; j < childrenLength; ++j) {
+  for (i = 0; i < pathComponents.length; ++i) {
+    if (pathComponents[i].length > 0) {
+      for (j = 0; j < node.children.length; ++j) {
         if (pathComponents[i] === node.children[j].name) {
           break;
         }
       }
-      if (j === childrenLength) {
+      if (j === node.children.length) {
         return undefined;
       }
       node = node.children[j];
@@ -44,11 +56,13 @@ function error(msg) {
 
 function ls(params) {
   var
-    node = nodeForPath(params.path),
+    path = fixPath(params.path),
+    node = nodeForPath(path),
     result = [],
     i,
     child,
-    o;
+    o,
+    pathPrefix = (path === '/') ? '/' : path + '/';
 
   if (node === undefined) {
     return error('path not found');
@@ -57,7 +71,7 @@ function ls(params) {
   for (i = 0; i < node.children.length; ++i) {
     child = node.children[i];
 
-    o = { path: (params.path || '') + '/' + child.name };
+    o = { path: pathPrefix + child.name };
 
     if (child.children) { // folder
       o.type = 'directory';
@@ -129,6 +143,37 @@ function chunk(url, res) {
   }
 }
 
+function expand(arr) {
+  var
+    i,
+    item,
+    result = [];
+
+  function expandNode(node) {
+    var i;
+    if (node.children) {
+      for (i = 0; i < node.children.length; ++i) {
+        expandNode(node.children[i]);
+      }
+    } else {
+      result.push({
+        artist: node.artist,
+        album: node.album,
+        title: node.title,
+        duration: node.duration,
+        id: node.inode
+      });
+    }
+  }
+
+  for (i = 0; i < arr.length; ++i) {
+    item = nodeForPath(arr[i].path);
+    expandNode(item);
+  }
+
+  return JSON.stringify(result);
+}
+
 library.loadLibrary(function (filesFound) {
   console.log(filesFound + ' files found in library');
   console.log('listening on: ' + PORT);
@@ -148,6 +193,15 @@ library.loadLibrary(function (filesFound) {
 
     if (method === '/ls/') {
       res.end(ls(params));
+    } else if (method === '/expand/') {
+      req.content = '';
+      req.addListener('data', function (data) {
+        req.content += data;
+      });
+      req.addListener('end', function () {
+        var o = JSON.parse(req.content.toString());
+        res.end(expand(o));
+      });
     } else if (method === '/get_chunks/') {
       res.end(get_chunks(params));
     } else if (method.substring(0, 7) === '/chunk/') {

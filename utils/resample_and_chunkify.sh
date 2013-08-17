@@ -23,7 +23,7 @@ lame --quiet -t --resample 48 --nores --cbr -b 96 \
 if [ $(uname) = Linux ]; then
   format_flag=c
 else
-  format_flag=i
+  format_flag=f
 fi
 
 inode=$(stat -$format_flag %i "$file")

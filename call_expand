@@ -1,0 +1,7 @@
+#!/bin/bash
+
+post_data='[{"path":"/Detour/Detour - 02 - Dokument 3.mp3","type":"file"},{"path":"/Detour","type":"directory","count":1},{"path":"/EKV","type":"directory","count":5}]'
+
+curl --data "$post_data" http://localhost:8080/expand/
+
+
