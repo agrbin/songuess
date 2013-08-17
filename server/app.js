@@ -6,7 +6,7 @@ var app = {
   PORT: 8080,
   url: require('url'),
   library: require('../library/library.js'),
-  handlerNames: [ 'ls', 'expand', 'get_chunks', 'chunk' ],
+  handlerNames: [ 'ls', 'expand', 'get_chunks', 'chunk', 'search' ],
   handlers: [],
   chunksTable: {}, // shared by get_chunks and chunk handlers
   initHandlers: function () {
