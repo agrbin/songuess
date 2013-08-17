@@ -34,7 +34,7 @@ module.exports = {
         o.type = 'directory';
         o.count = node.filesCount;
       } else {
-        o.type = 'file'; 
+        o.type = 'file';
       }
       results.push(o);
     }
@@ -46,11 +46,11 @@ module.exports = {
         nextPath;
 
       currentPath += node.name;
-      
+
       if (matches(currentPath)) {
         addToResult = true;
       } else if (node.children) {
-        nextPath = currentPath.length > 1? currentPath + '/': currentPath;
+        nextPath = currentPath.length > 1 ? currentPath + '/' : currentPath;
         for (i = 0; i < node.children.length; ++i) {
           traverse(node.children[i], nextPath);
         }
