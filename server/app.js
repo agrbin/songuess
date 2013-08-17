@@ -15,15 +15,20 @@ function nodeForPath(path) {
     pathComponents,
     i,
     j,
-    node = library.library;
+    node = library.library,
+    childrenLength;
 
   if (path !== undefined) {
     pathComponents = path.split('/');
     for (i = 0; i < pathComponents.length; ++i) {
-      for (j = 0; j < node.children.length; ++j) {
+      childrenLength = node.children.length;
+      for (j = 0; j < childrenLength; ++j) {
         if (pathComponents[i] === node.children[j].name) {
           break;
         }
+      }
+      if (j === childrenLength) {
+        return undefined;
       }
       node = node.children[j];
     }
@@ -44,6 +49,10 @@ function ls(params) {
     i,
     child,
     o;
+
+  if (node === undefined) {
+    return error('path not found');
+  }
 
   for (i = 0; i < node.children.length; ++i) {
     child = node.children[i];
