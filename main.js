@@ -1,9 +1,10 @@
 // auth napravi svoje
 // uzme socket i provjeri sebe
 // onda dodje sync i synca sat :) pazi expires!
-(function() {
+
+function initiateEverything(onReady, isOAuthReturn) {
   var storage = new Storage(fatalError);
-  var auth = new Auth(storage, fatalError);
+  var auth = new Auth(storage, isOAuthReturn, fatalError);
   var socket, user;
 
   function fatalError(err) {
@@ -38,10 +39,9 @@
 
   function onSynced() {
     debug("synced.");
-    new Chat(socket, user, fatalError);
+    onReady(socket, user, fatalError);
   };
-
-})();
+};
 
 // for debug.
 function logout() {

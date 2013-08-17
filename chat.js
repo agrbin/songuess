@@ -1,9 +1,9 @@
-function Chat(sock, user, onFatal) {
+function Chat(wsock, user, onFatal) {
 
-  var that = this;
-  var messageCallbacks = {}, commandCallbacks = {};
-  var ui = null, queue = [];
-  var clients = {}, ids = [];
+  var that = this,
+    commandCallbacks = {},
+    ui = new ChatUI(this, user),
+    clients = {}, ids = [];
 
   // checks whether the sending message is maybe
   // a command to chat itself
@@ -28,7 +28,7 @@ function Chat(sock, user, onFatal) {
 
   this.handleSend = function (text) {
     if (!checkCommand(text)) {
-      send("say", {
+      wsock.sendType("say", {
         from : user.id,
         to   : null,
         when : myClock.clock(),
@@ -37,8 +37,13 @@ function Chat(sock, user, onFatal) {
     }
   };
 
-  function send(type, data) {
-    sock.send(JSON.stringify({type:type, data:data}));
+  function updateClientIds() {
+    ids = [];
+    for (var id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        ids.push(id);
+      }
+    }
   }
 
   this.getNumberOfClients = function () {
@@ -59,80 +64,42 @@ function Chat(sock, user, onFatal) {
     return clients[id];
   };
 
-  sock.onclose = function (e) {
-    if (e.reason) {
-      onFatal("server closed connection: " + e.reason);
-    } else {
-      onFatal("server closed connection with no reason.");
-    }
-  };
-
-  sock.onmessage = function (message) {
-    var data = JSON.parse(message.data);
-    if (!(data.type in messageCallbacks)) {
-      return console.log(
-        "type '" + data.type + "' not registered.", data.data
-      );
-    }
-    if (!ui) {
-      return queue.push(data);
-    }
-    messageCallbacks[data.type](data.data);
-  };
-
-  function resolveQueue() {
-    var it;
-    for (it = 0; it < queue.length; ++it)
-      messageCallbacks[queue[it].type](queue[it].data);
-  }
-
   function onCommand(cmd, callback) {
     commandCallbacks[cmd] = callback;
   }
-
-  function onMessage(type, callback) {
-    messageCallbacks[type] = callback;
-  }
-
-  function updateClientIds() {
-    ids = [];
-    for (var id in clients) {
-      if (clients.hasOwnProperty(id)) {
-        ids.push(id);
-      }
-    }
-  }
-
-  // rgh, jquery
-  $(function () {
-    ui = new ChatUI(that, user);
-    resolveQueue();
-  });
 
   onCommand("hello", function () {
     ui.addNotice("hello to you too.");
   });
 
-  onMessage("say", ui.addMessage);
+  wsock.onMessage("say", ui.addMessage);
 
-  onMessage("room_state", function (data) {
+  wsock.onMessage("room_state", function (data) {
     clients = data;
     updateClientIds();
     ui.updateList();
   });
 
-  onMessage("new_client", function (user) {
+  wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;
     updateClientIds();
     ui.userJoined(user.id);
     ui.updateList();
   });
 
-  onMessage("old_client", function (pair) {
+  wsock.onMessage("old_client", function (pair) {
     ui.userLeft(pair[0], pair[1]);
     delete clients[pair[0]];
     updateClientIds();
     ui.updateList();
+  });
+
+  wsock.onClose(function (e) {
+    if (e.reason) {
+      onFatal("server closed connection: " + e.reason);
+    } else {
+      onFatal("server closed connection with no reason.");
+    }
   });
 
 }

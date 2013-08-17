@@ -1,6 +1,7 @@
 <html>
   <head>
     <script src="config.js" type="text/javascript"></script>
+    <script src="sockwrap.js" type="text/javascript"></script>
     <script src="storage.js" type="text/javascript"></script>
     <script src="auth.js" type="text/javascript"></script>
     <script src="clock.js" type="text/javascript"></script>
@@ -10,6 +11,13 @@
     <script src="chat_ui.js" type="text/javascript"></script>
     <script src="jquery.js" type="text/javascript"></script>
     <script src="main.js" type="text/javascript"></script>
+    <script>
+      window.initiateEverything(function (sock, user, err) {
+        $(document).ready(function() {
+          new Chat(new SockWrapper(sock), user, err);
+        });
+      }, true);
+    </script>
     <link rel="stylesheet" href="main.css"/>
   </head>
   <body>
@@ -22,15 +30,6 @@
       <form>
         <input type="text"/>
       </form>
-    </div>
-    <div class="layout media">
-      <form>
-        <input type="text"/>
-      </form>
-      <div class="container">
-        <div class="left"></div>
-        <div class="right"></div>
-      </div>
     </div>
   </body>
 </html>

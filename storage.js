@@ -7,7 +7,7 @@
  */
 function Storage(onFatal) {
 
-  var fs = null;
+  var fs = null, requestFunction;
   var queue = [];
   var writeFile, readFile, isFile, killFile;
 
@@ -19,8 +19,9 @@ function Storage(onFatal) {
     onFatal("File APIs are not fully supported.");
   }
 
-  // request file system.
-  webkitRequestFileSystem(
+  requestFunction = window.webkitRequestFileSystem
+                    || window.requestFileSystem;
+  requestFunction(
     window.TEMPORARY,
     1024,
     initHandler,

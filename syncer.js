@@ -11,6 +11,8 @@ var Syncer = function(ws, done) {
     if (buf.data.length == 0) {
       ws.send(myClock.clock().toString());
     } else {
+      // don't sync on next non-emtpy message.
+      ws.onmessage = function() {};
       myClock.skew(Number(buf.data));
       done();
     }

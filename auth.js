@@ -1,11 +1,8 @@
 /*
- * killFile = function(file, done);
- * isFile = function(file, yes, no);
- * writeFile = function(file, data, done);
- *
- * readFile = function(file, done);
+ * if mustHaveCookie is set to true, class will onError
+ * if cookie is not available trough filesystem API
  */
-function Auth(storage, onError) {
+function Auth(storage, isOAuthReturn, onError) {
 
   var that = this;
   var COOKIE_FILE_NAME = "cookie";
@@ -13,11 +10,11 @@ function Auth(storage, onError) {
   var oAuthParams = {
     response_type : 'token',
     client_id     : '156401229517.apps.googleusercontent.com',
-    redirect_uri  : document.URL,
+    redirect_uri  : document.URL.replace(/#.*/, ''),
     scope : 
       'https://www.googleapis.com/auth/userinfo.email' +
       ' https://www.googleapis.com/auth/userinfo.profile',
-    state : location.hash || "#"
+    state : location.hash || ""
   };
 
   this.kill = function(done) {
@@ -84,6 +81,12 @@ function Auth(storage, onError) {
   }
 
   function initiateHandshake() {
+    if (!isOAuthReturn) {
+      onError("initiating handshake from isOAuthReturn =="
+              + " false location will fail with endpoint"
+              + " not registered error.");
+      return;
+    }
     if (!checkFragment()) {
       debug("redirectam se na oauth");
       // redirects to google oauth endpoint

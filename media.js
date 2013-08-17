@@ -1,8 +1,27 @@
-function Media(sendMedia) {
+function Media(sock, user, err) {
 
   var that = this,
     ui = new MediaUI(this),
     nextCallback = null;
+
+  sock.onmessage = function (message) {
+    var data = JSON.parse(message.data);
+    if (!(data.type in messageCallbacks)) {
+      return console.log(
+        "type '" + data.type + "' not registered.", data.data
+      );
+    }
+    if (!ui) {
+      return queue.push(data);
+    }
+    messageCallbacks[data.type](data.data);
+    var data = JSON.parse(message.data);
+    that.onMediaMessage(data);
+  };
+
+  function onMessage(type, callback) {
+    messageCallbacks[type] = callback;
+  }
 
   this.newRoom = function (name, onFinish) {
     ui.takeOver();
