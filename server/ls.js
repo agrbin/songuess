@@ -13,7 +13,7 @@ module.exports = {
   handle: function (method, params, req, res, errCallback) {
     var
       path = this.pathUtils.fixPath(params.path),
-      node = this.pathUtils.nodeForPath(this.app.library.library, path),
+      node = this.pathUtils.nodeForPath(this.app.library.tree, path),
       result = [],
       i,
       child,

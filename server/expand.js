@@ -42,7 +42,7 @@ module.exports = {
       }
 
       for (i = 0; i < arr.length; ++i) {
-        item = that.pathUtils.nodeForPath(that.app.library.library, arr[i].path);
+        item = that.pathUtils.nodeForPath(that.app.library.tree, arr[i].path);
         if (item) {
           expandNode(item);
         }

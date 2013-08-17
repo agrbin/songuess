@@ -38,14 +38,14 @@ exports.loadLibrary = function (callback) {
           lib = JSON.parse(data),
           numFiles = findFiles(lib);
 
-        exports.library = lib;
+        exports.tree = lib;
 
         if (callback) {
           callback(numFiles);
         }
       });
     } else {
-      exports.library = {};
+      exports.tree = {};
       if (callback) {
         callback(0);
       }
