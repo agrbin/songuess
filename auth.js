@@ -2,10 +2,11 @@
 "use strict";
 
 var request = require('request'),
-  verifyURL = 'https://www.googleapis.com/oauth2/v1/tokeninfo',
-  profileURL = 'https://www.googleapis.com/oauth2/v1/userinfo',
-  expectedScope = 'https://www.googleapis.com/auth/userinfo.profile '
-                  + 'https://www.googleapis.com/auth/userinfo.email';
+  config = require('./config.js').auth,
+  verifyURL = config.verifyURL,
+  profileURL = config.profileURL,
+  expectedScope = config.scope,
+  clientID = config.clientID;
 
 function tryDecode(json, done, errmsg) {
   var data;
@@ -62,6 +63,9 @@ exports.verifyToken = function (tokenMessage, done) {
       }
       if (!data.verified_email) {
         return done(null, "google: mail not verified");
+      }
+      if (data.audience !== clientID) {
+        return done(null, "token is not for this app.");
       }
       if (data.scope !== expectedScope) {
         return done(null, "token scope is not as expected.");

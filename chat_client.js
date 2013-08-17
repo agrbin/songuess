@@ -59,7 +59,7 @@ exports.ChatClient = function (sock, user, chat) {
     }
   };
 
-  sock.onmessage = function (message) {
+  sock.onchatmessage = function (message) {
     var data;
     try {
       data = JSON.parse(message.data);
@@ -79,16 +79,5 @@ exports.ChatClient = function (sock, user, chat) {
   sock.onclose = function () {
     chat.kill(that, "connection closed.");
   };
-
-  // route media messages to mediaGateway
-  this.onMessage("media", function (data) {
-    chat.getMediaGateway().query(data, function (answer, err) {
-      if (err) {
-        kill(err);
-      } else {
-        that.send("media", answer);
-      }
-    });
-  });
 
 };

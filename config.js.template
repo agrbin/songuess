@@ -1,5 +1,5 @@
 /*jslint indent: 2, plusplus: true*/
-"use strict";
+'use strict';
 
 var currentEnv = process.env.NODE_ENV || 'developement';
 
@@ -23,7 +23,7 @@ exports.streamer = {
   checkInterval : 0.5,
   chunkDuration : 2.448,
   overlapTime   : 0.048,
-  chunkHostUrl  : "frags/",
+  chunkHostUrl  : 'frags/',
   numberOfChunks: 150
 };
 
@@ -34,12 +34,20 @@ exports.sync = {
 };
 
 exports.media = {
-  "media1" : {
-    endpoint  : "http://localhost:8081",
-    desc      : "grbinov media server"
+  'media1' : {
+    endpoint  : 'http://localhost:8081',
+    desc      : 'grbinov media server'
   },
-  "media2" : {
-    endpoint  : "http://localhost:8081",
-    desc      : "grbinov klon media server"
+  'media2' : {
+    endpoint  : 'http://localhost:8081',
+    desc      : 'grbinov klon media server'
   }
+};
+
+exports.auth = {
+  clientID    :  'XYZ.apps.googleusercontent.com',
+  verifyURL   :  'https://www.googleapis.com/oauth2/v1/tokeninfo',
+  profileURL  :  'https://www.googleapis.com/oauth2/v1/userinfo',
+  scope       :  'https://www.googleapis.com/auth/userinfo.profile '
+                  + 'https://www.googleapis.com/auth/userinfo.email'
 };

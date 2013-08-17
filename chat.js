@@ -4,16 +4,14 @@
 var clock = require("./clock.js"),
   config = require("./config.js").chat,
   ChatRoom = require("./chat_room.js").ChatRoom,
-  ChatClient = require("./chat_client.js").ChatClient,
-  media = require("./media.js");
+  ChatClient = require("./chat_client.js").ChatClient;
 
 
 exports.Chat = function () {
 
   var rootRoom = new ChatRoom({name: "root room"}, this),
     rooms = {"" : rootRoom},
-    where_is = {},
-    mediaGateway = new media.MediaGateway();
+    where_is = {};
 
   function log(msg) {
     console.log(clock.time() + ": " + msg);
@@ -31,10 +29,6 @@ exports.Chat = function () {
     }
     return false;
   }
-
-  this.getMediaGateway = function () {
-    return mediaGateway; 
-  };
 
   // add room to a list of rooms.
   this.createRoom = function (name, room) {
