@@ -3,24 +3,30 @@
 
 var ws = require('ws');
 
-exports.ChatClient = function (sock, user, chat) {
+exports.ChatClient = function (wsock, user, chat) {
 
-  var that = this,
-    messageCallbacks = {};
+  var that = this;
 
+  // we will initiate close.
   function kill(reason) {
-    try {
-      // kick from room
+    // remove all listeners from this socket
+    // (client: don't speak)
+    wsock.removeListeners();
+    // change close reason.
+    // this will tell others about the closing
+    wsock.onClose(function () {
       chat.kill(that, reason);
-      // don't invoke onclose
-      sock.onclose = null;
-      // close it.
-      sock.close(1000, reason);
-    } catch (e) {
-      console.log("kill err: "
-                  + user.email + ":" + e.toString());
-    }
+    });
+    // close it.
+    // this will tell the client about the closing.
+    wsock.close(reason);
   }
+
+  // when client closes the connection, notify
+  // others about that.
+  wsock.onClose(function () {
+    chat.kill(that, "connection closed by client.");
+  });
 
   this.id = function () {
     return user.id;
@@ -41,43 +47,13 @@ exports.ChatClient = function (sock, user, chat) {
   };
 
   this.onMessage = function (type, callback) {
-    messageCallbacks[type] = callback;
+    wsock.onMessageType(type, function (data) {
+      callback(data, that);
+    });
   };
 
   this.send = function (type, data) {
-    if (sock.readyState === ws.OPEN) {
-      sock.send(
-        JSON.stringify({type: type, data: data}),
-        function (err) {
-          if (err) {
-            sock.terminate(); // no mercy.
-          }
-        }
-      );
-    } else {
-      kill("connection lost");
-    }
-  };
-
-  sock.onchatmessage = function (message) {
-    var data;
-    try {
-      data = JSON.parse(message.data);
-    } catch (e) {return kill("sent message not json"); }
-    if (messageCallbacks[data.type] === undefined) {
-      kill("sent message type '" + data.type + "' not valid.");
-    } else {
-      messageCallbacks[data.type](data.data, that);
-      // debug
-      try {
-      } catch (err) {
-        kill("exception: " + err);
-      }
-    }
-  };
-
-  sock.onclose = function () {
-    chat.kill(that, "connection closed.");
+    wsock.sendType(type, data);
   };
 
 };

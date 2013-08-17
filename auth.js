@@ -43,6 +43,13 @@ function fetchProfile(token, done) {
 
 exports.verifyToken = function (tokenMessage, done) {
   var token, url;
+
+  if (config.bypassVerification !== undefined) {
+    var user = JSON.parse(JSON.stringify(config.bypassVerification));
+    user.id += Math.random().toString();
+    return done(user);
+  }
+
   token = tryDecode(tokenMessage.data, done, "token is not json");
   if (token === undefined) {
     return;

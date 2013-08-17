@@ -7,7 +7,8 @@ var ws = require('ws'),
   config = require('./config.js').server,
   verifyToken = require('./auth.js').verifyToken,
   Chat = require('./chat.js').Chat,
-  MediaGateway = require('./media.js').MediaGateway;
+  MediaGateway = require('./media.js').MediaGateway,
+  SockWrapper = require('./sockwrap.js').SockWrapper;
 
 var httpServer = require('http').createServer();
 var server = new ws.Server({server: httpServer});
@@ -15,10 +16,8 @@ var chat = new Chat(), media = new MediaGateway();
 
 function onVerified(sock, user) {
   var syncer = new Syncer(sock, function () {
-    sock.onmessage = function (message) {
-      sock.onchatmessage(message);
-    };
-    chat.connect(sock, user);
+    var wsock = new SockWrapper(sock);
+    chat.connect(wsock, user);
   });
 }
 
