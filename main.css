@@ -1,6 +1,6 @@
 html, body {
-  margin: 0px;
-  padding: 0px;
+  margin: 2px;
+  padding: 2px;
   zoom: 1.2;
   -moz-transform: scale(1.2);
   -moz-transform-origin: 0 0;
@@ -48,10 +48,10 @@ h1 {
 .layout.chat {
   position: fixed !important;
   position: relative;
-  left: 2px;
-  right: 2px;
-  top: 2px;
-  bottom: 2px;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
 }
 
 .layout.chat input {

@@ -6,12 +6,18 @@ function initiateEverything(onReady, isOAuthReturn) {
   var storage, auth, socket, user;
 
   function fatalError(err) {
-    document.write("<h1>this is why we don't have nice things.</h1>"
+    document.open();
+    document.write("<h2>this is why we don't have nice things.</h2>"
                     + "<p>" + err + "</p>");
+    document.write("<!--");
+    document.close();
     console.log(err);
   }
 
   function initialize() {
+    if (!window.hasOwnProperty("songuess")) {
+      return fatalError("config.js is missing");
+    }
     storage = new songuess.cookie_storage(fatalError);
     auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
   }
