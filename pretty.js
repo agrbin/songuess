@@ -1,4 +1,4 @@
-var Pretty = {
+var pretty = {
   colorStyle : function(id) {
     id = id.split(".")[1];
     var r = Math.floor(id%256*0.8); id /= 256;
@@ -17,11 +17,11 @@ var Pretty = {
   },
   time : function(when) {
     var d = new Date(when);
-    var minutes = Pretty.leadingZero(d.getHours()) + ":"
-        + Pretty.leadingZero(d.getMinutes());
+    var minutes = pretty.leadingZero(d.getHours()) + ":"
+        + pretty.leadingZero(d.getMinutes());
     var full = minutes + ":"
-        + Pretty.leadingZero(d.getSeconds()) + "."
-        + Pretty.leadingZero(d.getMilliseconds(), 3);
+        + pretty.leadingZero(d.getSeconds()) + "."
+        + pretty.leadingZero(d.getMilliseconds(), 3);
     return $("<span>")
       .addClass("time")
       .attr('title', full)
@@ -37,14 +37,14 @@ var Pretty = {
   fullClient : function (client) {
     return $("<span>")
       .addClass("full-client")
-      .css({color: Pretty.colorStyle(client.id)})
+      .css({color: pretty.colorStyle(client.id)})
       .text(client.display)
       [0].outerHTML;
   },
   nameClient : function (client) {
     return $("<span>")
       .addClass("full-client")
-      .css({color: Pretty.colorStyle(client.id)})
+      .css({color: pretty.colorStyle(client.id)})
       .text(client.name)
       [0].outerHTML;
   }

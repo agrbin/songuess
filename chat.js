@@ -3,7 +3,7 @@ function Chat(wsock, user, onFatal) {
   var that = this,
     commandCallbacks = {},
     ui = new ChatUI(this, user),
-    clients = {}, ids = [];
+    clients = {}, ids = [], playlist;
 
   function initialize() {
     var init_room = location.hash;
@@ -54,6 +54,9 @@ function Chat(wsock, user, onFatal) {
     }
   }
 
+  function updatePlaylist() {
+  }
+
   this.getNumberOfClients = function () {
     return ids.length;
   };
@@ -76,11 +79,31 @@ function Chat(wsock, user, onFatal) {
     commandCallbacks[cmd] = callback;
   }
 
+  function roomNameOk(name) {
+    return name
+      && name.indexOf(" ") === -1
+      && name[0] === "#";
+  }
+
+  onCommand("help", function () {
+    ui.addNotice("available commands are /clear and /join");
+  });
+
   onCommand("hello", function () {
     ui.addNotice("hello to you too.");
   });
 
+  onCommand("clear", function () {
+    ui.clear();
+  });
+
   onCommand("join", function (room) {
+    if (!roomNameOk(room)) {
+      return ui.addNotice("room name not valid.");
+    }
+    wsock.onError(1, function (err) {
+      return document.location = "room.html" + room;
+    });
     wsock.sendType("new_room", room);
   });
 
@@ -88,9 +111,16 @@ function Chat(wsock, user, onFatal) {
 
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
+    document.title = "songuess " + data.desc.name;
+    ui.clear();
     ui.addNotice("you entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
+    playlist = data.desc.playlist;
     clients = data.users;
+    if (playlist.length) {
+      ui.addNotice("playlist has " + playlist.length + " songs.");
+    }
+    updatePlaylist();
     updateClientIds();
     ui.updateList();
   });

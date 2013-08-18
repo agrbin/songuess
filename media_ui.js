@@ -8,12 +8,15 @@ function MediaUI(media) {
     $(".layout.media").show();
     left = $(".media .left")[0];
     right = $(".media .right")[0];
-    input = $(".media input")[0];
-    $(input).focus();
+    input = $(".media #cmd");
+    $(input).hide();
+    $("#name").val(location.hash);
+    $("#desc").focus();
     $(".media form").submit(function () {
-      media.handleTextQuery(
-        $(input).val()
-      );
+      media.handleNewRoom({
+        name : $("#name").val(),
+        desc : $("#desc").val()
+      });
       return false;
     });
   }
@@ -26,66 +29,134 @@ function MediaUI(media) {
     };
     $(left).empty().append(parentDir(apath));
     for (it = 0; it < list.length; ++it) {
+      list[it].url = media.apathToUrl(list[it].apath);
       $(left).append(
-        map[list[it].type](it, list[it])
+        map[list[it].type](list[it])
       );
     }
+    disableSelect();
   };
 
   this.setInput = function (what) {
     $(input).val(what);
   };
 
+  this.updatePlaylist = function (playlist) {
+    var url;
+    $(right).empty();
+    for (url in playlist) {
+      if (playlist.hasOwnProperty(url)) {
+        $(right).append(playlistEntry(playlist[url]));
+      }
+    }
+    disableSelect();
+  };
+
+  function disableSelect() {
+    $('.clickable').mousedown(function(e) {e.preventDefault();});
+  }
+
   function handleLsClick(path) {
     media.handleTextQuery("ls " + path);
   }
 
   function aPath(one) {
-    var url = media.arrayToPath(one.apath);
     if (one.type === 'file') {
       return $("<a>")
-        .attr('title', url)
+        .attr('title', one.url)
         .text(one.name);
     }
     return $("<a>")
       .attr('href', '#')
-      .attr('title', media.arrayToPath(one.apath))
+      .attr('title', media.apathToUrl(one.apath))
       .text(one.name)
       .click(function (e) {
         e.preventDefault();
-        handleLsClick(url);
+        handleLsClick(one.url);
       });
   }
+
+  function numDiv(one) {
+    return $("<div>")
+      .addClass("num")
+      .hover(
+        function() {$(this).parent().addClass("hover");},
+        function() {$(this).parent().removeClass("hover");}
+      )
+      .attr("title", "add to playlist")
+      .addClass("clickable")
+      .click(function (e) {
+        e.preventDefault();
+        media.addToPlaylist(one);
+      })
+      .append($("<span>").text("add"));
+  };
+
+  function deleteDiv(one) {
+    return $("<div>")
+      .addClass("num")
+      .addClass("clickable")
+      .hover(
+        function() {$(this).parent().addClass("hover");},
+        function() {$(this).parent().removeClass("hover");}
+      )
+      .click(function (e) {
+        e.preventDefault();
+        media.removeFromPlaylist(one.url);
+      })
+      .append(
+        $("<span>")
+          .text("del")
+          .attr('title', "remove from playlist")
+      );
+  };
 
   function parentDir(apath) {
     if (apath.length) {
       apath = apath.slice(0, -1);
       return $("<div>")
         .addClass("entry")
-        .append($("<div>").addClass("num").text("-"))
-        .append(aPath({apath: apath, name : ".."}));
+        .append($("<div>").addClass("num").html("&nbsp;"))
+        .append(aPath({
+          url: media.apathToUrl(apath),
+          apath: apath,
+          name : ".."}));
     }
   }
 
-  function fileEntry(num, one) {
+  function playlistEntry(one) {
+    if (one.count === undefined) {
+      one.count = 1;
+    }
     return $("<div>")
       .addClass("entry")
-      .append($("<div>").addClass("num").text(num))
+      .append(deleteDiv(one))
+      .append($("<a>")
+              .text(one.name)
+              .attr('title', one.url)
+             )
+      .append($("<div>").addClass("desc").text(one.count));
+  }
+
+  function fileEntry(one) {
+    return $("<div>")
+      .addClass("entry")
+      .append(numDiv(one))
       .append(aPath(one));
   }
 
-  function dirEntry(num, one) {
+  function dirEntry(one) {
     return $("<div>")
       .addClass("entry")
-      .append($("<div>").addClass("num").text(num))
+      .append(numDiv(one))
       .append(aPath(one))
       .append($("<div>").addClass("desc").text(one.count));
   }
 
-  function srvEntry(num, one) {
+  function srvEntry(one) {
     return $("<div>")
       .addClass("entry")
-      .append($("<div>").addClass("num").text(num))
+      .append($("<div>").addClass("num").html("&nbsp;"))
       .append(aPath(one))
       .append($("<div>").addClass("desc").text(one.desc));
   }

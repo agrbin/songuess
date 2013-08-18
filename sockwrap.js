@@ -2,7 +2,8 @@ function SockWrapper(sock, onFatal) {
 
   var that = this,
     messageCallbacks = {},
-    closeCallbacks = [];
+    closeCallbacks = [],
+    errorCallbacks = {};
 
   this.onClose = function (callback) {
     closeCallbacks.push(callback);
@@ -10,6 +11,10 @@ function SockWrapper(sock, onFatal) {
 
   this.onMessage = function (type, callback) {
     messageCallbacks[type] = callback;
+  };
+
+  this.onError = function (code, callback) {
+    errorCallbacks[code] = callback;
   };
 
   this.sendType = function (type, data) {
@@ -33,7 +38,11 @@ function SockWrapper(sock, onFatal) {
       return onFatal("received message is not json");
     }
     if (data.hasOwnProperty("error")) {
-      return onFatal(data.error);
+      var code = data.code;
+      if (code === undefined || errorCallbacks[code] === undefined) {
+        return onFatal(data.error);
+      }
+      errorCallbacks[code](data.error);
     }
     if (!messageCallbacks.hasOwnProperty(data.type)) {
       return console.log(

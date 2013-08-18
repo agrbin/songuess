@@ -19,7 +19,6 @@ h1 {
   height: 300px;
   overflow-x: hidden;
   overflow-y: auto;
-  margin-right: 3px;
   border-right: 1px solid #ccc;
 }
 
@@ -30,8 +29,7 @@ h1 {
 }
 
 .layout .right {
-  height: 297px;
-  margin-top: 3px;
+  height: 300;
   overflow-x: hidden;
   overflow-y: auto;
 }
@@ -45,6 +43,14 @@ h1 {
 }
 
 /* chat */
+
+.layout .chat .left {
+  margin-right: 3px;
+}
+
+.layout .chat .right {
+  margin-top: 3px;
+}
 
 .chat .time {
   color: gray;
@@ -63,23 +69,43 @@ h1 {
 
 /* media */
 
+.layout.media {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .layout.media .left {
   width: 50%;
 }
 
-.media .left .entry {
+.media .entry {
   height: 20px;
   border-bottom: 1px #ccc dashed;
   line-height: 20px;
+  overflow: hidden;
 }
 
-.media .left .entry .num {
+.media .entry.hover {
+  background-color: #eef;
+  cursor: pointer;
+}
+
+.media .entry .num {
   float: left;
-  margin-right: 30px;
+  width: 35px;
   margin-left: 3px;
 }
 
-.media .left .entry .desc {
+.media .entry .desc {
   float: right;
   margin-right: 5px;
+}
+
+.media form {
+  margin-bottom: 3px;
+}
+
+.media input {
+  margin-bottom: 5px;
 }

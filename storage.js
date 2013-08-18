@@ -43,7 +43,7 @@ function Storage(onFatal) {
     ];
     for (i = 0; i < errors.length; ++i)
       if (e.code == FileError[errors[i]])
-        onFatal("Storage: " + errors[i], e);
+        throw("Storage: " + errors[i], e);
   }
 
   function resolveQueue() {

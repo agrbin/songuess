@@ -19,7 +19,7 @@ function ChatUI(chat, user) {
       return false;
     });
     $("h1").css({
-      color: Pretty.colorStyle(user.id)
+      color: pretty.colorStyle(user.id)
     });
   }
 
@@ -32,40 +32,44 @@ function ChatUI(chat, user) {
       .scrollTop(body.scrollHeight);
   }
 
+  this.clear = function () {
+    $(body).empty();
+  };
+
   this.updateList = function () {
     $(list).empty();
     for (it = 0; it < chat.getNumberOfClients(); ++it)
       $(list)
-        .append(Pretty.fullClient(chat.getClient(it)));
+        .append(pretty.fullClient(chat.getClient(it)));
   };
 
   this.addNotice = function (what) {
     entry("sys",
-      Pretty.time(myClock.clock()) + " "
-      + Pretty.text(what));
+      pretty.time(myClock.clock()) + " "
+      + pretty.text(what));
   };
 
   this.userJoined = function (id, reason) {
     entry("sys",
-      Pretty.time(myClock.clock()) + " " +
-      Pretty.nameClient(chat.getClient(id))
+      pretty.time(myClock.clock()) + " " +
+      pretty.nameClient(chat.getClient(id))
       + " joined the room.");
   };
 
   this.userLeft = function (id, reason) {
     entry("sys",
-      Pretty.time(myClock.clock()) + " " +
-      Pretty.nameClient(chat.getClient(id))
+      pretty.time(myClock.clock()) + " " +
+      pretty.nameClient(chat.getClient(id))
       + " left: " + reason);
   };
 
   this.addMessage = function (msg) {
     entry("say",
-      Pretty.time(msg.when) + " " +
+      pretty.time(msg.when) + " " +
       (msg.from ?
-        Pretty.nameClient(chat.getClient(msg.from)) + ": "
+        pretty.nameClient(chat.getClient(msg.from)) + ": "
         : "")
-      + Pretty.text(msg.what));
+      + pretty.text(msg.what));
   };
 
   initialize();

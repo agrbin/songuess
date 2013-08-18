@@ -30,7 +30,12 @@ function initiateEverything(onReady, isOAuthReturn) {
 
   function onSynced() {
     debug("synced.");
-    onReady(socket, user, fatalError);
+    try {
+      onReady(socket, user, fatalError);
+    } catch (err) {
+      fatalError(err);
+      throw err;
+    }
   }
 
   function onAuthReady(token) {
