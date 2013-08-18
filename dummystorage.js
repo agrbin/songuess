@@ -1,15 +1,15 @@
 // fails everything.
 function DummyStorage() {
   this.writeFile = function (file, data, done) {
-    done();
+    setTimeout(done, 0);
   };
   this.isFile = function (file, yes, no) {
-    no();
+    setTimeout(no, 0);
   };
   this.readFile = function (file, done) {
-    done(null);
+    setTimeout(done, 0);
   };
   this.killFile = function (file, done) {
-    done();
+    setTimeout(done, 0);
   };
 };

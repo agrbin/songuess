@@ -1,0 +1,8 @@
+window.songuess = {
+  master_server : "ws://localhost:8080/",
+
+  /*
+   * can be DummyStorage, or FileStorage
+   */
+  cookie_storage : FileStorage
+};

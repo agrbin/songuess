@@ -5,37 +5,32 @@
 function initiateEverything(onReady, isOAuthReturn) {
   var storage, auth, socket, user;
 
-  function initialize() {
-    try {
-      storage = new Storage(fatalError);
-    } catch (err) {
-      console.log("storage not available: " + err);
-      storage = new DummyStorage(fatalError);
-    }
-
-    auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
-  }
-
   function fatalError(err) {
     document.write("<h1>this is why we don't have nice things.</h1>"
                     + "<p>" + err + "</p>");
     console.log(err);
   }
 
-  function onVerified(verified_user) {
-    debug("user verified.");    
-    user = verified_user;
-    new Syncer(socket, onSynced);
+  function initialize() {
+    storage = new songuess.cookie_storage(fatalError);
+    auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
   }
 
   function onSynced() {
     debug("synced.");
     try {
+      // this will start the app.
       onReady(socket, user, fatalError);
     } catch (err) {
       fatalError(err);
       throw err;
     }
+  }
+
+  function onVerified(verified_user) {
+    debug("user verified.");    
+    user = verified_user;
+    new Syncer(socket, onSynced);
   }
 
   function onAuthReady(token) {
@@ -54,11 +49,11 @@ function initiateEverything(onReady, isOAuthReturn) {
                    + " not responding.");
       socket.onopen = null;
     }, 3000);
-  };
+  }
 
   initialize();
 
-};
+}
 
 // for debug.
 function logout() {

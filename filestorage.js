@@ -5,28 +5,25 @@
  *
  * readFile = function(file, done);
  */
-function Storage(onFatal) {
+function FileStorage(onFatal) {
 
-  var fs = null, requestFunction;
-  var queue = [];
-  var writeFile, readFile, isFile, killFile;
+  var that = this,
+    fs = null,
+    queue = [];
 
-  if (!onFatal) onFatal = function() {
-    console.log(arguments);
-  };
-
-  if (!(File && FileReader && FileList && Blob)) {
-    onFatal("File APIs are not fully supported.");
+  function initialize() {
+    var requestFunction = window.webkitRequestFileSystem
+                      || window.requestFileSystem;
+    if (!(File && FileReader && FileList && Blob && requestFunction)) {
+      return onFatal("FileStorage is not supported.");
+    }
+    requestFunction(
+      window.TEMPORARY,
+      1024,
+      initHandler,
+      errorHandler
+    );
   }
-
-  requestFunction = window.webkitRequestFileSystem
-                    || window.requestFileSystem;
-  requestFunction(
-    window.TEMPORARY,
-    1024,
-    initHandler,
-    errorHandler
-  );
 
   function initHandler(_fs) {
     fs = _fs;
@@ -43,7 +40,7 @@ function Storage(onFatal) {
     ];
     for (i = 0; i < errors.length; ++i)
       if (e.code == FileError[errors[i]])
-        onFatal("Storage: " + errors[i], e);
+        return onFatal("Storage: " + errors[i], e);
   }
 
   function resolveQueue() {
@@ -52,8 +49,9 @@ function Storage(onFatal) {
       queue[i][0](queue[i][1], queue[i][2], queue[i][3]);
   }
 
-  this.writeFile = writeFile = function(file, data, done) {
-    if (!fs) return queue.push([writeFile, file, data, done]);
+  this.writeFile = function(file, data, done) {
+    if (!fs) return queue.push([that.writeFile, file, data, done]);
+
     fs.root.getFile(file, {create: true}, function(fileEntry) {
       fileEntry.createWriter(function(fileWriter) {
         var blob = new Blob([data], {type: 'text/plain'});
@@ -64,15 +62,15 @@ function Storage(onFatal) {
     }, errorHandler);
   };
 
-  this.isFile = isFile = function(file, yes, no) {
-    if (!fs) return queue.push([isFile, file, yes, no]);
+  this.isFile = function(file, yes, no) {
+    if (!fs) return queue.push([that.isFile, file, yes, no]);
     fs.root.getFile(file, {create: false}, yes, function() {
       if(no) no();
     });
   };
 
-  this.readFile = readFile = function(file, done) {
-    if (!fs) return queue.push([readFile, file, done]);
+  this.readFile = function(file, done) {
+    if (!fs) return queue.push([that.readFile, file, done]);
     fs.root.getFile(file, {create: false}, function(fileEntry) {
       fileEntry.file(function(file) {
          var reader = new FileReader();
@@ -84,13 +82,15 @@ function Storage(onFatal) {
     }, errorHandler);
   };
 
-  this.killFile = killFile = function(file, done) {
-    if (!fs) return queue.push([killFile, file, done]);
+  this.killFile = function(file, done) {
+    if (!fs) return queue.push([that.killFile, file, done]);
     fs.root.getFile(file, {create: false}, function(fileEntry) {
       fileEntry.remove(function() {
         if(done) done();
       }, errorHandler);
     }, errorHandler);
   };
+
+  initialize();
 
 }
