@@ -66,6 +66,6 @@ function logout() {
 }
 
 function debug() {
-  console.log("auth", arguments);
+  console.log(arguments);
 }
 

@@ -10,7 +10,6 @@ function ChatUI(chat, user) {
     body = $(".chat .right")[0];
     list = $(".chat .left")[0];
     input = $(".chat input")[0];
-    $(input).focus();
     $(".chat form").submit(function () {
       if ($(input).val().length > 0) {
         chat.handleSend($(input).val());
@@ -18,9 +17,12 @@ function ChatUI(chat, user) {
       }
       return false;
     });
-    $("h1").css({
+    $("h1").text("songuess").css({
       color: pretty.colorStyle(user.id)
     });
+    $("pre.log").hide();
+    $(".layout.chat").show();
+    $(input).focus();
   }
 
   function entry (type, what) {

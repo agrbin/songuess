@@ -44,11 +44,11 @@ h1 {
 
 /* chat */
 
-.layout .chat .left {
+.layout.chat .left {
   margin-right: 3px;
 }
 
-.layout .chat .right {
+.layout.chat .right {
   margin-top: 3px;
 }
 
