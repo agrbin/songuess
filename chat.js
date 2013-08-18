@@ -6,13 +6,20 @@ var clock = require("./clock.js"),
   ChatRoom = require("./chat_room.js").ChatRoom,
   ChatClient = require("./chat_client.js").ChatClient;
 
-
 exports.Chat = function () {
 
   var that = this,
-    rootRoom = new ChatRoom({name: "#root", desc: "root room"}, this),
-    rooms = {"#root" : rootRoom},
+    rooms = {},
     where_is = {};
+
+  function initialize() {
+    // create root room.
+    that.createRoom({
+      name: "#root",
+      desc: "root room",
+      playlist: []
+    });
+  }
 
   function log(msg) {
     console.log(clock.time() + ": " + msg);
@@ -36,12 +43,14 @@ exports.Chat = function () {
   };
 
   // add room to a list of rooms.
-  this.createRoom = function (name, room) {
-    assertType(room, ChatRoom);
+  this.createRoom = function (roomDescriptor) {
+    var name = roomDescriptor.name, room;
     if (that.roomNameExists(name)) {
       throw "room already exists";
     }
+    room = new ChatRoom(roomDescriptor, that);
     rooms[name] = room;
+    console.log("new room created " + name);
   };
 
   // pop room from a list of rooms (when user requests so.)
@@ -108,5 +117,7 @@ exports.Chat = function () {
     }
     return where_is[client.id()];
   };
+
+  initialize();
 
 };

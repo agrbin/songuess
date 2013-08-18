@@ -1,7 +1,7 @@
 var config = require("./config.js").media,
   request = require('request');
 
-exports.MediaGateway = function () {
+exports.MediaGateway = function (chat) {
 
   var that = this;
 
@@ -9,6 +9,15 @@ exports.MediaGateway = function () {
     wsock.onMessageType("media", function (query) {
       if (query.type === "ls") {
         return processLs(query, function (result, err) {
+          if (err) {
+            wsock.sendError(err);
+          } else {
+            wsock.sendType("media", result);
+          }
+        });
+      }
+      if (query.type === "new_room") {
+        return processNewRoom(query, function (result, err) {
           if (err) {
             wsock.sendError(err);
           } else {
@@ -36,6 +45,25 @@ exports.MediaGateway = function () {
         }
       } else {
         return done(null, "media server not available.");
+      }
+    });
+  };
+
+  this.expandApi = function (server, input, onResult) {
+    var url;
+    if (config[server] === undefined) {
+      return onResult(null, null, "no such server");
+    }
+    url = config[server].endpoint + "/expand/";
+    request({uri: url, body: input}, function (e, response, body) {
+      if (!e && response.statusCode === 200) {
+        try {
+          onResult(JSON.parse(body), server);
+        } catch (err) {
+          onResult(null, null, "error while querying media: " + err);
+        }
+      } else {
+        return onResult(null, null, "media server not available.");
       }
     });
   };
@@ -78,6 +106,93 @@ exports.MediaGateway = function () {
       }
       done(entries);
     });
+  }
+
+  function dispatchByServers(playlist) {
+    var byServers = {}, server;
+    for (it = 0; it < playlist.length; ++it) {
+      if (!playlist[it].length) {
+        throw "playlist have invalid apath";
+      }
+      server = playlist[it][0];
+      if (!byServers.hasOwnProperty(server)) {
+        byServers[server] = [];
+      }
+      byServers[server].push(
+        {path: "/" + playlist[it].slice(1).join("/")}
+      );
+    }
+    return byServers;
+  }
+
+  /*
+   * {
+   *  name :
+   *  desc :
+   *  playlist : [
+   *    { server:, id:, artist:, title:, album:, ...}
+   *  ]
+   * }
+   */
+  function registerNewRoom(room, done) {
+    chat.createRoom(room);
+    done(true);
+  }
+
+  /*
+  type:
+  room: {name:, desc:}
+  playlist: [ apath, apath, ... ]
+
+  amo prvo expandat sve.
+  */
+  function processNewRoom(query, done) {
+    var expanded = [], callsLeft = 0;
+
+    if (!query.room.name.length) {
+      return done(null, "room name should not be empty.");
+    }
+    if (query.room.name.substr(0, 1) !== "#") {
+      return done(null, "room name should start with #.");
+    }
+
+    function finish() {
+      if (expanded.length === 0) {
+        return done(null, "playlist should not be empty");
+      }
+      query.room.playlist = expanded;
+      registerNewRoom(query.room, done);
+    }
+
+    function partialDone(partialExpanded, server, err) {
+      if (err) {
+        return done(null, err);
+      }
+      for (var it = 0; it < partialExpanded.length; ++it) {
+        partialExpanded[it].server = server;
+        expanded.push(partialExpanded[it]);
+      }
+      if (!--callsLeft) {
+        return finish();
+      }
+    }
+
+    function start() {
+      var byServers, body, server;
+      byServers = dispatchByServers(query.playlist);
+      for (server in byServers) {
+        if (byServers.hasOwnProperty(server)) {
+          ++callsLeft;
+          body = JSON.stringify(byServers[server]);
+          that.expandApi(server, body, partialDone);
+        }
+      }
+      if (!callsLeft) {
+        done(null, "playlist should not be empty");
+      }
+    }
+
+    start();
   }
 
 };

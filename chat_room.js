@@ -40,7 +40,7 @@ exports.ChatRoom = function (desc, chat) {
     // handle moving to another room
     client.onMessage("new_room", function (data, client) {
       if (!chat.roomNameExists(data)) {
-        return client.error("no such room", 1);
+        return client.error("no such room " + data + ".", 1);
       }
       chat.move(
         client, chat.whereIs(client), chat.getRoomByName(data)
