@@ -29,7 +29,7 @@ module.exports = {
     }
 
     function addNodeToResults(node, path) {
-      var o = { path: path };
+      var o = { path: path, name : node.name };
       if (node.children) {
         o.type = 'directory';
         o.count = node.filesCount;

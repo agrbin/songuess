@@ -27,6 +27,7 @@ module.exports = {
         child = node.children[i];
 
         o = { path: pathPrefix + child.name };
+        o.name = child.name;
 
         if (child.children) { // folder
           o.type = 'directory';
