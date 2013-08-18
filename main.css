@@ -35,6 +35,8 @@ h1 {
 }
 
 .layout input {
+  border-radius: 0px;
+  -webkit-appearance: none;
   width: 100%;
 }
 
@@ -48,10 +50,10 @@ h1 {
 .layout.chat {
   position: fixed !important;
   position: relative;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  bottom: 2px;
 }
 
 .layout.chat input {
