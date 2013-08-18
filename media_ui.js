@@ -3,7 +3,7 @@ function MediaUI(media) {
 
   var input, left, right;
 
-  this.takeOver = function () {
+  function initialize() {
     $(".layout.chat").hide();
     $(".layout.media").show();
     left = $(".media .left")[0];
@@ -14,18 +14,17 @@ function MediaUI(media) {
       media.handleTextQuery(
         $(input).val()
       );
-      $(input).val("");
       return false;
     });
-  };
+  }
 
-  this.populateLeft = function (list) {
+  this.populateLeft = function (list, apath) {
     var it, map = {
       "server" : srvEntry,
       "directory" : dirEntry,
       "file"   : fileEntry
     };
-    $(left).empty().append(parentDir());
+    $(left).empty().append(parentDir(apath));
     for (it = 0; it < list.length; ++it) {
       $(left).append(
         map[list[it].type](it, list[it])
@@ -42,50 +41,30 @@ function MediaUI(media) {
   }
 
   function aPath(one) {
-    var text = one.url;
-    if (one.type !== 'server') {
-      text = text.split("/").slice(-1)[0];
-    }
+    var url = media.arrayToPath(one.apath);
     if (one.type === 'file') {
       return $("<a>")
-        .attr('title', one.url)
-        .text(text);
+        .attr('title', url)
+        .text(one.name);
     }
     return $("<a>")
       .attr('href', '#')
-      .attr('title', one.url)
-      .text(text)
+      .attr('title', media.arrayToPath(one.apath))
+      .text(one.name)
       .click(function (e) {
         e.preventDefault();
-        handleLsClick(one.url);
+        handleLsClick(url);
       });
   }
 
-  function parentDir() {
-    var url = $(input).val();
-    if (url.substr(-2) === "//") {
-      url = "ls";
-    } else {
-      url = url.split("/").slice(0, -1).join("/");
-      if (url.substr(-2) === "//") {
-        url += "/";
-      }
+  function parentDir(apath) {
+    if (apath.length) {
+      apath = apath.slice(0, -1);
+      return $("<div>")
+        .addClass("entry")
+        .append($("<div>").addClass("num").text("-"))
+        .append(aPath({apath: apath, name : ".."}));
     }
-    url = url.split(" ").slice(1).join(" ");
-    // i will just kill my self with shotgun now.
-    return $("<div>")
-      .addClass("entry")
-      .append($("<div>").addClass("num").text("-"))
-      .append(
-        $("<a>")
-          .attr('href', '#')
-          .attr('title', 'parent dir')
-          .text('..')
-          .click(function (e) {
-            e.preventDefault();
-            handleLsClick(url);
-          })
-      );
   }
 
   function fileEntry(num, one) {
@@ -109,6 +88,8 @@ function MediaUI(media) {
       .append($("<div>").addClass("num").text(num))
       .append(aPath(one))
       .append($("<div>").addClass("desc").text(one.desc));
-  };
+  }
+
+  initialize();
 
 }

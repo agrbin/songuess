@@ -1,66 +1,75 @@
-function Media(sock, user, err) {
+function Media(wsock, user, onFatal) {
 
   var that = this,
     ui = new MediaUI(this),
     nextCallback = null;
 
-  sock.onmessage = function (message) {
-    var data = JSON.parse(message.data);
-    if (!(data.type in messageCallbacks)) {
-      return console.log(
-        "type '" + data.type + "' not registered.", data.data
-      );
-    }
-    if (!ui) {
-      return queue.push(data);
-    }
-    messageCallbacks[data.type](data.data);
-    var data = JSON.parse(message.data);
-    that.onMediaMessage(data);
-  };
-
-  function onMessage(type, callback) {
-    messageCallbacks[type] = callback;
+  function initialize() {
+    that.handleTextQuery("ls");
   }
+
+  wsock.onMessage("media", function (data) {
+    if (nextCallback) {
+      nextCallback(data);
+    }
+  });
+
+  this.query = function (query, answerCallback) {
+    wsock.sendType("media", query);
+    nextCallback = answerCallback;
+  };
 
   this.newRoom = function (name, onFinish) {
     ui.takeOver();
     this.handleTextQuery("ls media1:///");
   };
 
-  this.onMediaMessage = function (data) {
-    if (nextCallback) {
-      nextCallback(data);
-    }
-  };
-
-  this.query = function (query, answerCallback) {
-    sendMedia(query);
-    nextCallback = answerCallback;
-  };
-
-  function handleQuery(first) {
-    var args = Array.prototype.slice.call(arguments, 0);
-    args = args.filter(function (x) {
-      return !!x.length;
-    });
-    if (first === "ls") {
-      that.query(args, onLsReturn);
-    }
-  };
-
   this.handleTextQuery = function (text) {
-    console.log(text);
     ui.setInput(text);
     var args = text.split(" ");
     if (args[0] === "ls") {
-      handleQuery(args[0], args.slice(1).join(" "));
-    } else {
-      handleQuery(args);
+      var apath = this.pathToArray(args[1] || '');
+      return this.query(
+        {type : "ls", apath : apath},
+        function (data) {
+          ui.populateLeft(data, apath);
+        }
+      );
+    }
+    onFatal("unknown query " + text);
+  };
+
+  this.pathToArray = function (text) {
+    var tmp1;
+    if (!text.length) {
+      return [];
+    }
+    try {
+      tmp1 = text.split("://");
+      return [tmp1[0]].concat(tmp1[1].split("/").filter(
+        function (x) {return !!x.length;})
+      );
+    } catch (err) {
+      onFatal(err);
     }
   };
 
-  function onLsReturn(data) {
-    ui.populateLeft(data);
-  }
+  this.arrayToPath = function (apath) {
+    if (apath.length) {
+      return apath[0] + ":///" + apath.slice(1).join("/");
+    } else {
+      return "";
+    }
+  };
+
+  wsock.onClose(function (e) {
+    if (e.reason) {
+      onFatal("server closed connection: " + e.reason);
+    } else {
+      onFatal("server closed connection with no reason.");
+    }
+  });
+
+  initialize();
+
 }

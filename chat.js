@@ -5,6 +5,14 @@ function Chat(wsock, user, onFatal) {
     ui = new ChatUI(this, user),
     clients = {}, ids = [];
 
+  function initialize() {
+    var init_room = location.hash;
+    if (init_room.length <= 1) {
+      init_room = "#root";
+    }
+    wsock.sendType("room", init_room);
+  }
+
   // checks whether the sending message is maybe
   // a command to chat itself
   function checkCommand(text) {
@@ -72,10 +80,17 @@ function Chat(wsock, user, onFatal) {
     ui.addNotice("hello to you too.");
   });
 
+  onCommand("join", function (room) {
+    wsock.sendType("new_room", room);
+  });
+
   wsock.onMessage("say", ui.addMessage);
 
   wsock.onMessage("room_state", function (data) {
-    clients = data;
+    location.hash = data.desc.name;
+    ui.addNotice("you entered " + data.desc.name
+                 + " (" + data.desc.desc + ").");
+    clients = data.users;
     updateClientIds();
     ui.updateList();
   });
@@ -101,5 +116,7 @@ function Chat(wsock, user, onFatal) {
       onFatal("server closed connection with no reason.");
     }
   });
+
+  initialize();
 
 }

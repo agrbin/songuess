@@ -20,7 +20,7 @@ function SockWrapper(sock, onFatal) {
 
   sock.onclose = function (e) {
     var it;
-    for (it = 0; it < closeCallbacks; ++it) {
+    for (it = 0; it < closeCallbacks.length; ++it) {
       closeCallbacks[it](e);
     }
   };
@@ -31,6 +31,9 @@ function SockWrapper(sock, onFatal) {
       data = JSON.parse(message.data);
     } catch (err) {
       return onFatal("received message is not json");
+    }
+    if (data.hasOwnProperty("error")) {
+      return onFatal(data.error);
     }
     if (!messageCallbacks.hasOwnProperty(data.type)) {
       return console.log(
