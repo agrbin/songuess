@@ -9,16 +9,16 @@ exports.ChatRoom = function (desc, chat) {
     clients = {};
 
   function packRoomState() {
-    var id, sol = {};
+    var id, sol = { desc : desc, users : {} };
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
-        sol[id] = clients[id].publicInfo();
+        sol.users[id] = clients[id].publicInfo();
       }
     }
     return sol;
   }
 
-  this.name = desc.name;
+  this.desc = desc;
 
   this.broadcast = function (type, msg) {
     var id;
@@ -36,6 +36,16 @@ exports.ChatRoom = function (desc, chat) {
     clients[client.id()] = client;
     client.send("room_state", packRoomState());
     client.onMessage("say", onSay);
+
+    // handle moving to another room
+    client.onMessage("new_room", function (data, client) {
+      if (!chat.roomNameExists(data)) {
+        return client.error("no such room", 1);
+      }
+      chat.move(
+        client, chat.whereIs(client), chat.getRoomByName(data)
+      );
+    });
   };
 
   // pop a client from a list of clients and

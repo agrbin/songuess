@@ -18,6 +18,7 @@ function onVerified(sock, user) {
   var syncer = new Syncer(sock, function () {
     var wsock = new SockWrapper(sock);
     chat.connect(wsock, user);
+    media.serve(wsock);
   });
 }
 

@@ -3,21 +3,21 @@ var config = require("./config.js").media,
 
 exports.MediaGateway = function () {
 
-  var that = this,
-    commandCallbacks = {};
+  var that = this;
 
-  // function answerCallback(answer, err)
-  this.query = function (query, answerCallback) {
-    var cmd, params;
-    if (!(query instanceof Array)) {
-      return answerCallback(null, "query must be instance of array");
-    }
-    params = query;
-    cmd = params.shift();
-    if (cmd === "ls") {
-      return processLs(params, answerCallback);
-    }
-    return answerCallback(null, "query unavailable");
+  this.serve = function (wsock) {
+    wsock.onMessageType("media", function (query) {
+      if (query.type === "ls") {
+        return processLs(query, function (result, err) {
+          if (err) {
+            wsock.sendError(err);
+          } else {
+            wsock.sendType("media", result);
+          }
+        });
+      }
+      wsock.sendError("unknown media query type: " + query.type);
+    });
   };
 
   this.api = function (server, method, param, done) {
@@ -45,47 +45,39 @@ exports.MediaGateway = function () {
     for (name in config) {
       if (config.hasOwnProperty(name)) {
         sol.push({
-          path : name + ":///",
-          url : name + ":///",
+          name : name,
+          apath : [name],
           type : "server",
           desc : config[name].desc
         });
       }
     }
     return sol;
-  };
-
-  // server and path.
-  function parsePath(path, done) {
-    var it = path.indexOf("://");
-    if (!it) {
-      done(null, "ls invalid path");
-      return;
-    }
-    return [path.substr(0, it), path.substr(it + 3)];
   }
 
-  function processLs(params, done) {
-    var path;
-    if (params.length === 0) {
+  function processLs(query, done) {
+    var server, path;
+
+    if (!query.hasOwnProperty('apath')) {
+      return done(null, "ls query has no apath field");
+    }
+
+    if (query.apath.length === 0) {
       return done(getMediaProviders()); 
     }
-    if (params.length === 1) {
-      path = parsePath(params[0], done); 
-      if (path) {
-        that.api(path[0], "/ls/?path=", path[1], function (entries, err) {
-          if (err) {
-            return done(null, err);
-          }
-          for (var i = 0; i < entries.length; ++i) {
-            entries[i].url = path[0] + "://" + entries[i].path;
-          }
-          done(entries);
-        });
+
+    server = query.apath[0];
+    path = "/" + query.apath.slice(1).join("/");
+
+    that.api(server, "/ls/?path=", path, function (entries, err) {
+      if (err) {
+        return done(null, err);
       }
-      return;
-    }
-    done(null, "unavailable!");
+      for (var i = 0; i < entries.length; ++i) {
+        entries[i].apath = query.apath.concat(entries[i].name);
+      }
+      done(entries);
+    });
   }
 
 };

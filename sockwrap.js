@@ -4,13 +4,15 @@ exports.SockWrapper = function (sock) {
 
   var that = this,
     messageCallbacks = {},
-    closeCallbacks = [];
+    closeCallbacks = [],
+    sleepyTimeout, sleepyCallback;
 
   this.onMessageType = function (type, callback) {
-    if (messageCallbacks.hasOwnProperty(type)) {
-      throw "type '"+type+"' already registered";
-    }
     messageCallbacks[type] = callback;
+  };
+
+  this.onSleepy = function (callback) {
+    sleepyCallback = callback;
   };
 
   this.onClose = function (callback) {
@@ -22,6 +24,12 @@ exports.SockWrapper = function (sock) {
     closeCallbacks = [];
   };
 
+  this.sendError = function (error, code, done) {
+    sock.send(JSON.stringify(
+      { error: error, code : code }), done
+    );
+  };
+
   this.sendType = function (type, data, done) {
     sock.send(
       JSON.stringify({type: type, data: data}),
@@ -30,12 +38,12 @@ exports.SockWrapper = function (sock) {
   };
 
   this.close = function (reason) {
-    console.log("closing ws: " + reason);
-    sock.close(1000, reason);
+    sock.close(1000, reason.substr(0, 100));
   };
 
   sock.onmessage = function (message) {
     var type, data;
+    tickSleepy();
     try {
       data = JSON.parse(message.data);
     } catch (err) {
@@ -55,5 +63,16 @@ exports.SockWrapper = function (sock) {
     for (it = 0; it < closeCallbacks.length; ++it)
       closeCallbacks[it]();
   };
+
+  function tickSleepy() {
+    clearTimeout(sleepyTimeout);
+    sleepyTimeout = setTimeout(function() {
+      if (sleepyCallback) {
+        sleepyCallback();
+      }
+    }, 15 * 60 * 1000);
+  };
+
+  tickSleepy();
 
 };

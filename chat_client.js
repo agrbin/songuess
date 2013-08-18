@@ -7,7 +7,7 @@ exports.ChatClient = function (wsock, user, chat) {
 
   var that = this;
 
-  // we will initiate close.
+  // when we initiate close.
   function kill(reason) {
     // remove all listeners from this socket
     // (client: don't speak)
@@ -26,6 +26,10 @@ exports.ChatClient = function (wsock, user, chat) {
   // others about that.
   wsock.onClose(function () {
     chat.kill(that, "connection closed by client.");
+  });
+
+  wsock.onSleepy(function () {
+    kill("15 minutes of inactivity.");
   });
 
   this.id = function () {
@@ -50,6 +54,10 @@ exports.ChatClient = function (wsock, user, chat) {
     wsock.onMessageType(type, function (data) {
       callback(data, that);
     });
+  };
+
+  this.error = function (error, code, done) {
+    wsock.sendError(error, code, done);
   };
 
   this.send = function (type, data) {

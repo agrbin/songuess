@@ -9,8 +9,9 @@ var clock = require("./clock.js"),
 
 exports.Chat = function () {
 
-  var rootRoom = new ChatRoom({name: "root room"}, this),
-    rooms = {"" : rootRoom},
+  var that = this,
+    rootRoom = new ChatRoom({name: "#root", desc: "root room"}, this),
+    rooms = {"#root" : rootRoom},
     where_is = {};
 
   function log(msg) {
@@ -23,17 +24,21 @@ exports.Chat = function () {
     }
   }
 
-  function roomNameExists(name) {
+  this.getRoomByName = function (name) {
+    return rooms[name];
+  };
+
+  this.roomNameExists = function (name) {
     if (rooms.hasOwnProperty(name)) {
       return true;
     }
     return false;
-  }
+  };
 
   // add room to a list of rooms.
   this.createRoom = function (name, room) {
     assertType(room, ChatRoom);
-    if (roomNameExists(name)) {
+    if (that.roomNameExists(name)) {
       throw "room already exists";
     }
     rooms[name] = room;
@@ -45,7 +50,7 @@ exports.Chat = function () {
     if (!room.isEmpty()) {
       throw "removing non empty room";
     }
-    if (roomNameExists(room.name)) {
+    if (that.roomNameExists(room.name)) {
       throw "room doesn't exists";
     }
     delete rooms[room.name];
@@ -59,7 +64,10 @@ exports.Chat = function () {
     if (this.whereIs(client) !== srcRoom) {
       throw "not in that room.";
     }
-    srcRoom.leave(client);
+    if (srcRoom === destRoom) {
+      return;
+    }
+    srcRoom.leave(client, "going to " + destRoom.desc.name);
     where_is[client.id()] = destRoom;
     destRoom.enter(client);
   };
@@ -71,11 +79,24 @@ exports.Chat = function () {
     delete where_is[client.id()];
   };
 
-  this.connect = function (sock, user) {
-    log(user.email + " connected.");
-    var client = new ChatClient(sock, user, this);
-    where_is[client.id()] = rootRoom;
-    rootRoom.enter(client);
+  this.connect = function (wsock, user) {
+    var bio = false;
+    wsock.onMessageType("room", function (data) {
+      var client, room;
+      if (bio) {
+        return wsock.sendError("you call room this only once.");
+      } else {
+        bio = true;
+      }
+      if (!that.roomNameExists(data)) {
+        return wsock.sendError("no such room", 1);
+      }
+      // entering the room
+      log(user.email + " initial room " + data);
+      client = new ChatClient(wsock, user, that);
+      where_is[client.id()] = rooms[data];
+      rooms[data].enter(client);
+    });
   };
 
   // @param client ChatClient
