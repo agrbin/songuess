@@ -93,9 +93,7 @@ exports.Chat = function () {
     wsock.onMessageType("room", function (data) {
       var client, room;
       if (bio) {
-        return wsock.sendError("you call room this only once.");
-      } else {
-        bio = true;
+        return wsock.sendError("you call 'room' successfuly only once.");
       }
       if (!that.roomNameExists(data)) {
         return wsock.sendError("no such room", 1);
@@ -105,6 +103,7 @@ exports.Chat = function () {
       client = new ChatClient(wsock, user, that);
       where_is[client.id()] = rooms[data];
       rooms[data].enter(client);
+      bio = true;
     });
   };
 

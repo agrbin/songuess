@@ -25,16 +25,22 @@ exports.SockWrapper = function (sock) {
   };
 
   this.sendError = function (error, code, done) {
-    sock.send(JSON.stringify(
-      { error: error, code : code }), done
-    );
+    // problem can arrise if client disconnects but some future event
+    // has this socket in scope and tries to call send.
+    if (sock.readyState === ws.OPEN) {
+      sock.send(JSON.stringify(
+        { error: error, code : code }), done
+      );
+    }
   };
 
   this.sendType = function (type, data, done) {
-    sock.send(
-      JSON.stringify({type: type, data: data}),
-      done
-    );
+    if (sock.readyState === ws.OPEN) {
+      sock.send(
+        JSON.stringify({type: type, data: data}),
+        done
+      );
+    }
   };
 
   this.close = function (reason) {
@@ -62,6 +68,7 @@ exports.SockWrapper = function (sock) {
     var it;
     for (it = 0; it < closeCallbacks.length; ++it)
       closeCallbacks[it]();
+    clearTimeout(sleepyTimeout);
   };
 
   function tickSleepy() {

@@ -36,7 +36,7 @@ exports.MediaGateway = function (chat) {
     }
     url = config[server].endpoint + method;
     url += encodeURIComponent(param);
-    request(url, function (e, response, body) {
+    request({url: url, timeout:500}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {
           done(JSON.parse(body));
