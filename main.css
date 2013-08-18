@@ -1,37 +1,33 @@
-container {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 13px;
-  line-height: 18px;
-  color: #333333;
+html, body {
+  margin: 0px;
+  padding: 0px;
+  zoom: 1.2;
+  -moz-transform: scale(1.2);
+  -moz-transform-origin: 0 0;
 }
 
 h1 {
+  text-align: center;
   color: gray;
-};
-
-.layout {
-  width: 100%;
-}
-
-.layout .left {
-  float: left;
-  width: 15%;
-  height: 300px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border-right: 1px solid #ccc;
 }
 
 .layout .container {
-  width: 100%;
-  border: 1px solid #ccc;
+  border: 1px solid gray;
   font-family: monospace;
 }
 
-.layout .right {
-  height: 300;
+.layout .col {
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.layout .right {
+  float: right;
+  width: 20%;
+}
+
+.layout .left {
+  border-right: 1px solid gray;
 }
 
 .layout .bold {
@@ -44,23 +40,54 @@ h1 {
 
 /* chat */
 
-.layout.chat .left {
-  margin-right: 3px;
+.layout.chat .col {
+  height: -webkit-calc(100% - 23px);
+  height: calc(100% - 23px);
 }
 
-.layout.chat .right {
+.layout.chat {
+  position: fixed !important;
+  position: relative;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  bottom: 2px;
+}
+
+.layout.chat input {
+  margin-top: -1px;
+  padding: 3px 2px;
+  border: 1px gray solid;
+  font-family: monospace;
+  margin-bottom: 0px;
+  line-height: 14px;
+}
+
+.layout.chat form {
+  margin: 0px;
+}
+
+.layout.chat input:focus {
+  outline: 0px;
+}
+
+.layout.chat .left .entry:first-child {
   margin-top: 3px;
+}
+
+.layout.chat .left .entry {
+  margin-left: 3px;
 }
 
 .chat .time {
   color: gray;
 }
 
-.chat .left .full-client {
+.chat .right .full-client {
   display: block;
   font-weight: bold;
   margin-top: 3px;
-  margin-left: 5px;
+  margin-left: 3px;
 }
 
 .chat .sys {
@@ -75,13 +102,17 @@ h1 {
   margin-right: auto;
 }
 
-.layout.media .left {
+.layout.media .col {
+  height: 300px;
+}
+
+.layout.media .right {
   width: 50%;
 }
 
 .media .entry {
   height: 20px;
-  border-bottom: 1px #ccc dashed;
+  border-bottom: 1px #eee dashed;
   line-height: 20px;
   overflow: hidden;
 }

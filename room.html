@@ -1,8 +1,7 @@
 <html>
   <head>
-    <script src="config.js" type="text/javascript"></script>
-    <script src="storage.js" type="text/javascript"></script>
     <script src="sockwrap.js" type="text/javascript"></script>
+    <script src="filestorage.js" type="text/javascript"></script>
     <script src="dummystorage.js" type="text/javascript"></script>
     <script src="auth.js" type="text/javascript"></script>
     <script src="clock.js" type="text/javascript"></script>
@@ -12,6 +11,7 @@
     <script src="media_ui.js" type="text/javascript"></script>
     <script src="jquery.js" type="text/javascript"></script>
     <script src="main.js" type="text/javascript"></script>
+    <script src="config.js" type="text/javascript"></script>
     <script>
       window.initiateEverything(function (sock, user, onErr) {
         new Media(new SockWrapper(sock, onErr), user, onErr);
@@ -35,8 +35,8 @@
           Playlist:
         </label>
         <div class="container">
-          <div class="left"></div>
-          <div class="right"></div>
+          <div class="right col"></div>
+          <div class="left col"></div>
         </div>
         <label>
           <input id="submit" value="Create and join room!" type="submit"/>

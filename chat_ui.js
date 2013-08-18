@@ -7,8 +7,8 @@ function ChatUI(chat, user) {
   function initialize() {
     var it;
     debug("DOM sbodyman");
-    body = $(".chat .right")[0];
-    list = $(".chat .left")[0];
+    body = $(".chat .left")[0];
+    list = $(".chat .right")[0];
     input = $(".chat input")[0];
     $(".chat form").submit(function () {
       if ($(input).val().length > 0) {
@@ -17,16 +17,20 @@ function ChatUI(chat, user) {
       }
       return false;
     });
-    $("h1").text("songuess").css({
-      color: pretty.colorStyle(user.id)
-    });
+    $("h1").hide();
+    $(".chat div,.chat input").css('border-color',
+                 pretty.colorStyle(user.id));
     $("pre.log").hide();
     $(".layout.chat").show();
+    $(".chat .col").click(function () {
+      $(input).focus();
+    });
     $(input).focus();
   }
 
   function entry (type, what) {
     $("<div>")
+      .addClass("entry")
       .addClass(type)
       .html(what)
       .appendTo(body);
