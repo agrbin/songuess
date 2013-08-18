@@ -1,4 +1,4 @@
-function Chat(wsock, user, onFatal) {
+function Chat(wsock, user, media, onFatal) {
 
   var that = this,
     commandCallbacks = {},
@@ -10,7 +10,17 @@ function Chat(wsock, user, onFatal) {
     if (init_room.length <= 1) {
       init_room = "#root";
     }
+    if (!roomNameOk(init_room)) {
+      return onFatal("initial room name '" + init_room
+                     + "' is not valid.");
+    }
     wsock.sendType("room", init_room);
+    // if init room doesn't exists.
+    wsock.onError(1, function () {
+      media.newRoomDialog(init_room, function (room) {
+        wsock.sendType("room", room);
+      });
+    });
   }
 
   // checks whether the sending message is maybe
@@ -85,6 +95,10 @@ function Chat(wsock, user, onFatal) {
       && name[0] === "#";
   }
 
+  this.triggerCommand = function (text) {
+    checkCommand(text);
+  }
+
   onCommand("help", function () {
     ui.addNotice("available commands are /clear and /join");
   });
@@ -102,7 +116,9 @@ function Chat(wsock, user, onFatal) {
       return ui.addNotice("room name not valid.");
     }
     wsock.onError(1, function (err) {
-      return document.location = "room.html" + room;
+      media.newRoomDialog(room, function (room) {
+        wsock.sendType("new_room", room);
+      });
     });
     wsock.sendType("new_room", room);
   });
@@ -118,7 +134,8 @@ function Chat(wsock, user, onFatal) {
     playlist = data.desc.playlist;
     clients = data.users;
     if (playlist.length) {
-      ui.addNotice("playlist has " + playlist.length + " songs.");
+      ui.addNotice("playlist has " + playlist.length + " song"
+                   + (playlist.length > 1 ? "s." : "."));
     }
     updatePlaylist();
     updateClientIds();

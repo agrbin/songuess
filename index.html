@@ -8,6 +8,8 @@
     <script src="clock.js" type="text/javascript"></script>
     <script src="syncer.js" type="text/javascript"></script>
     <script src="pretty.js" type="text/javascript"></script>
+    <script src="media.js" type="text/javascript"></script>
+    <script src="media_ui.js" type="text/javascript"></script>
     <script src="chat.js" type="text/javascript"></script>
     <script src="chat_ui.js" type="text/javascript"></script>
     <script src="jquery.js" type="text/javascript"></script>
@@ -16,7 +18,8 @@
     <script>
       window.initiateEverything(function (sock, user, onErr) {
         $(document).ready(function() {
-          new Chat(new SockWrapper(sock, onErr), user, onErr);
+          var ws = new SockWrapper(sock, onErr);
+          new Chat(ws, user, new Media(ws), onErr);
         });
       }, true);
     </script>
@@ -30,6 +33,29 @@
       </div>
       <form>
         <input type="text"/>
+      </form>
+    </div>
+    <div class="layout media" style="display: none;">
+      <form>
+        <label>
+          Room name:
+          <input id="name" type="text"/>
+        </label>
+        <label>
+          Room description:
+          <input id="desc" type="text"/>
+        </label>
+        <label>
+          Playlist:
+        </label>
+        <div class="container">
+          <div class="right col"></div>
+          <div class="left col"></div>
+        </div>
+        <label>
+          <input id="submit" value="Create and join room!" type="submit"/>
+        </label>
+        <input id="cmd" type="text"/>
       </form>
     </div>
   </body>

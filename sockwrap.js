@@ -42,7 +42,7 @@ function SockWrapper(sock, onFatal) {
       if (code === undefined || errorCallbacks[code] === undefined) {
         return onFatal(data.error);
       }
-      errorCallbacks[code](data.error);
+      return errorCallbacks[code](data.error);
     }
     if (!messageCallbacks.hasOwnProperty(data.type)) {
       return console.log(

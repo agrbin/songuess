@@ -26,6 +26,9 @@ function ChatUI(chat, user) {
       $(input).focus();
     });
     $(input).focus();
+    $(window).on('hashchange', function() {
+      chat.triggerCommand("/join " + location.hash);
+    });
   }
 
   function entry (type, what) {

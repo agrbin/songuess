@@ -1,17 +1,13 @@
 // media_ui
 function MediaUI(media) {
 
-  var input, left, right;
+  var that = this, input, left, right;
 
   function initialize() {
-    $(".layout.chat").hide();
-    $(".layout.media").show();
     left = $(".media .left")[0];
     right = $(".media .right")[0];
     input = $(".media #cmd");
     $(input).hide();
-    $("#name").val(location.hash);
-    $("#desc").focus();
     $(".media form").submit(function () {
       media.handleNewRoom({
         name : $("#name").val(),
@@ -19,6 +15,29 @@ function MediaUI(media) {
       });
       return false;
     });
+    $(document).keydown(function (e) {
+      if (e.keyCode == 27) {
+        that.hideDialog();
+      }
+    });
+    $(window).on('hashchange', function() {
+      that.hideDialog();
+    });
+  }
+
+  this.showDialog = function (name) {
+    $(".layout.chat").hide();
+    $(".layout.media").show();
+    $("#name").val(name);
+    $("#desc").val("").focus();
+  }
+
+  this.hideDialog = function () {
+    $(".layout.chat").show();
+    $(".layout.media").hide();
+    // this is not in our district, but we will
+    // do it :)
+    $(".layout.chat input").focus();
   }
 
   this.populateLeft = function (list, apath) {

@@ -1,9 +1,10 @@
-function Media(wsock, user, onFatal) {
+function Media(wsock, onFatal) {
 
   var that = this,
     ui = new MediaUI(this),
     nextCallback = null,
-    playlist = {};
+    playlist,
+    onFinish;
 
   function initialize() {
     that.handleTextQuery("ls");
@@ -25,18 +26,25 @@ function Media(wsock, user, onFatal) {
     return sol;
   }
 
+  this.newRoomDialog = function (name, pOnFinish) {
+    onFinish = pOnFinish;
+    playlist = {};
+    ui.updatePlaylist(playlist);
+    ui.showDialog(name);
+  };
+
   this.handleNewRoom = function (room) {
     wsock.sendType("media", {
       type : "new_room",
       room : room,
       playlist : packPlaylist()
     });
-    location.hash = room.name;
     nextCallback = function(data) {
       if (data === true) {
-        document.location = document.URL.replace(/room.html/, '');
+        ui.hideDialog();
+        onFinish(room.name);
       } else {
-        onFatal("unknown error while creating room");
+        onFatal("unknown error while creating room.");
       }
     };
   };
@@ -102,14 +110,6 @@ function Media(wsock, user, onFatal) {
       return "";
     }
   };
-
-  wsock.onClose(function (e) {
-    if (e.reason) {
-      onFatal("server closed connection: " + e.reason);
-    } else {
-      onFatal("server closed connection with no reason.");
-    }
-  });
 
   initialize();
 
