@@ -34,19 +34,18 @@ function Media(wsock, onFatal) {
   };
 
   this.handleNewRoom = function (room) {
-    wsock.sendType("media", {
-      type : "new_room",
+    wsock.sendType("create_room", {
       room : room,
       playlist : packPlaylist()
     });
-    nextCallback = function(data) {
+    wsock.onMessage("create_room", function (data) {
       if (data === true) {
         ui.hideDialog();
         onFinish(room.name);
       } else {
         onFatal("unknown error while creating room.");
       }
-    };
+    });
   };
 
   this.query = function (query, answerCallback) {

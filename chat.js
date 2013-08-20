@@ -14,11 +14,11 @@ function Chat(wsock, user, media, onFatal) {
       return onFatal("initial room name '" + init_room
                      + "' is not valid.");
     }
-    wsock.sendType("room", init_room);
+    wsock.sendType("initial_room", init_room);
     // if init room doesn't exists.
     wsock.onError(1, function () {
       media.newRoomDialog(init_room, function (room) {
-        wsock.sendType("room", room);
+        wsock.sendType("initial_room", room);
       });
     });
   }
