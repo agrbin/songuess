@@ -75,6 +75,7 @@ h1 {
 
 .layout.chat .left .entry:first-child {
   margin-top: 3px;
+  margin-bottom: 1px;
 }
 
 .layout.chat .left .entry {

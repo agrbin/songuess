@@ -108,6 +108,10 @@ function Chat(wsock, user, media, onFatal) {
     ui.addNotice("hello to you too.");
   });
 
+  onCommand("next", function () {
+    wsock.sendType("next", null);
+  });
+
   onCommand("clear", function () {
     ui.clear();
   });
