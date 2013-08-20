@@ -23,6 +23,8 @@ exports.Chat = function (media) {
     }
   }
 
+  this.media = media;
+
   this.getRoomByName = function (name) {
     return rooms[name];
   };

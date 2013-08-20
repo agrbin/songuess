@@ -2,7 +2,7 @@
 "use strict";
 
 // u options na primjer idu uvjeti kad prihvacam tocan odgovor
-module.exports = function (playlist, options) {
+module.exports = function (playlist) {
   var
     currentIndex = 0,
     randomOrder,
@@ -31,17 +31,11 @@ module.exports = function (playlist, options) {
     return playlist[randomOrder[currentIndex]];
   };
 
-  this.currentId = function () {
-    return this.currentItem().id;
-  };
-
-  this.nextId = function () {
+  this.nextItem = function () {
+    var item = this.currentItem();
+    if (currentIndex === playlistLength) return undefined;
     ++currentIndex;
-    return this.currentId();
-  };
-
-  this.acceptableAnswer = function (answer) {
-    return answer.toLowerCase() === this.currentItem().title.toLowerCase();
+    return item;
   };
 };
 

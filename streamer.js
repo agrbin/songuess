@@ -10,7 +10,7 @@ var
  *  sendHandler must dispatch message to all clients
  *  it will loop over fragments defined in config.
  */
-exports.Streamer = function (media) {
+exports.Streamer = function (media, chunkHandler, songEndedHandler) {
 
   // all clocks here are in milliseconds
   var
@@ -22,22 +22,25 @@ exports.Streamer = function (media) {
     currentChunkIndex,
     server,
     chunkURLs,
-    timer = undefined;
+    timer;
 
   // scheduling technique from
   // http://chimera.labs.oreilly.com/books/1234000001552/ch02.html
   // 
   function checkSchedule() {
     if (chunkToSendPlayTime < clock.clock() + sendAhead) {
-      sendHandler({
-        url   : config.chunkHostUrl + "tg." + chunkToSend + ".mp3",
+      chunkHandler({
+        url   : server + '/chunk/' + chunkURLs[currentChunkIndex],
         start : chunkToSendPlayTime
       });
-      chunkToSend = (chunkToSend + 1) % numberOfChunks;
-      chunkToSendPlayTime += chunkDuration - overlapTime;
-      checkSchedule();
+      if (++currentChunkIndex === chunkURLs.length) {
+        songEndedHandler();
+      } else {
+        chunkToSendPlayTime += chunkDuration - overlapTime;
+        checkSchedule();
+      }
     } else {
-      setTimeout(checkSchedule, checkInterval);
+      timer = setTimeout(checkSchedule, checkInterval);
     }
   }
 
@@ -48,10 +51,10 @@ exports.Streamer = function (media) {
         done(null, err);
       } else {
         server = playlistItem.server;
-        chunksURLs = chunks;
+        chunkURLs = chunks;
         currentChunkIndex = 0;
         chunkToSendPlayTime = clock.clock() + sendAhead;
-        checkSchedule(); 
+        checkSchedule();
       }
     });
   }

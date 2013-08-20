@@ -1,12 +1,26 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var clock = require("./clock.js");
+var
+  clock = require('./clock.js'),
+  Streamer = require('./streamer.js').Streamer,
+  AnswerChecker = require('./answer_checker.js'),
+  PlaylistIterator = require('./shuffle_playlist_iterator.js');
 
 exports.ChatRoom = function (desc, chat) {
   var
     that = this,
-    clients = {};
+    clients = {},
+    playlistIterator = new PlaylistIterator(desc.playlist),
+    answerChecker = new AnswerChecker({}), // no options for now
+    streamer = new Streamer(chat.media,
+      function chunkHandler(chunkInfo) {
+        // send chunk to all
+      },
+      function songEndedHandler() {
+        // send song ended to all
+        // go to next song
+      });
 
   function packRoomState() {
     var id, sol = { desc : desc, users : {} };
@@ -76,6 +90,8 @@ exports.ChatRoom = function (desc, chat) {
       throw "to specified, but not in this room";
     }
     that.broadcast("say", data);
+
+    // check answer
   }
 
 };

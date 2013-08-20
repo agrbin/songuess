@@ -198,7 +198,4 @@ exports.MediaGateway = function () {
     api(server, '/get_chunks/?id=', id, done);
   }
 
-  this.chunk = function (server, url, done) {
-    api(server, '/chunk/' + url, null, done);
-  }
 };
