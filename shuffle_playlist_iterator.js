@@ -32,10 +32,9 @@ module.exports = function (playlist) {
   };
 
   this.nextItem = function () {
-    var item = this.currentItem();
     if (currentIndex === playlistLength) return undefined;
     ++currentIndex;
-    return item;
+    return this.currentItem();
   };
 };
 

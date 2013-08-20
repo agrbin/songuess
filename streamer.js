@@ -50,14 +50,14 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
     if (!playlistItem) {
       return;
     }
-    media.getChunks(playlistItem.server, playlistItem.id, function (chunks, err) {
+    media.getChunks(playlistItem.server, playlistItem.id,function (cs, err) {
       if (err) {
         done(null, err);
       } else {
         server = playlistItem.server;
-        chunkURLs = chunks;
+        chunkURLs = cs;
         currentChunkIndex = 0;
-        chunkToSendPlayTime = clock.clock() + sendAhead;
+        chunkToSendPlayTime = clock.clock() + sendAhead + chunkDuration;
         checkSchedule();
       }
     });
