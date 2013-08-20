@@ -3,7 +3,8 @@ function Chat(wsock, user, media, onFatal) {
   var that = this,
     commandCallbacks = {},
     ui = new ChatUI(this, user),
-    clients = {}, ids = [], playlist;
+    clients = {}, ids = [], playlist,
+    player = new Player(myClock.clock, null);
 
   function initialize() {
     var init_room = location.hash;
@@ -124,6 +125,10 @@ function Chat(wsock, user, media, onFatal) {
   });
 
   wsock.onMessage("say", ui.addMessage);
+
+  wsock.onMessage("chunk", function (chunk) {
+    player.addChunk(chunk);
+  });
 
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
