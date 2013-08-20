@@ -4,6 +4,6 @@
 module.exports = function (options) {
   this.checkAnswer = function (playlistItem, answer) {
     return answer.toLowerCase() === playlistItem.title.toLowerCase();
-  }
+  };
 };
 

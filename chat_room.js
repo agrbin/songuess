@@ -91,7 +91,7 @@ exports.ChatRoom = function (desc, chat) {
     }
     that.broadcast("say", data);
 
-    if (answerChecker.checkAnswer(playlistIterator.currentItem(), {})) {
+    if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
       info("wd @" + client.id() + "! answer is: " + playlistIterator.currentItem().title);
       streamer.play(playlistIterator.nextItem(), function () {});
     }
