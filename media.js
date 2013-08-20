@@ -11,7 +11,7 @@ exports.MediaGateway = function () {
   this.serve = function (wsock) {
     wsock.onMessageType("media", function (query) {
       if (query.type === "ls") {
-        that.processLs(query, function (result, err) {
+        processLs(query, function (result, err) {
           if (err) {
             wsock.sendError(err);
           } else {
@@ -94,7 +94,7 @@ exports.MediaGateway = function () {
     server = query.apath[0];
     path = "/" + query.apath.slice(1).join("/");
 
-    that.api(server, "/ls/?path=", path, function (entries, err) {
+    api(server, "/ls/?path=", path, function (entries, err) {
       var i;
       if (err) {
         return done(null, err);
@@ -143,7 +143,7 @@ exports.MediaGateway = function () {
 
   amo prvo expandat sve.
   */
-  function expandPlaylist(query, done) {
+  this.expandPlaylist = function (query, done) {
     var expanded = [], callsLeft = 0;
 
     if (!query.room.name.length) {

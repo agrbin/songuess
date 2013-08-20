@@ -13,15 +13,6 @@ exports.Chat = function (media) {
     rooms = {},
     where_is = {};
 
-  (function () {
-    // create root room.
-    that.createRoom({
-      name: "#root",
-      desc: "root room",
-      playlist: []
-    });
-  }());
-
   function log(msg) {
     console.log(clock.time() + ": " + msg);
   }
@@ -128,5 +119,14 @@ exports.Chat = function (media) {
     }
     return where_is[client.id()];
   };
+
+  (function () {
+    // create root room.
+    that.createRoom({
+      name: "#root",
+      desc: "root room",
+      playlist: []
+    });
+  }());
 
 };
