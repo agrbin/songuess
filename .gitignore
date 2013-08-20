@@ -1,4 +1,5 @@
 node_modules
 app.log
+*.swp
 # use config.js.template to create config.js
 config.js
