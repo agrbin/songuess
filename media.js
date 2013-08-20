@@ -1,38 +1,30 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var config = require("./config.js").media,
+var
+  config = require("./config.js").media,
   request = require('request');
 
-exports.MediaGateway = function (chat) {
-
+exports.MediaGateway = function () {
   var that = this;
 
   this.serve = function (wsock) {
     wsock.onMessageType("media", function (query) {
-      var
-        handler = function (result, err) {
+      if (query.type === "ls") {
+        that.processLs(query, function (result, err) {
           if (err) {
             wsock.sendError(err);
           } else {
             wsock.sendType("media", result);
           }
-        },
-        map = {
-          "ls": that.processLs,
-          "new_room": that.processNewRoom
-        },
-        processor = map[query.type];
-
-      if (processor === undefined) {
-        wsock.sendError("unknown media query type: " + query.type);
+        });
       } else {
-        return map[query.type](query, handler);
+        wsock.sendError("unknown media query type: " + query.type);
       }
     });
   };
 
-  this.api = function (server, method, param, done) {
+  function api(server, method, param, done) {
     var url;
     if (config[server] === undefined) {
       return done(null, "no such server");
@@ -50,7 +42,7 @@ exports.MediaGateway = function (chat) {
         return done(null, "media server not available.");
       }
     });
-  };
+  }
 
   this.expandApi = function (server, input, onResult) {
     var url;
@@ -134,7 +126,7 @@ exports.MediaGateway = function (chat) {
     return byServers;
   }
 
-  /*
+  /* room:
    * {
    *  name :
    *  desc :
@@ -143,10 +135,6 @@ exports.MediaGateway = function (chat) {
    *  ]
    * }
    */
-  function registerNewRoom(room, done) {
-    chat.createRoom(room);
-    done(true);
-  }
 
   /*
   type:
@@ -155,7 +143,7 @@ exports.MediaGateway = function (chat) {
 
   amo prvo expandat sve.
   */
-  function processNewRoom(query, done) {
+  function expandPlaylist(query, done) {
     var expanded = [], callsLeft = 0;
 
     if (!query.room.name.length) {
@@ -169,8 +157,7 @@ exports.MediaGateway = function (chat) {
       if (expanded.length === 0) {
         return done(null, "playlist should not be empty");
       }
-      query.room.playlist = expanded;
-      registerNewRoom(query.room, done);
+      done(expanded);
     }
 
     function partialDone(partialExpanded, server, err) {

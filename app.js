@@ -1,7 +1,8 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var ws = require('ws'),
+var
+  ws = require('ws'),
   Streamer = require('./streamer.js').Streamer,
   Syncer = require('./syncer.js').Syncer,
   config = require('./config.js').server,
@@ -12,7 +13,8 @@ var ws = require('ws'),
 
 var httpServer = require('http').createServer();
 var server = new ws.Server({server: httpServer});
-var chat = new Chat(), media = new MediaGateway(chat);
+var media = new MediaGateway();
+var chat = new Chat(media);
 
 function onVerified(sock, user) {
   var syncer = new Syncer(sock, function () {

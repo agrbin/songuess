@@ -4,8 +4,8 @@
 var clock = require("./clock.js");
 
 exports.ChatRoom = function (desc, chat) {
-
-  var that = this,
+  var
+    that = this,
     clients = {};
 
   function packRoomState() {

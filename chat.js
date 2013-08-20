@@ -1,25 +1,26 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var clock = require("./clock.js"),
+var
+  clock = require("./clock.js"),
   config = require("./config.js").chat,
   ChatRoom = require("./chat_room.js").ChatRoom,
   ChatClient = require("./chat_client.js").ChatClient;
 
-exports.Chat = function () {
-
-  var that = this,
+exports.Chat = function (media) {
+  var
+    that = this,
     rooms = {},
     where_is = {};
 
-  function initialize() {
+  (function () {
     // create root room.
     that.createRoom({
       name: "#root",
       desc: "root room",
       playlist: []
     });
-  }
+  }());
 
   function log(msg) {
     console.log(clock.time() + ": " + msg);
@@ -90,10 +91,10 @@ exports.Chat = function () {
 
   this.connect = function (wsock, user) {
     var bio = false;
-    wsock.onMessageType("room", function (data) {
+    wsock.onMessageType("initial_room", function (data) {
       var client, room;
       if (bio) {
-        return wsock.sendError("you call 'room' successfuly only once.");
+        return wsock.sendError("you call 'initial_room' successfuly only once.");
       }
       if (!that.roomNameExists(data)) {
         return wsock.sendError("no such room", 1);
@@ -104,6 +105,17 @@ exports.Chat = function () {
       where_is[client.id()] = rooms[data];
       rooms[data].enter(client);
       bio = true;
+    });
+    wsock.onMessageType("create_room", function (data) {
+      media.expandPlaylist(data, function (playlist, err) {
+        if (err) {
+          wsock.sendError(err);
+        } else {
+          data.room.playlist = playlist;
+          that.createRoom(data.room);
+          wsock.sendType("create_room", true);
+        }
+      });
     });
   };
 
@@ -116,7 +128,5 @@ exports.Chat = function () {
     }
     return where_is[client.id()];
   };
-
-  initialize();
 
 };
