@@ -46,6 +46,7 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
 
   // start song without sending multiple chunks at once
   this.play = function (playlistItem, done) {
+    stop();
     if (!playlistItem) {
       return;
     }
