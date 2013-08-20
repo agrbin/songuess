@@ -74,7 +74,7 @@ exports.verifyToken = function (tokenMessage, done) {
       if (data.audience !== clientID) {
         return done(null, "token is not for this app.");
       }
-      if (data.scope !== expectedScope) {
+      if (!checkScope(data.scope)) {
         return done(null, "token scope is not as expected.");
       }
       return fetchProfile(token.access_token, done);
@@ -89,3 +89,17 @@ exports.verifyToken = function (tokenMessage, done) {
   });
 };
 
+function checkScope(scope) {
+  var arr = scope.split(" "), it;
+  arr.sort();
+  expectedScope.sort();
+  if (arr.length !== expectedScope.length) {
+    return false;
+  }
+  for (it = 0; it < arr.length; ++it) {
+    if (arr[it] !== expectedScope[it]) {
+      return false;
+    }
+  }
+  return true;
+}
