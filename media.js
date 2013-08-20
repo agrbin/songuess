@@ -1,3 +1,6 @@
+/*jslint indent: 2, plusplus: true*/
+"use strict";
+
 var config = require("./config.js").media,
   request = require('request');
 
@@ -7,25 +10,25 @@ exports.MediaGateway = function (chat) {
 
   this.serve = function (wsock) {
     wsock.onMessageType("media", function (query) {
-      if (query.type === "ls") {
-        return processLs(query, function (result, err) {
+      var
+        handler = function (result, err) {
           if (err) {
             wsock.sendError(err);
           } else {
             wsock.sendType("media", result);
           }
-        });
+        },
+        map = {
+          "ls": that.processLs,
+          "new_room": that.processNewRoom
+        },
+        processor = map[query.type];
+
+      if (processor === undefined) {
+        wsock.sendError("unknown media query type: " + query.type);
+      } else {
+        return map[query.type](query, handler);
       }
-      if (query.type === "new_room") {
-        return processNewRoom(query, function (result, err) {
-          if (err) {
-            wsock.sendError(err);
-          } else {
-            wsock.sendType("media", result);
-          }
-        });
-      }
-      wsock.sendError("unknown media query type: " + query.type);
     });
   };
 
@@ -36,7 +39,7 @@ exports.MediaGateway = function (chat) {
     }
     url = config[server].endpoint + method;
     url += encodeURIComponent(param);
-    request({url: url, timeout:500}, function (e, response, body) {
+    request({url: url, timeout: 500}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {
           done(JSON.parse(body));
@@ -84,24 +87,27 @@ exports.MediaGateway = function (chat) {
   }
 
   function processLs(query, done) {
-    var server, path;
+    var
+      server,
+      path;
 
     if (!query.hasOwnProperty('apath')) {
       return done(null, "ls query has no apath field");
     }
 
     if (query.apath.length === 0) {
-      return done(getMediaProviders()); 
+      return done(getMediaProviders());
     }
 
     server = query.apath[0];
     path = "/" + query.apath.slice(1).join("/");
 
     that.api(server, "/ls/?path=", path, function (entries, err) {
+      var i;
       if (err) {
         return done(null, err);
       }
-      for (var i = 0; i < entries.length; ++i) {
+      for (i = 0; i < entries.length; ++i) {
         entries[i].apath = query.apath.concat(entries[i].name);
       }
       done(entries);
@@ -109,7 +115,10 @@ exports.MediaGateway = function (chat) {
   }
 
   function dispatchByServers(playlist) {
-    var byServers = {}, server;
+    var
+      byServers = {},
+      server,
+      it;
     for (it = 0; it < playlist.length; ++it) {
       if (!playlist[it].length) {
         throw "playlist have invalid apath";
@@ -165,10 +174,11 @@ exports.MediaGateway = function (chat) {
     }
 
     function partialDone(partialExpanded, server, err) {
+      var it;
       if (err) {
         return done(null, err);
       }
-      for (var it = 0; it < partialExpanded.length; ++it) {
+      for (it = 0; it < partialExpanded.length; ++it) {
         partialExpanded[it].server = server;
         expanded.push(partialExpanded[it]);
       }
