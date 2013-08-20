@@ -30,11 +30,11 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
   function checkSchedule() {
     if (chunkToSendPlayTime < clock.clock() + sendAhead) {
       chunkHandler({
-        url   : server + '/chunk/' + chunkURLs[currentChunkIndex],
+        url   : chunkURLs[currentChunkIndex],
         start : chunkToSendPlayTime
       });
       if (++currentChunkIndex === chunkURLs.length) {
-        songEndedHandler();
+        timer = setTimeout((chunkToSendPlayTime + chunkDuration) - clock.clock(), songEndedHandler);
       } else {
         chunkToSendPlayTime += chunkDuration - overlapTime;
         checkSchedule();

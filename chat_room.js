@@ -15,11 +15,11 @@ exports.ChatRoom = function (desc, chat) {
     answerChecker = new AnswerChecker({}), // no options for now
     streamer = new Streamer(chat.media,
       function chunkHandler(chunkInfo) {
-        // send chunk to all
+        that.broadcast('chunk', chunkInfo);
       },
       function songEndedHandler() {
-        // send song ended to all
-        // go to next song
+        info("song ended: " + playlistIterator.currentItem().title);
+        streamer.play(playlistIterator.nextItem(), function () {}); // TODO
       });
 
   function packRoomState() {
@@ -91,7 +91,11 @@ exports.ChatRoom = function (desc, chat) {
     }
     that.broadcast("say", data);
 
-    // check answer
+    if (answerChecker.checkAnswer(playlistIterator.currentItem(), {})) {
+      info("wd @" + client.id() + "! answer is: " + playlistIterator.currentItem().title);
+      streamer.play(playlistIterator.nextItem(), function () {});
+    }
   }
 
+  streamer.play(playlistIterator.currentItem(), function () {});
 };
