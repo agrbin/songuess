@@ -30,7 +30,9 @@ exports.MediaGateway = function () {
       return done(null, "no such server");
     }
     url = config[server].endpoint + method;
-    url += encodeURIComponent(param);
+    if (param) {
+      url += encodeURIComponent(param);
+    }
     request({url: url, timeout: 500}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {
@@ -192,4 +194,11 @@ exports.MediaGateway = function () {
     start();
   }
 
+  this.getChunks = function (server, id, done) {
+    api(server, '/get_chunks/?id=', id, done);
+  }
+
+  this.chunk = function (server, url, done) {
+    api(server, '/chunk/' + url, null, done);
+  }
 };

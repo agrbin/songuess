@@ -1,7 +1,8 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var clock = require('./clock.js'),
+var
+  clock = require('./clock.js'),
   config = require('./config.js').streamer;
 
 /*
@@ -9,17 +10,19 @@ var clock = require('./clock.js'),
  *  sendHandler must dispatch message to all clients
  *  it will loop over fragments defined in config.
  */
-exports.Streamer = function (sendHandler) {
+exports.Streamer = function (media) {
 
   // all clocks here are in milliseconds
-  var chunkDuration = config.chunkDuration * 1000,
+  var
+    chunkDuration = config.chunkDuration * 1000,
     sendAhead = config.sendAhead * 1000,
     checkInterval = config.checkInterval * 1000,
     overlapTime = config.overlapTime * 1000,
-    numberOfChunks = config.numberOfChunks,
-    checkTimer,
-    chunkToSend,
-    chunkToSendPlayTime;
+    chunkToSendPlayTime,
+    currentChunkIndex,
+    server,
+    chunkURLs,
+    timer = undefined;
 
   // scheduling technique from
   // http://chimera.labs.oreilly.com/books/1234000001552/ch02.html
@@ -39,12 +42,23 @@ exports.Streamer = function (sendHandler) {
   }
 
   // start song without sending multiple chunks at once
-  function initialize() {
-    chunkToSendPlayTime = clock.clock() + sendAhead;
-    chunkToSend = 0;
-    checkSchedule();
+  function play(playlistItem, done) {
+    media.getChunks(playlistItem.server, playlistItem.id, function (chunks, err) {
+      if (err) {
+        done(null, err);
+      } else {
+        server = playlistItem.server;
+        chunksURLs = chunks;
+        currentChunkIndex = 0;
+        chunkToSendPlayTime = clock.clock() + sendAhead;
+        checkSchedule(); 
+      }
+    });
   }
 
-  initialize();
-
+  function stop() {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
 };

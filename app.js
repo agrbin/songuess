@@ -3,7 +3,6 @@
 
 var
   ws = require('ws'),
-  Streamer = require('./streamer.js').Streamer,
   Syncer = require('./syncer.js').Syncer,
   config = require('./config.js').server,
   verifyToken = require('./auth.js').verifyToken,
