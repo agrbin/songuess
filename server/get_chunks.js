@@ -1,6 +1,8 @@
 /*jslint indent: 2, plusplus: true */
 "use strict";
 
+var config = require('./config.js');
+
 module.exports = {
   app: undefined,
   urlsTable: {},
@@ -31,7 +33,7 @@ module.exports = {
             inode: id,
             index: i
           };
-          urls.push(rndUrl);
+          urls.push(config.chunkBaseURL + rndUrl);
         }
         this.urlsTable[id] = {
           urls: urls,

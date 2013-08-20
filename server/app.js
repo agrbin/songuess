@@ -51,7 +51,12 @@ var app = {
         for (i = 0; i < that.handlers.length; ++i) {
           if (that.handlers[i].canHandleMethod(method)) {
             that.handlers[i].handle(method, params, req, res, sendError);
+            break;
           }
+        }
+
+        if (i === that.handlers.length) {
+          sendError("unknown method");
         }
       }).listen(that.PORT);
     });
