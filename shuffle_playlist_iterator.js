@@ -4,7 +4,7 @@
 // u options na primjer idu uvjeti kad prihvacam tocan odgovor
 module.exports = function (playlist) {
   var
-    currentIndex = 0,
+    currentIndex = -1,
     randomOrder,
     playlistLength = playlist.length;
 
@@ -32,8 +32,10 @@ module.exports = function (playlist) {
   };
 
   this.nextItem = function () {
-    if (currentIndex === playlistLength) return undefined;
     ++currentIndex;
+    if (currentIndex === playlistLength) {
+      currentIndex -= playlistLength;
+    }
     return this.currentItem();
   };
 };

@@ -18,12 +18,19 @@ exports.ChatRoom = function (desc, chat) {
         that.broadcast('chunk', chunkInfo);
       },
       function songEndedHandler() {
-        info("song ended: " + playlistIterator.currentItem().title);
-        streamer.play(playlistIterator.nextItem(), function () {}); // TODO
+        that.broadcast('song_ended', {
+          answer : playlistIterator.currentItem(),
+          when : clock.clock()
+        });
+        playNext();
       });
 
   function packRoomState() {
-    var id, sol = { desc : desc, users : {} };
+    var id, sol = {
+      desc : desc,
+      users : {},
+      started : streamer.getSongStartedTime() || null
+    };
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
         sol.users[id] = clients[id].publicInfo();
@@ -60,21 +67,37 @@ exports.ChatRoom = function (desc, chat) {
         client, chat.whereIs(client), chat.getRoomByName(data)
       );
     });
+
+    // register next callback
+    client.onMessage('next', function (data, client) {
+      that.broadcast('called_next', {
+        who: client.id(),
+        answer: playlistIterator.currentItem(),
+        when : data.when
+      });
+      playNext();
+    });
   };
 
   // pop a client from a list of clients and
   // notify all other clients about the popping :)
   this.leave = function (client, reason) {
     delete clients[client.id()];
-    this.broadcast("old_client", [client.id(), reason]);
+    this.broadcast('old_client', [client.id(), reason]);
   };
 
   function info(text) {
-    that.broadcast("say", {
+    that.broadcast('say', {
       when : clock.clock(),
       to   : null,
       from : null,
       what : text
+    });
+  }
+
+  function playNext() {
+    streamer.play(playlistIterator.nextItem(), function (songStartTime) {
+      that.broadcast('next_song_announce', songStartTime);
     });
   }
 
@@ -89,13 +112,18 @@ exports.ChatRoom = function (desc, chat) {
     if (data.to !== null && !clients.hasOwnProperty(data.to)) {
       throw "to specified, but not in this room";
     }
-    that.broadcast("say", data);
+    that.broadcast('say', data);
 
     if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
-      info("wd @" + client.id() + "! answer is: " + playlistIterator.currentItem().title);
-      streamer.play(playlistIterator.nextItem(), function () {});
+      that.broadcast('correct_answer', {
+        who: client.id(),
+        answer: playlistIterator.currentItem(),
+        when : data.when
+      });
+      playNext();
     }
   }
 
-  streamer.play(playlistIterator.currentItem(), function () {});
+  playNext();
+
 };

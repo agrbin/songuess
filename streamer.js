@@ -22,7 +22,8 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
     currentChunkIndex,
     server,
     chunkURLs,
-    timer;
+    timer,
+    songStartedTime;
 
   // scheduling technique from
   // http://chimera.labs.oreilly.com/books/1234000001552/ch02.html
@@ -34,7 +35,10 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
         start : chunkToSendPlayTime
       });
       if (++currentChunkIndex === chunkURLs.length) {
-        timer = setTimeout((chunkToSendPlayTime + chunkDuration) - clock.clock(), songEndedHandler);
+        timer = setTimeout(
+          songEndedHandler,
+          (chunkToSendPlayTime + chunkDuration) - clock.clock()
+        );
       } else {
         chunkToSendPlayTime += chunkDuration - overlapTime;
         checkSchedule();
@@ -44,12 +48,17 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
     }
   }
 
+  this.getSongStartedTime = function () {
+    return songStartedTime;
+  };
+
   // start song without sending multiple chunks at once
   this.play = function (playlistItem, done) {
     stop();
     if (!playlistItem) {
       return;
     }
+    console.log("play: ", playlistItem);
     media.getChunks(playlistItem.server, playlistItem.id,function (cs, err) {
       if (err) {
         done(null, err);
@@ -58,10 +67,11 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
         chunkURLs = cs;
         currentChunkIndex = 0;
         chunkToSendPlayTime = clock.clock() + sendAhead + chunkDuration;
+        done(songStartedTime = chunkToSendPlayTime);
         checkSchedule();
       }
     });
-  }
+  };
 
   function stop() {
     if (timer) {
