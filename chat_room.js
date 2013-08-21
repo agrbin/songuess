@@ -85,6 +85,15 @@ exports.ChatRoom = function (desc, chat, proxy) {
       });
       playNext();
     });
+
+    // register score reset
+    client.onMessage('reset_score', function (data, client) {
+      client.correctAnswers = 0;
+      that.broadcast('called_reset', {
+        who: client.id(),
+        when: data.when
+      });
+    });
   };
 
   // pop a client from a list of clients and
@@ -130,8 +139,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
     that.broadcast('say', data);
 
     if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
+      client.correctAnswers += 1;
       that.broadcast('correct_answer', {
         who: client.id(),
+        score: client.correctAnswers,
         answer: playlistIterator.currentItem(),
         when : data.when
       });

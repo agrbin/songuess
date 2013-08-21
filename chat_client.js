@@ -46,7 +46,8 @@ exports.ChatClient = function (wsock, user, chat) {
       name    : this.desc('name'),
       display : this.desc('display'),
       gender  : this.desc('gender'),
-      picture : this.desc('picture')
+      picture : this.desc('picture'),
+      score   : this.correctAnswers
     };
   };
 
@@ -76,4 +77,5 @@ exports.ChatClient = function (wsock, user, chat) {
     });
   };
 
+  this.correctAnswers = 0;
 };
