@@ -111,11 +111,6 @@ var Player = function(getTime, volumeElement) {
     gainNode.gain.linearRampToValueAtTime(1, startTime + duration -overlapTime);
     gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
 
-    // log some data.
-    console.log(
-      Math.round(audioContext.currentTime*100)/100 + ": scheduling chunk to "
-      + Math.round(startTime*100)/100
-    );
     // play the chunk if it is in the future
     if (startTime > 0) {
       source.noteOn(startTime);

@@ -3,6 +3,7 @@
 function ChatUI(chat, user) {
 
   var body, list, input, user;
+  var announceTimer;
 
   function initialize() {
     var it;
@@ -58,6 +59,24 @@ function ChatUI(chat, user) {
       + pretty.text(what));
   };
 
+  this.youEntered = function (data) {
+    var list = data.desc.playlist;
+    pretty.relativeTime();
+    this.addNotice("You entered " + data.desc.name
+                 + " (" + data.desc.desc + ").");
+    if (list.length) {
+      this.addNotice("Playlist has " + list.length + " song"
+                   + (list.length > 1 ? "s." : "."));
+      if (data.started) {
+        entry("sys", 
+          pretty.time(myClock.clock())
+          + " Current song is @ "
+          + pretty.timeInterval(myClock.clock() - data.started) + "s.");
+        pretty.relativeTime(data.started);
+      }
+    }
+  };
+
   this.userJoined = function (id, reason) {
     entry("sys",
       pretty.time(myClock.clock()) + " " +
@@ -70,6 +89,42 @@ function ChatUI(chat, user) {
       pretty.time(myClock.clock()) + " " +
       pretty.nameClient(chat.getClient(id))
       + " left: " + reason);
+  };
+
+  this.calledNext = function (desc) {
+    pretty.relativeTime();
+    entry("sys wrong",
+      pretty.time(desc.when, true) +
+      " The song was " +
+      pretty.song(desc.answer) + ". " +
+      pretty.nameClient(chat.getClient(desc.who)) +
+      " called for a next one :/");
+  };
+
+  this.correctAnswer = function (desc) {
+    entry("sys correct",
+      pretty.time(myClock.clock(), true) + " Well done " +
+      pretty.nameClient(chat.getClient(desc.who)) +
+      "! The song was " +
+      pretty.song(desc.answer) + ".");
+  };
+
+  this.songEnded = function (desc) {
+    pretty.relativeTime();
+    entry("sys wrong",
+      pretty.time(desc.when) +
+      " No one got this one - " +
+      pretty.song(desc.answer));
+  };
+
+  this.announceSong = function (when) {
+    var interval = (when - myClock.clock()) - 3000;
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(function() {
+      pretty.relativeTime(when);
+      entry("sys line",
+        pretty.time(myClock.clock()) + " Get ready!");
+    }, (interval < 0 ? 0 : interval) );
   };
 
   this.addMessage = function (msg) {

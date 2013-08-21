@@ -109,7 +109,7 @@ function Chat(wsock, user, media, onFatal) {
   });
 
   onCommand("next", function () {
-    wsock.sendType("next", null);
+    wsock.sendType("next", {when: myClock.clock()});
   });
 
   onCommand("clear", function () {
@@ -138,18 +138,18 @@ function Chat(wsock, user, media, onFatal) {
     location.hash = data.desc.name;
     document.title = "songuess " + data.desc.name;
     ui.clear();
-    ui.addNotice("you entered " + data.desc.name
-                 + " (" + data.desc.desc + ").");
+    ui.youEntered(data);
     playlist = data.desc.playlist;
     clients = data.users;
-    if (playlist.length) {
-      ui.addNotice("playlist has " + playlist.length + " song"
-                   + (playlist.length > 1 ? "s." : "."));
-    }
     updatePlaylist();
     updateClientIds();
     ui.updateList();
   });
+
+  wsock.onMessage("correct_answer", ui.correctAnswer);
+  wsock.onMessage("next_song_announce", ui.announceSong);
+  wsock.onMessage("called_next", ui.calledNext);
+  wsock.onMessage("song_ended", ui.songEnded);
 
   wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;

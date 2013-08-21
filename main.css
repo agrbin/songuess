@@ -73,6 +73,12 @@ h1 {
   outline: 0px;
 }
 
+.layout.chat .left .entry.correct {
+}
+
+.layout.chat .left .entry.wrong {
+}
+
 .layout.chat .left .entry:first-child {
   margin-top: 3px;
   margin-bottom: 1px;

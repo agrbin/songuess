@@ -1,4 +1,5 @@
 var pretty = {
+  t0 : null,
   colorStyle : function(id) {
     id = id.split(".")[1];
     var r = Math.floor(id%256*0.8); id /= 256;
@@ -15,11 +16,38 @@ var pretty = {
       sol = "0" + sol;
     return sol;
   },
-  time : function(when) {
-    var d = new Date(when);
-    var minutes = pretty.leadingZero(d.getHours()) + ":"
+  relativeTime : function (songStarts) {
+    if (!songStarts) {
+      pretty.t0 = null;
+    } else {
+      pretty.t0 = songStarts;
+    }
+  },
+  timeInterval : function (ms) {
+    var sol = (Math.round(ms)/1000).toString();
+    if (sol[0] !== '-') sol = "+" + sol;
+    if (sol.indexOf('.') === -1) sol = sol + '.';
+    while (sol.length < 5) sol = sol + "0";
+    while (sol.length > 5) sol = sol.substr(0, sol.length-1);
+    if (sol.substr(-1) === ".") sol = "+ " + sol.substr(1, sol.length - 2);
+    return sol.replace(/d/g, '&nbsp;');
+  },
+  time : function(when, forceAbsolute) {
+    if (pretty.t0 && !forceAbsolute) {
+      return $("<span>")
+        .addClass("time")
+        .attr('title', full)
+        .html(pretty.timeInterval(when - pretty.t0))
+        [0].outerHTML;
+    }
+    var d, minutes, full;
+    if (!when) {
+      when = myClock.clock();
+    }
+    d = new Date(when);
+    minutes = pretty.leadingZero(d.getHours()) + ":"
         + pretty.leadingZero(d.getMinutes());
-    var full = minutes + ":"
+    full = minutes + ":"
         + pretty.leadingZero(d.getSeconds()) + "."
         + pretty.leadingZero(d.getMilliseconds(), 3);
     return $("<span>")
@@ -33,6 +61,9 @@ var pretty = {
       .addClass(css_class)
       .text(info)
       [0].outerHTML;
+  },
+  song : function (song) {
+    return '"' + pretty.text(song.title, "bold") + '"';
   },
   fullClient : function (client) {
     return $("<span>")
