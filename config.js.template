@@ -4,7 +4,8 @@
 var currentEnv = process.env.NODE_ENV || 'developement';
 
 exports.server = {
-  port  : 8080
+  port  : 8080,
+  httpRoot : 'http://xfer.hr:8080'
 };
 
 // server and client have synced clocks. if chunk is to be played less than
