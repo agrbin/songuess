@@ -97,6 +97,13 @@ h1 {
   font-weight: bold;
   margin-top: 3px;
   margin-left: 3px;
+  overflow-y: hidden;
+  height: 15px;
+}
+
+.chat .right .full-client span {
+  float: right;
+  margin-right: 5px;
 }
 
 .chat .sys {
