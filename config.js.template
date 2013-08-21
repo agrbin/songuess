@@ -49,3 +49,20 @@ exports.auth = {
   scope       :  'https://www.googleapis.com/auth/userinfo.profile '
                   + 'https://www.googleapis.com/auth/userinfo.email'
 };
+
+exports.proxy = {
+  // you can bypass proxy with this.
+  enable  : true,
+
+  // where will proxy serve chunks
+  urlPrefix : '/c/',
+
+  // maximum number of seconds for media server to
+  // send a chunk. after this we will issue 504 gateway
+  // timeout to clients requesting that chunk.
+  maxDelay : 0.5,
+
+  // time that the URL returned from proxify will be available.
+  maxAge : 60
+
+};

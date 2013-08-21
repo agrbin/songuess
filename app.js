@@ -3,17 +3,23 @@
 
 var
   ws = require('ws'),
-  Syncer = require('./syncer.js').Syncer,
   config = require('./config.js').server,
   verifyToken = require('./auth.js').verifyToken,
-  Chat = require('./chat.js').Chat,
-  MediaGateway = require('./media.js').MediaGateway,
+  Syncer = require('./syncer.js').Syncer,
   SockWrapper = require('./sockwrap.js').SockWrapper;
 
-var httpServer = require('http').createServer();
+var httpServer = require('http').createServer(onHttpRequest);
+var media = new (require('./media.js').MediaGateway)();
+var proxy = new (require('./httpproxy.js').HttpProxy)();
+var chat = new (require('./chat.js').Chat)(media, proxy);
 var server = new ws.Server({server: httpServer});
-var media = new MediaGateway();
-var chat = new Chat(media);
+
+function onHttpRequest(req, res) {
+  if (!proxy.handleRequest(req, res)) {
+    res.statusCode = 404;
+    res.end();
+  }
+}
 
 function onVerified(sock, user) {
   var syncer = new Syncer(sock, function () {

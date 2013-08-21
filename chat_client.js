@@ -25,11 +25,11 @@ exports.ChatClient = function (wsock, user, chat) {
   // when client closes the connection, notify
   // others about that.
   wsock.onClose(function () {
-    chat.kill(that, "connection closed by client.");
+    chat.kill(that, "connection lost.");
   });
 
   wsock.onSleepy(function () {
-    kill("15 minutes of inactivity.");
+    kill("30 minutes of inactivity.");
   });
 
   this.id = function () {
@@ -57,11 +57,23 @@ exports.ChatClient = function (wsock, user, chat) {
   };
 
   this.error = function (error, code, done) {
-    wsock.sendError(error, code, done);
+    wsock.sendError(error, code, function (res, err) {
+      if (err) {
+        kill(err);
+      } else if (done) {
+        done(res);
+      }
+    });
   };
 
-  this.send = function (type, data) {
-    wsock.sendType(type, data);
+  this.send = function (type, data, done) {
+    wsock.sendType(type, data, function (res, err) {
+      if (err) {
+        kill(err);
+      } else if (done) {
+        done(res);
+      }
+    });
   };
 
 };

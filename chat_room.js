@@ -7,23 +7,26 @@ var
   AnswerChecker = require('./answer_checker.js'),
   PlaylistIterator = require('./shuffle_playlist_iterator.js');
 
-exports.ChatRoom = function (desc, chat) {
+exports.ChatRoom = function (desc, chat, proxy) {
   var
     that = this,
     clients = {},
     playlistIterator = new PlaylistIterator(desc.playlist),
     answerChecker = new AnswerChecker({}), // no options for now
-    streamer = new Streamer(chat.media,
-      function chunkHandler(chunkInfo) {
-        that.broadcast('chunk', chunkInfo);
-      },
-      function songEndedHandler() {
-        that.broadcast('song_ended', {
-          answer : playlistIterator.currentItem(),
-          when : clock.clock()
-        });
-        playNext();
-      });
+    streamer = new Streamer(chat.media, chunkHandler, songEndedHandler);
+
+  function chunkHandler(chunkInfo) {
+    chunkInfo.url = proxy.proxify(chunkInfo.url);
+    that.broadcast('chunk', chunkInfo);
+  }
+
+  function songEndedHandler() {
+    that.broadcast('song_ended', {
+      answer : playlistIterator.currentItem(),
+      when : clock.clock()
+    });
+    playNext();
+  }
 
   function packRoomState() {
     var id, sol = {

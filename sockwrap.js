@@ -1,3 +1,6 @@
+/*jslint indent: 2, plusplus: true*/
+"use strict";
+
 var ws = require('ws');
 
 exports.SockWrapper = function (sock) {
@@ -5,7 +8,17 @@ exports.SockWrapper = function (sock) {
   var that = this,
     messageCallbacks = {},
     closeCallbacks = [],
-    sleepyTimeout, sleepyCallback;
+    sleepyTimeout,
+    sleepyCallback;
+
+  function tickSleepy() {
+    clearTimeout(sleepyTimeout);
+    sleepyTimeout = setTimeout(function () {
+      if (sleepyCallback) {
+        sleepyCallback();
+      }
+    }, 30 * 60 * 1000);
+  }
 
   this.onMessageType = function (type, callback) {
     messageCallbacks[type] = callback;
@@ -19,27 +32,33 @@ exports.SockWrapper = function (sock) {
     closeCallbacks.push(callback);
   };
 
-  this.removeListeners = function() {
+  this.removeListeners = function () {
     messageCallbacks = {};
     closeCallbacks = [];
   };
 
   this.sendError = function (error, code, done) {
-    // problem can arrise if client disconnects but some future event
-    // has this socket in scope and tries to call send.
-    if (sock.readyState === ws.OPEN) {
+    try {
       sock.send(JSON.stringify(
-        { error: error, code : code }), done
-      );
+        { error: error, code : code }
+      ), done);
+    } catch (err) {
+      setTimeout(function () {
+        done(null, err);
+      }, 0);
     }
   };
 
   this.sendType = function (type, data, done) {
-    if (sock.readyState === ws.OPEN) {
+    try {
       sock.send(
         JSON.stringify({type: type, data: data}),
         done
       );
+    } catch (err) {
+      setTimeout(function () {
+        done(null, err);
+      }, 0);
     }
   };
 
@@ -66,18 +85,10 @@ exports.SockWrapper = function (sock) {
 
   sock.onclose = function () {
     var it;
-    for (it = 0; it < closeCallbacks.length; ++it)
+    for (it = 0; it < closeCallbacks.length; ++it) {
       closeCallbacks[it]();
+    }
     clearTimeout(sleepyTimeout);
-  };
-
-  function tickSleepy() {
-    clearTimeout(sleepyTimeout);
-    sleepyTimeout = setTimeout(function() {
-      if (sleepyCallback) {
-        sleepyCallback();
-      }
-    }, 15 * 60 * 1000);
   };
 
   tickSleepy();
