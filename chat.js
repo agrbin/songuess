@@ -152,7 +152,7 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("correct_answer", function (data) {
     var client = that.getClient(data.who);
-    client.score = desc.score;
+    client.score = data.score;
     ui.correctAnswer(data);
   });
 
