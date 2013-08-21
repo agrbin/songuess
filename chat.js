@@ -150,11 +150,21 @@ function Chat(wsock, user, media, onFatal) {
     ui.updateList();
   });
 
-  wsock.onMessage("correct_answer", ui.correctAnswer);
+  wsock.onMessage("correct_answer", function (data) {
+    var client = that.getClient(data.who);
+    client.score = desc.score;
+    ui.correctAnswer(data);
+  });
+
+  wsock.onMessage("called_reset", function (data) {
+    var client = that.getClient(data.who);
+    client.score = 0;
+    ui.calledReset(data);
+  });
+
   wsock.onMessage("next_song_announce", ui.announceSong);
   wsock.onMessage("called_next", ui.calledNext);
   wsock.onMessage("song_ended", ui.songEnded);
-  wsock.onMessage("called_reset", ui.calledReset);
 
   wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;

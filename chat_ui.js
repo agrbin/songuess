@@ -118,8 +118,6 @@ function ChatUI(chat, user) {
   };
 
   this.calledReset = function (desc) {
-    var client = chat.getClient(desc.who);
-    client.score = 0;
     this.updateList();
   };
 
