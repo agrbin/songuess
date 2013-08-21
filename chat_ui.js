@@ -106,11 +106,21 @@ function ChatUI(chat, user) {
   };
 
   this.correctAnswer = function (desc) {
+    var client = chat.getClient(desc.who);
+    
     entry("sys correct",
       pretty.time(myClock.clock(), true) + " Well done " +
-      pretty.nameClient(chat.getClient(desc.who)) +
+      pretty.nameClient(client) +
       "! The song was " +
       pretty.song(desc.answer) + ".");
+
+    this.updateList();
+  };
+
+  this.calledReset = function (desc) {
+    var client = chat.getClient(desc.who);
+    client.score = 0;
+    this.updateList();
   };
 
   this.songEnded = function (desc) {

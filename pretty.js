@@ -66,10 +66,11 @@ var pretty = {
     return '"' + pretty.text(song.title, "bold") + '"';
   },
   fullClient : function (client) {
-    return $("<span>")
+    return $("<div>")
       .addClass("full-client")
       .css({color: pretty.colorStyle(client.id)})
       .text(client.display)
+      .append($("<span>").text(client.score))
       [0].outerHTML;
   },
   nameClient : function (client) {

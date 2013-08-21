@@ -1,2 +1,4 @@
 # take a look at config.js.template
 config.js
+*.swp
+
