@@ -14,7 +14,7 @@ exports.HttpProxy = function () {
     inMemory = 0;
 
   function log(what) {
-    console.log( (new Date()).toString() + " proxy: " + what);
+    // console.log( (new Date()).toString() + " proxy: " + what);
   }
 
   // this is called only when we are sure that resourceData has the id data.
@@ -38,7 +38,7 @@ exports.HttpProxy = function () {
       return res.end("Bad gateway (media server).");
     }
 
-    log(" HIT: " + id);
+    log(" HIT:       " + id);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'max-age=' + config.maxAge); // 1m
@@ -57,12 +57,14 @@ exports.HttpProxy = function () {
     res.setHeader('Access-Control-Allow-Origin', '*');
     // now, possible scenarios:
     // 1. resourceData for this id can already be loaded
+    // this will almost always be the case (especially if throttleStream is
+    // set)
     if (resourceData.hasOwnProperty(id)) {
       return sendData(id, req, res);
     }
     // 2. we may see event mounting point for this id
-    log("WAIT: " + id);
     if (resourceOnReady.hasOwnProperty(id)) {
+      log("WAIT: " + id);
       return resourceOnReady[id].push(function () {
         sendData(id, req, res); 
       });
@@ -100,17 +102,31 @@ exports.HttpProxy = function () {
     );
   }
 
+  // intention of this function was to warm-up cflare cache globaly
+  // which is of course not possible :)
+  // maybe if we had IP's of all cf servers and then query them explicitly.
+  function warmUpCache(id) {
+    request(
+      {
+        url: (httpRoot + config.urlPrefix + id),
+        encoding:null
+      },
+      function (e, response, body) {}
+    );
+  }
+
   // announces that someone will fetch a resource soon.
   // function receives url and returns changed url that points to
   // http://server/PREFIX/hash
   // which should be routed to function fetch(sth);
   //
-  this.proxify = function (url) {
+  this.proxify = function (url, done) {
     var id;
 
     if (!config.enable) {
-      return url;
+      return setTimeout(function () {done(url);}, 0);
     }
+
     // decide the URL of a new resource
     // create resourceReady subscribe point for this resource.
     id = randomId();
@@ -137,7 +153,13 @@ exports.HttpProxy = function () {
       delete resourceData[id];
     }, config.maxAge * 1000);
 
-    return httpRoot + config.urlPrefix + id;
+    // hold off for throttleStream and issue new URL
+    setTimeout(function () {
+      log (" GO: " + id);
+      done(httpRoot + config.urlPrefix + id);
+    }, config.throttleStreamOff * 1000 +
+      Math.random() * config.throttleStreamAmp * 2000
+      - 1000);
   };
 
   // returns true if request was for us. in that case, response will be ended.

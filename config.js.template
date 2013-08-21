@@ -11,7 +11,8 @@ exports.server = {
 // server and client have synced clocks. if chunk is to be played less than
 // sendAhead seconds in the future, dispatch process for that chunk will begin.
 // every setTimeout-ed 0.5 seconds streamer will check above condition.
-//
+// note that if proxy is available this time will be cutted for
+// proxy.throttleStream value.
 // overlapTime
 //  is overlapping between chunks to make seamless playback on
 //  client. this constant is copied to ../client/player.js
@@ -20,7 +21,7 @@ exports.server = {
 //  is chunk duration! it is copied to lib/frames.cpp
 //
 exports.streamer = {
-  sendAhead     : 4,
+  sendAhead     : 8,
   checkInterval : 0.5,
   chunkDuration : 2.448,
   overlapTime   : 0.048,
@@ -55,13 +56,20 @@ exports.proxy = {
   // you can bypass proxy with this.
   enable  : true,
 
+  // time period before proxy sends out the stream.
+  // it is used to warm-up cache.
+  // throttle delay will be calculated:
+  //   delay = Off + (rand() * 2 - 1) * Amp
+  throttleStreamOff : 2,
+  throttleStreamAmp : 2,
+
   // where will proxy serve chunks
   urlPrefix : '/c/',
 
   // maximum number of seconds for media server to
   // send a chunk. after this we will issue 504 gateway
   // timeout to clients requesting that chunk.
-  maxDelay : 0.5,
+  maxDelay : 1,
 
   // time that the URL returned from proxify will be available.
   maxAge : 60

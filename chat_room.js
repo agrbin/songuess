@@ -17,8 +17,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
     streamer = new Streamer(chat.media, chunkHandler, songEndedHandler);
 
   function chunkHandler(chunkInfo) {
-    chunkInfo.url = proxy.proxify(chunkInfo.url);
-    that.broadcast('chunk', chunkInfo);
+    proxy.proxify(chunkInfo.url, function (url) {
+      chunkInfo.url = url;
+      that.broadcast('chunk', chunkInfo);
+    });
   }
 
   function songEndedHandler() {
