@@ -33,10 +33,10 @@ function MediaUI(media) {
   }
 
   this.hideDialog = function () {
-    $(".layout.chat").show();
     $(".layout.media").hide();
     // this is not in our district, but we will
     // do it :)
+    $(".layout.chat").show();
     $(".layout.chat input").focus();
   }
 

@@ -21,15 +21,19 @@ function ChatUI(chat, user) {
     $("h1").hide();
     $(".chat div,.chat input").css('border-color',
                  pretty.colorStyle(user.id));
-    $("pre.log").hide();
     $(".layout.chat").show();
     $(".chat .col").click(function () {
       $(input).focus();
     });
     $(input).focus();
-    $(window).on('hashchange', function() {
-      chat.triggerCommand("/join " + location.hash);
-    });
+    $(window)
+      .on('hashchange', function() {
+        chat.triggerCommand("/join " + location.hash);
+      })
+      .on('resize', function() {
+        $(body)
+          .scrollTop(body.scrollHeight);
+      });
   }
 
   function entry (type, what) {
