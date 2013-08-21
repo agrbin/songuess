@@ -11,6 +11,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
   var
     that = this,
     clients = {},
+    numberOfClients = 0,
     playlistIterator = new PlaylistIterator(desc.playlist),
     answerChecker = new AnswerChecker({}), // no options for now
     streamer = new Streamer(chat.media, chunkHandler, songEndedHandler);
@@ -57,6 +58,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
   // notify all clients about the adding.
   this.enter = function (client) {
     this.broadcast("new_client", client.publicInfo());
+    numberOfClients++;
+    if (numberOfClients === 1) {
+      playNext();
+    }
     clients[client.id()] = client;
     client.send("room_state", packRoomState());
     client.onMessage("say", onSay);
@@ -85,7 +90,11 @@ exports.ChatRoom = function (desc, chat, proxy) {
   // pop a client from a list of clients and
   // notify all other clients about the popping :)
   this.leave = function (client, reason) {
+    numberOfClients--;
     delete clients[client.id()];
+    if (!numberOfClients) {
+      streamer.stop();
+    }
     this.broadcast('old_client', [client.id(), reason]);
   };
 
@@ -99,6 +108,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function playNext() {
+    if (!desc.playlist.length) {
+      return;
+    }
     streamer.play(playlistIterator.nextItem(), function (songStartTime) {
       that.broadcast('next_song_announce', songStartTime);
     });
@@ -126,7 +138,5 @@ exports.ChatRoom = function (desc, chat, proxy) {
       playNext();
     }
   }
-
-  playNext();
 
 };

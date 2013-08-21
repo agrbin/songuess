@@ -13,7 +13,7 @@ var
 exports.Streamer = function (media, chunkHandler, songEndedHandler) {
 
   // all clocks here are in milliseconds
-  var
+  var that = this,
     chunkDuration = config.chunkDuration * 1000,
     sendAhead = config.sendAhead * 1000,
     checkInterval = config.checkInterval * 1000,
@@ -54,11 +54,8 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
 
   // start song without sending multiple chunks at once
   this.play = function (playlistItem, done) {
-    stop();
-    if (!playlistItem) {
-      return;
-    }
-    console.log("play: ", playlistItem);
+    that.stop();
+    console.log("streamer.play: ", playlistItem);
     media.getChunks(playlistItem.server, playlistItem.id,function (cs, err) {
       if (err) {
         done(null, err);
@@ -73,9 +70,11 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
     });
   };
 
-  function stop() {
+  this.stop = function () {
     if (timer) {
       clearTimeout(timer);
     }
-  }
+    songStartedTime = null;
+  };
+
 };
