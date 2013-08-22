@@ -65,6 +65,7 @@ function ChatUI(chat, user) {
 
   this.youEntered = function (data) {
     var list = data.desc.playlist;
+    clearTimeout(announceTimer);
     pretty.relativeTime();
     this.addNotice("You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");

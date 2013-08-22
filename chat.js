@@ -72,6 +72,10 @@ function Chat(wsock, user, media, onFatal) {
     return ids.length;
   };
 
+  this.id2Pid = function (id) {
+    return id.split(".")[0];
+  };
+
   // by sequential number or by id.
   this.getClient = function (id) {
     if (id >= 0 && id < ids.length) {
@@ -98,6 +102,20 @@ function Chat(wsock, user, media, onFatal) {
 
   this.triggerCommand = function (text) {
     checkCommand(text);
+  }
+
+  // copies score value from client to every other client that shares pid with
+  // him.
+  // in future we will copy more details (eg. group);
+  function copySharedToPidPeers(src_client) {
+    var src_pid = that.id2Pid(src_client.id), id;
+    for (id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        if (that.id2Pid(id) === src_pid) {
+          clients[id].score = src_client.score;
+        }
+      }
+    }
   }
 
   onCommand("help", function () {
@@ -152,13 +170,15 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("correct_answer", function (data) {
     var client = that.getClient(data.who);
-    client.score = data.score;
+    ++ client.score;
+    copySharedToPidPeers(client);
     ui.correctAnswer(data);
   });
 
   wsock.onMessage("called_reset", function (data) {
     var client = that.getClient(data.who);
     client.score = 0;
+    copySharedToPidPeers(client);
     ui.calledReset(data);
   });
 
