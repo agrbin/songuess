@@ -21,6 +21,8 @@ module.exports = {
       path = '../chunks/' + chunkInfo.inode + '/' + chunkInfo.index + '.mp3';
       this.fs.readFile(path, function (err, data) {
         if (err) {
+          console.log(err);
+          console.log("working dir correct?");
           errCallback('unexpected error, chunk file not found');
         } else {
           res.setHeader('Content-Type', 'text/plain'); // TODO:

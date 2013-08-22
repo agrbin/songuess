@@ -1,2 +1,5 @@
+# port to listen on
 exports.port = 8080;
-exports.chunkBaseURL = 'http://localhost:8081/chunk/';
+# URL where the chunks will be served
+# in future, chunks can be served by another web server
+exports.chunkBaseURL = "http://localhost:8080/chunk/";
