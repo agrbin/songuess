@@ -19,11 +19,13 @@ var clock = require("./clock.js"),
 exports.Syncer = function (ws, done) {
 
   var offsets = [],
-    stopwatch = new clock.Timer();
+    stopwatch = new clock.Timer(),
+    avg_ping;
 
   ws.onmessage = function (msg) {
     var clientTime = Number(msg.data);
     if (clientTime !== -1) {
+      avg_ping += stopwatch.get();
       offsets.push(
         (clock.clock() - stopwatch.get() / 2) - clientTime
       );
@@ -38,11 +40,12 @@ exports.Syncer = function (ws, done) {
     var summary = analyze(offsets);
     if (summary.std < config.MaxClockDeviation) {
       ws.send(summary.avg.toString(), function () {
-        done();
+        done(avg_ping / config.NumberOfSamples);
       });
     } else {
       console.log("skew std too large: ", summary);
       offsets = [];
+      avg_ping = 0;
       ws.send('', stopwatch.reset);
     }
   }
