@@ -48,6 +48,10 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
     COOKIE_FILE_NAME = "cookie",
     token;
 
+  function log(msg) {
+    console.log(msg);
+  }
+
   function initialize() {
     storage.isFile(
       COOKIE_FILE_NAME,
@@ -58,11 +62,11 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
 
   // if cookie file exists, check whether it's valid.
   function cookieFileExists() {
-    debug("cookie file exists.");
+    log("cookie file exists.");
     storage.readFile(COOKIE_FILE_NAME, function(filedata) {
       var data;
       function bailOut() {
-        debug("cookie file is not valid.");
+        log("cookie file is not valid.");
         storage.killFile(COOKIE_FILE_NAME, initiateHandshake);
       }
       try {data = JSON.parse(filedata);}
@@ -76,7 +80,7 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
   }
 
   function haveToken() {
-    debug("token obtained.");
+    log("token obtained.");
     onReady(token);
   };
 
@@ -93,7 +97,7 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
       location.hash = token.state || "";
       delete token.state;
       storage.writeFile(COOKIE_FILE_NAME, JSON.stringify(token), haveToken);
-      debug("fragment exists.");
+      log("fragment exists.");
       return true;
     }
   }
@@ -107,7 +111,7 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
       return;
     }
     if (!checkFragment()) {
-      debug("redirecting to oauth endpoint");
+      log("redirecting to oauth endpoint");
       var url = "https://accounts.google.com/o/oauth2/auth?",
         fragments = [], field;
       for (field in oAuthParams)

@@ -23,7 +23,7 @@ function initiateEverything(onReady, isOAuthReturn) {
   }
 
   function onSynced() {
-    debug("synced.");
+    console.log("synced.");
     try {
       // this will start the app.
       onReady(socket, user, fatalError);
@@ -34,7 +34,7 @@ function initiateEverything(onReady, isOAuthReturn) {
   }
 
   function onVerified(verified_user) {
-    debug("user verified.");    
+    console.log("user verified.");    
     user = verified_user;
     new Syncer(socket, onSynced);
   }
@@ -58,15 +58,12 @@ function initiateEverything(onReady, isOAuthReturn) {
   }
 
   initialize();
-
 }
 
-// for debug.
-function logout() {
-  (new Storage()).killFile("cookie");
-}
-
-function debug() {
-  console.log(arguments);
-}
+window.initiateEverything(function (sock, user, onErr) {
+  $(document).ready(function() {
+    var ws = new SockWrapper(sock, onErr);
+    new Chat(ws, user, new Media(ws), onErr);
+  });
+}, true);
 

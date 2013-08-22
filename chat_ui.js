@@ -7,7 +7,6 @@ function ChatUI(chat, user) {
 
   function initialize() {
     var it;
-    debug("DOM sbodyman");
     body = $(".chat .left")[0];
     list = $(".chat .right")[0];
     input = $(".chat input")[0];
