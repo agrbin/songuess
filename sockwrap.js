@@ -44,6 +44,9 @@ function SockWrapper(sock, onFatal) {
       }
       return errorCallbacks[code](data.error);
     }
+    if (data.type === 'non-patient-firewall') {
+      return that.sendType('non-patient-firewall', {when: myClock.clock()});
+    }
     if (!messageCallbacks.hasOwnProperty(data.type)) {
       return console.log(
         "type '" + data.type + "' not registered.", data.data
