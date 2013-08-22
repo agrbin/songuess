@@ -110,8 +110,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function chunkHandler(chunkInfo) {
-    proxy.proxify(chunkInfo.url, function (url) {
+    proxy.proxify(chunkInfo.url, function (url, url2) {
       chunkInfo.url = url;
+      chunkInfo.backupUrl = url2;
       that.broadcast('chunk', chunkInfo);
     });
   }

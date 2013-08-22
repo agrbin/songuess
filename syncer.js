@@ -8,7 +8,7 @@ var clock = require("./clock.js"),
 /*
  * Syncer is responsible for clock synchronization between clients. 
  * Client will initiate synchronization by sending message with string "-1".
- * Syncer will NumberOfSamples times answer to the client with empty message,
+ * Syncer will numberOfSamples times answer to the client with empty message,
  * and client will answer with his local time.
  *
  * Client's time offset is callculated in NTP fashion. Symmetric communication
@@ -29,7 +29,7 @@ exports.Syncer = function (ws, done) {
       offsets.push(
         (clock.clock() - stopwatch.get() / 2) - clientTime
       );
-      if (offsets.length === config.NumberOfSamples) {
+      if (offsets.length === config.numberOfSamples) {
         return process();
       }
     }
@@ -37,10 +37,11 @@ exports.Syncer = function (ws, done) {
   };
 
   function process() {
-    var summary = analyze(offsets);
-    if (summary.std < config.MaxClockDeviation) {
+    var summary = analyze(offsets), ping;
+    ping = avg_ping / config.numberOfSamples;
+    if (ping < config.maxPing && summary.std < config.maxClockDeviation) {
       ws.send(summary.avg.toString(), function () {
-        done(avg_ping / config.NumberOfSamples);
+        done(ping);
       });
     } else {
       console.log("skew std too large: ", summary);

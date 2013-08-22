@@ -4,8 +4,7 @@
 var currentEnv = process.env.NODE_ENV || 'developement';
 
 exports.server = {
-  port  : 8080,
-  httpRoot : 'http://xfer.hr:8080'
+  port  : 8080
 };
 
 // ping will be sent  every pingInterval seconds to client
@@ -38,8 +37,9 @@ exports.streamer = {
 
 // synchronization params.
 exports.sync = {
-  NumberOfSamples : 10,
-  MaxClockDeviation : 10
+  numberOfSamples   : 10,
+  maxClockDeviation : 10,
+  maxPing           : 1000
 };
 
 exports.media = {
@@ -83,6 +83,13 @@ exports.proxy = {
   maxDelay : 1,
 
   // time that the URL returned from proxify will be available.
-  maxAge : 60
+  maxAge : 60,
+
+  // primary url sent to clients
+  // if this timeout's secondary url will be queried
+  cdnHttpRoot : 'http://sg.anton-grbin.from.hr',
+
+  // secondary url.
+  httpRoot : 'http://xfer.hr:8080'
 
 };

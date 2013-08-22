@@ -2,7 +2,6 @@
 "use strict";
 
 var config = require('./config.js').proxy,
-  httpRoot = require('./config.js').server.httpRoot,
   url = require('url'),
   request = require('request');
 
@@ -11,10 +10,20 @@ exports.HttpProxy = function () {
   var that = this,
     resourceOnReady = {},
     resourceData = {},
-    inMemory = 0;
+    inMemory = 0,
+    chunksSentPM = 0;
+
 
   function log(what) {
-    // console.log( (new Date()).toString() + " proxy: " + what);
+    //console.log( (new Date()).toString() + " proxy: " + what);
+  }
+
+  function remoteAddr(req) {
+    var ip = req.headers['x-real-ip'];
+    if (ip === undefined) {
+      ip = req.connection.remoteAddres;
+    }
+    return ip;
   }
 
   // this is called only when we are sure that resourceData has the id data.
@@ -38,11 +47,11 @@ exports.HttpProxy = function () {
       return res.end("Bad gateway (media server).");
     }
 
-    log(" HIT:       " + id);
+    //log(" HIT from " + remoteAddr(req) + " :       " + id);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'max-age=' + config.maxAge); // 1m
-
+    ++chunksSentPM;
     res.end(data);
   }
 
@@ -103,19 +112,6 @@ exports.HttpProxy = function () {
     );
   }
 
-  // intention of this function was to warm-up cflare cache globaly
-  // which is of course not possible :)
-  // maybe if we had IP's of all cf servers and then query them explicitly.
-  function warmUpCache(id) {
-    request(
-      {
-        url: (httpRoot + config.urlPrefix + id),
-        encoding: null
-      },
-      function (e, response, body) {}
-    );
-  }
-
   // announces that someone will fetch a resource soon.
   // function receives url and returns changed url that points to
   // http://server/PREFIX/hash
@@ -125,7 +121,7 @@ exports.HttpProxy = function () {
     var id;
 
     if (!config.enable) {
-      return setTimeout(function () {done(url); }, 0);
+      return setTimeout(function () {done(url, null); }, 0);
     }
 
     // decide the URL of a new resource
@@ -157,7 +153,10 @@ exports.HttpProxy = function () {
     // hold off for throttleStream and issue new URL
     setTimeout(function () {
       log(" GO: " + id);
-      done(httpRoot + config.urlPrefix + id);
+      done(
+        config.cdnHttpRoot + config.urlPrefix + id,
+        config.httpRoot + config.urlPrefix + id
+      );
     }, config.throttleStreamOff * 1000 +
       Math.random() * config.throttleStreamAmp * 2000
       - 1000);
@@ -173,5 +172,16 @@ exports.HttpProxy = function () {
     }
     return false;
   };
+
+  function bandwidthStat() {
+    console.log("streaming " + chunksSentPM + " chunks per minute.");
+    chunksSentPM = 0;
+    setTimeout(bandwidthStat, 60 * 1000);
+  }
+
+  (function() {
+    chunksSentPM = 0;
+    setTimeout(bandwidthStat, 60 * 1000);
+  }());
 
 };
