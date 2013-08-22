@@ -23,7 +23,8 @@
  */
 var Player = function(getTime, volumeElement) {
 
-  var audioContext = new webkitAudioContext()
+  var that = this
+    , audioContext = new webkitAudioContext()
     , masterGain = null
     , timeOffset = null
     , warmUpCalled = false
@@ -56,16 +57,40 @@ var Player = function(getTime, volumeElement) {
 
   // socket.onmessage will be binded to this method.
   // when message is received, start downloading mp3 chunk and decode it.
-  this.addChunk = function(chunkInfo) {
-    var request = new XMLHttpRequest();
-    request.open('GET', chunkInfo.url, true);
+  this.addChunk = function(chunkInfo, secondary) {
+    var request = new XMLHttpRequest(), done = false;
+
+    // we have timeout only on primary URL
+    request.open(
+        'GET',
+        secondary ? chunkInfo.backupUrl : chunkInfo.url
+    );
     request.responseType = 'arraybuffer';
+
+    // after timeout query the backupUrl only if:
+    //  this is primary query
+    //  primary query is not finished
+    //  we have backup url
+    setTimeout(function () {
+      if (!secondary && !done && chunkInfo.backupUrl) {
+        console.log("using backup URL for chunk.");
+        request.abort();
+        return that.addChunk(chunkInfo, true);
+      }
+    }, window.songuess.primaryChunkDownloadTimeout);
+
+    // register onload.
     request.addEventListener('load', function(evt) {
+      done = true;
       if (evt.target.status != 200) return;
-      audioContext.decodeAudioData(evt.target.response, function(decoded) {
-        schedule(decoded, chunkInfo.start);
-      });
+      audioContext.decodeAudioData(
+        evt.target.response,
+        function(decoded) {
+          schedule(decoded, chunkInfo.start);
+        }
+      );
     }, false);
+
     request.send();
   };
 
@@ -99,7 +124,8 @@ var Player = function(getTime, volumeElement) {
       , gainNode = audioContext.createGainNode()
       , duration = buffer.duration
       , overlapTime = 0.048
-      , startTime = transponseTime(srvTime);
+      , startTime = transponseTime(srvTime)
+      , currentTime = audioContext.currentTime;
 
     // connect the components
     source.buffer = buffer;
@@ -112,8 +138,17 @@ var Player = function(getTime, volumeElement) {
     gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
 
     // play the chunk if it is in the future
-    if (startTime > 0) {
+    // log the issues.
+    if (startTime > currentTime) {
+      if (startTime - currentTime) {
+        console.log("chunk almost late: ", startTime - currentTime);
+      }
       source.noteOn(startTime);
+    } else if (startTime + duration > currentTime) {
+      console.log("chunk played with offset. late for: ", currentTime - startTime);
+      source.start(currentTime, currentTime - startTime);
+    } else {
+      console.log("chunk ignored. late for: ", currentTime - startTime);
     }
   }
 

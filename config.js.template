@@ -4,5 +4,10 @@ window.songuess = {
   /*
    * can be DummyStorage, or FileStorage
    */
-  cookie_storage : FileStorage
+  cookie_storage : FileStorage,
+
+  // for each chunk client gets primary and secondary URL.
+  // client should download primary URL and only
+  // if this timeout passes, secondary URL is queried.
+  primaryChunkDownloadTimeout : 1000
 };
