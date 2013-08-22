@@ -3,6 +3,7 @@
 
 var
   ws = require('ws'),
+  fs = require('fs'),
   config = require('./config.js').server,
   verifyToken = require('./auth.js').verifyToken,
   Syncer = require('./syncer.js').Syncer,
@@ -13,10 +14,18 @@ var onHttpRequest,
   media = new (require('./media.js').MediaGateway)(),
   proxy = new (require('./httpproxy.js').HttpProxy)(),
   chat = new (require('./chat.js').Chat)(media, proxy),
-  server = new ws.Server({server: httpServer});
+  server = new ws.Server({server: httpServer}),
+  landingHtml = null;
 
 function onHttpRequest(req, res) {
-  if (!proxy.handleRequest(req, res)) {
+  if (proxy.handleRequest(req, res)) {
+    return;
+  } else if (req.url === "/" && landingHtml !== null) {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'max-age=3600');
+    res.end(landingHtml);
+  } else {
     res.statusCode = 404;
     res.end();
   }
@@ -45,5 +54,16 @@ server.on('connection', function (sock) {
     });
   };
 });
+
+if (config.landingHtml) {
+  fs.readFile(config.landingHtml, function (err, data) {
+    if (err) {
+      console.log("while loading landing html: ", err);
+    } else {
+      console.log("landing html size: ", data.length);
+      landingHtml = data;
+    }
+  });
+}
 
 httpServer.listen(config.port);

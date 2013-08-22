@@ -13,7 +13,6 @@ exports.HttpProxy = function () {
     inMemory = 0,
     chunksSentPM = 0;
 
-
   function log(what) {
     //console.log( (new Date()).toString() + " proxy: " + what);
   }
@@ -112,6 +111,12 @@ exports.HttpProxy = function () {
     );
   }
 
+  function bandwidthStat() {
+    console.log("streaming " + chunksSentPM + " chunks per minute.");
+    chunksSentPM = 0;
+    setTimeout(bandwidthStat, 60 * 1000);
+  }
+
   // announces that someone will fetch a resource soon.
   // function receives url and returns changed url that points to
   // http://server/PREFIX/hash
@@ -172,12 +177,6 @@ exports.HttpProxy = function () {
     }
     return false;
   };
-
-  function bandwidthStat() {
-    console.log("streaming " + chunksSentPM + " chunks per minute.");
-    chunksSentPM = 0;
-    setTimeout(bandwidthStat, 60 * 1000);
-  }
 
   (function() {
     chunksSentPM = 0;

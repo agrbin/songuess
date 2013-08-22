@@ -4,7 +4,10 @@
 var currentEnv = process.env.NODE_ENV || 'developement';
 
 exports.server = {
-  port  : 8080
+  port  : 8080,
+  // this file will be served when server is hit with GET /
+  // .. or null
+  landingHtml : null
 };
 
 // ping will be sent  every pingInterval seconds to client
