@@ -8,22 +8,6 @@ var
 exports.MediaGateway = function () {
   var that = this;
 
-  this.serve = function (wsock) {
-    wsock.onMessageType("media", function (query) {
-      if (query.type === "ls") {
-        processLs(query, function (result, err) {
-          if (err) {
-            wsock.sendError(err);
-          } else {
-            wsock.sendType("media", result);
-          }
-        });
-      } else {
-        wsock.sendError("unknown media query type: " + query.type);
-      }
-    });
-  };
-
   function api(server, method, param, done) {
     var url;
     if (config[server] === undefined) {
@@ -45,25 +29,6 @@ exports.MediaGateway = function () {
       }
     });
   }
-
-  this.expandApi = function (server, input, onResult) {
-    var url;
-    if (config[server] === undefined) {
-      return onResult(null, null, "no such server");
-    }
-    url = config[server].endpoint + "/expand/";
-    request({uri: url, body: input}, function (e, response, body) {
-      if (!e && response.statusCode === 200) {
-        try {
-          onResult(JSON.parse(body), server);
-        } catch (err) {
-          onResult(null, null, "error while querying media: " + err);
-        }
-      } else {
-        return onResult(null, null, "media server not available.");
-      }
-    });
-  };
 
   function getMediaProviders() {
     var name, sol = [];
@@ -192,10 +157,45 @@ exports.MediaGateway = function () {
     }
 
     start();
-  }
+  };
+
+  this.expandApi = function (server, input, onResult) {
+    var url;
+    if (config[server] === undefined) {
+      return onResult(null, null, "no such server");
+    }
+    url = config[server].endpoint + "/expand/";
+    request({uri: url, body: input}, function (e, response, body) {
+      if (!e && response.statusCode === 200) {
+        try {
+          onResult(JSON.parse(body), server);
+        } catch (err) {
+          onResult(null, null, "error while querying media: " + err);
+        }
+      } else {
+        return onResult(null, null, "media server not available.");
+      }
+    });
+  };
+
+  this.serve = function (wsock) {
+    wsock.onMessageType("media", function (query) {
+      if (query.type === "ls") {
+        processLs(query, function (result, err) {
+          if (err) {
+            wsock.sendError(err);
+          } else {
+            wsock.sendType("media", result);
+          }
+        });
+      } else {
+        wsock.sendError("unknown media query type: " + query.type);
+      }
+    });
+  };
 
   this.getChunks = function (server, id, done) {
     api(server, '/get_chunks/?id=', id, done);
-  }
+  };
 
 };

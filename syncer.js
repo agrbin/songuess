@@ -20,7 +20,7 @@ exports.Syncer = function (ws, done) {
 
   var offsets = [],
     stopwatch = new clock.Timer(),
-    avg_ping;
+    avg_ping = 0;
 
   ws.onmessage = function (msg) {
     var clientTime = Number(msg.data);

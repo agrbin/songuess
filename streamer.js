@@ -55,19 +55,22 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
   // start song without sending multiple chunks at once
   this.play = function (playlistItem, done) {
     that.stop();
-    console.log("streamer.play: ", playlistItem);
-    media.getChunks(playlistItem.server, playlistItem.id,function (cs, err) {
-      if (err) {
-        done(null, err);
-      } else {
-        server = playlistItem.server;
-        chunkURLs = cs;
-        currentChunkIndex = 0;
-        chunkToSendPlayTime = clock.clock() + sendAhead + chunkDuration;
-        done(songStartedTime = chunkToSendPlayTime);
-        checkSchedule();
+    media.getChunks(
+      playlistItem.server,
+      playlistItem.id,
+      function (cs, err) {
+        if (err) {
+          done(null, err);
+        } else {
+          server = playlistItem.server;
+          chunkURLs = cs;
+          currentChunkIndex = 0;
+          chunkToSendPlayTime = clock.clock() + sendAhead + chunkDuration;
+          done(songStartedTime = chunkToSendPlayTime);
+          checkSchedule();
+        }
       }
-    });
+    );
   };
 
   this.stop = function () {

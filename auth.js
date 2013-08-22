@@ -19,6 +19,21 @@ function tryDecode(json, done, errmsg) {
   return data;
 }
 
+function checkScope(scope) {
+  var arr = scope.split(" "), it;
+  arr.sort();
+  expectedScope.sort();
+  if (arr.length !== expectedScope.length) {
+    return false;
+  }
+  for (it = 0; it < arr.length; ++it) {
+    if (arr[it] !== expectedScope[it]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function fetchProfile(token, done) {
   var url = profileURL + "?access_token=" + token;
   request(url, function (e, response, body) {
@@ -42,10 +57,10 @@ function fetchProfile(token, done) {
 }
 
 exports.verifyToken = function (tokenMessage, done) {
-  var token, url;
+  var token, url, user;
 
   if (config.bypassVerification !== undefined) {
-    var user = JSON.parse(JSON.stringify(config.bypassVerification));
+    user = JSON.parse(JSON.stringify(config.bypassVerification));
     user.id += Math.random().toString();
     return done(user);
   }
@@ -88,18 +103,3 @@ exports.verifyToken = function (tokenMessage, done) {
       + response.statusCode);
   });
 };
-
-function checkScope(scope) {
-  var arr = scope.split(" "), it;
-  arr.sort();
-  expectedScope.sort();
-  if (arr.length !== expectedScope.length) {
-    return false;
-  }
-  for (it = 0; it < arr.length; ++it) {
-    if (arr[it] !== expectedScope[it]) {
-      return false;
-    }
-  }
-  return true;
-}

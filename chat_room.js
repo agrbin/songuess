@@ -11,10 +11,103 @@ exports.ChatRoom = function (desc, chat, proxy) {
   var
     that = this,
     clients = {},
+    localPersonData = {},
     numberOfClients = 0,
-    playlistIterator = new PlaylistIterator(desc.playlist),
-    answerChecker = new AnswerChecker({}), // no options for now
-    streamer = new Streamer(chat.media, chunkHandler, songEndedHandler);
+    playlistIterator,
+    answerChecker,
+    streamer;
+
+  function packRoomState() {
+    var id, sol = {
+      desc : desc,
+      users : {},
+      started : streamer.getSongStartedTime() || null
+    };
+    for (id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        sol.users[id] = clients[id].publicInfo();
+      }
+    }
+    return sol;
+  }
+
+  function playNext() {
+    if (!desc.playlist.length) {
+      return;
+    }
+    streamer.play(playlistIterator.nextItem(), function (songStartTime) {
+      that.broadcast('next_song_announce', songStartTime);
+    });
+  }
+
+  function info(text) {
+    that.broadcast('say', {
+      when : clock.clock(),
+      to   : null,
+      from : null,
+      what : text
+    });
+  }
+
+  // if local record for this person (pid) is missing,
+  // initialize to {}.
+  // assign that record to a client.
+  function initLocalData(client) {
+    if (!localPersonData.hasOwnProperty(client.pid())) {
+      localPersonData[client.pid()] = {
+        score : 0
+      };
+    }
+    client.desc('local', localPersonData[client.pid()]);
+  }
+
+  function onSay(data, client) {
+    // debug
+    if (!clients.hasOwnProperty(data.from)) {
+      console.log("internal: from not in this room");
+      throw "internal: from not in this room";
+    }
+    if (data.from !== client.id()) {
+      throw "from is not you";
+    }
+    if (data.to !== null && !clients.hasOwnProperty(data.to)) {
+      throw "to specified, but not in this room";
+    }
+    that.broadcast('say', data);
+    if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
+      client.local('score', client.local('score') + 1);
+      that.broadcast('correct_answer', {
+        who: client.id(),
+        answer: playlistIterator.currentItem(),
+        when : data.when
+      });
+      playNext();
+    }
+  }
+
+  function onNewRoom(data, client) {
+    if (!chat.roomNameExists(data)) {
+      return client.error("no such room " + data + ".", 1);
+    }
+    chat.move(client, chat.whereIs(client), chat.getRoomByName(data));
+  }
+
+  function onNext(data, client) {
+    that.broadcast('called_next', {
+      who: client.id(),
+      answer: playlistIterator.currentItem(),
+      when : data.when
+    });
+    playNext();
+  }
+
+  function onResetScore(data, client) {
+    client.local('score', 0);
+    that.broadcast('called_reset', {
+      who: client.id(),
+      when: data.when
+    });
+  }
 
   function chunkHandler(chunkInfo) {
     proxy.proxify(chunkInfo.url, function (url) {
@@ -31,27 +124,30 @@ exports.ChatRoom = function (desc, chat, proxy) {
     playNext();
   }
 
-  function packRoomState() {
-    var id, sol = {
-      desc : desc,
-      users : {},
-      started : streamer.getSongStartedTime() || null
-    };
-    for (id in clients) {
-      if (clients.hasOwnProperty(id)) {
-        sol.users[id] = clients[id].publicInfo();
-      }
-    }
-    return sol;
-  }
-
   this.desc = desc;
 
-  this.broadcast = function (type, msg) {
+  this.broadcast = function (type, msg, except) {
     var id;
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
-        clients[id].send(type, msg);
+        if (!(except && except.id === id)) {
+          clients[id].send(type, msg);
+        }
+      }
+    }
+  };
+
+  // this is triggered from ChatClient::local
+  // function will copy local data to all other clients
+  // with same pid and to room's localPersonData
+  this.localDataChanged = function (client) {
+    var pid = client.pid(), id;
+    localPersonData[pid] = client.desc('local');
+    for (id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        if (clients[id].pid() === pid) {
+          clients[id].desc('local', localPersonData[pid]);
+        }
       }
     }
   };
@@ -59,43 +155,20 @@ exports.ChatRoom = function (desc, chat, proxy) {
   // add a client to a list of clients and
   // notify all clients about the adding.
   this.enter = function (client) {
-    this.broadcast("new_client", client.publicInfo());
     numberOfClients++;
     if (numberOfClients === 1) {
       playNext();
     }
     clients[client.id()] = client;
-    client.send("room_state", packRoomState());
-    client.onMessage("say", onSay);
+    client.setRoom(that);
+    initLocalData(client);
 
-    // handle moving to another room
-    client.onMessage("new_room", function (data, client) {
-      if (!chat.roomNameExists(data)) {
-        return client.error("no such room " + data + ".", 1);
-      }
-      chat.move(
-        client, chat.whereIs(client), chat.getRoomByName(data)
-      );
-    });
-
-    // register next callback
-    client.onMessage('next', function (data, client) {
-      that.broadcast('called_next', {
-        who: client.id(),
-        answer: playlistIterator.currentItem(),
-        when : data.when
-      });
-      playNext();
-    });
-
-    // register score reset
-    client.onMessage('reset_score', function (data, client) {
-      client.correctAnswers = 0;
-      that.broadcast('called_reset', {
-        who: client.id(),
-        when: data.when
-      });
-    });
+    this.broadcast('new_client', client.publicInfo(), client);
+    client.send('room_state', packRoomState());
+    client.onMessage('say', onSay);
+    client.onMessage('new_room', onNewRoom);
+    client.onMessage('next', onNext);
+    client.onMessage('reset_score', onResetScore);
   };
 
   // pop a client from a list of clients and
@@ -109,47 +182,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
     this.broadcast('old_client', [client.id(), reason]);
   };
 
-  function info(text) {
-    that.broadcast('say', {
-      when : clock.clock(),
-      to   : null,
-      from : null,
-      what : text
-    });
-  }
-
-  function playNext() {
-    if (!desc.playlist.length) {
-      return;
-    }
-    streamer.play(playlistIterator.nextItem(), function (songStartTime) {
-      that.broadcast('next_song_announce', songStartTime);
-    });
-  }
-
-  function onSay(data, client) {
-    // debug
-    if (!clients.hasOwnProperty(data.from)) {
-      throw "from not in this room";
-    }
-    if (data.from !== client.id()) {
-      throw "from is not you";
-    }
-    if (data.to !== null && !clients.hasOwnProperty(data.to)) {
-      throw "to specified, but not in this room";
-    }
-    that.broadcast('say', data);
-
-    if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
-      client.correctAnswers += 1;
-      that.broadcast('correct_answer', {
-        who: client.id(),
-        score: client.correctAnswers,
-        answer: playlistIterator.currentItem(),
-        when : data.when
-      });
-      playNext();
-    }
-  }
-
+  (function () {
+    playlistIterator = new PlaylistIterator(desc.playlist);
+    answerChecker = new AnswerChecker({});
+    streamer = new Streamer(chat.media, chunkHandler, songEndedHandler);
+  }());
 };

@@ -48,8 +48,10 @@ exports.auth = {
   clientID    :  'XYZ.apps.googleusercontent.com',
   verifyURL   :  'https://www.googleapis.com/oauth2/v1/tokeninfo',
   profileURL  :  'https://www.googleapis.com/oauth2/v1/userinfo',
-  scope       :  ['https://www.googleapis.com/auth/userinfo.profile'
-                   ,'https://www.googleapis.com/auth/userinfo.email']
+  scope       :  [
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email'
+  ]
 };
 
 exports.proxy = {

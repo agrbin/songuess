@@ -5,7 +5,8 @@ var ws = require('ws');
 
 exports.ChatClient = function (wsock, user, chat) {
 
-  var that = this;
+  var that = this,
+    currentRoom;
 
   // when we initiate close.
   function kill(reason) {
@@ -32,11 +33,34 @@ exports.ChatClient = function (wsock, user, chat) {
     kill("30 minutes of inactivity.");
   });
 
+  this.setRoom = function (room) {
+    currentRoom = room;
+  };
+
+  this.getRoom = function () {
+    return currentRoom;
+  };
+
   this.id = function () {
     return user.id;
   };
 
-  this.desc = function (what) {
+  this.pid = function () {
+    return user.id.split(".")[0];
+  };
+
+  this.local = function (field, set) {
+    if (set !== undefined) {
+      user.local[field] = set;
+      currentRoom.localDataChanged(that);
+    }
+    return user.local[field];
+  };
+
+  this.desc = function (what, set) {
+    if (set !== undefined) {
+      user[what] = set;
+    }
     return user[what];
   };
 
@@ -47,7 +71,8 @@ exports.ChatClient = function (wsock, user, chat) {
       display : this.desc('display'),
       gender  : this.desc('gender'),
       picture : this.desc('picture'),
-      score   : this.correctAnswers
+      ping    : this.desc('ping'),
+      score   : this.local('score')
     };
   };
 
@@ -77,5 +102,4 @@ exports.ChatClient = function (wsock, user, chat) {
     });
   };
 
-  this.correctAnswers = 0;
 };

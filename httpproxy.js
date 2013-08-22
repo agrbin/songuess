@@ -52,7 +52,7 @@ exports.HttpProxy = function () {
   // valid CORS headers for javasciprt
   // hash, req, res
   //
-  function fetch (id, req, res) {
+  function fetch(id, req, res) {
     // first of all, this is fetched trough ajax:
     res.setHeader('Access-Control-Allow-Origin', '*');
     // now, possible scenarios:
@@ -66,20 +66,21 @@ exports.HttpProxy = function () {
     if (resourceOnReady.hasOwnProperty(id)) {
       log("WAIT: " + id);
       return resourceOnReady[id].push(function () {
-        sendData(id, req, res); 
+        sendData(id, req, res);
       });
     }
     // 3. we haven't heard for this id.
     res.statusCode = 404;
     res.end("Resource not found.");
-  };
+  }
 
   function randomId() {
     return Math.random().toString(36).substring(2);
   }
 
   function fireOnReady(id) {
-    for (var it = 0; it < resourceOnReady[id].length; ++it) {
+    var it;
+    for (it = 0; it < resourceOnReady[id].length; ++it) {
       resourceOnReady[id][it]();
     }
   }
@@ -90,7 +91,7 @@ exports.HttpProxy = function () {
       {
         url: url,
         timeout: config.maxDelay * 1000,
-        encoding:null
+        encoding: null
       },
       function (e, response, body) {
         if (!e && response.statusCode === 200) {
@@ -109,7 +110,7 @@ exports.HttpProxy = function () {
     request(
       {
         url: (httpRoot + config.urlPrefix + id),
-        encoding:null
+        encoding: null
       },
       function (e, response, body) {}
     );
@@ -124,13 +125,13 @@ exports.HttpProxy = function () {
     var id;
 
     if (!config.enable) {
-      return setTimeout(function () {done(url);}, 0);
+      return setTimeout(function () {done(url); }, 0);
     }
 
     // decide the URL of a new resource
     // create resourceReady subscribe point for this resource.
     id = randomId();
-    log (" NEW: " + id);
+    log(" NEW: " + id);
     resourceOnReady[id] = [];
 
     // start loading the resource
@@ -155,7 +156,7 @@ exports.HttpProxy = function () {
 
     // hold off for throttleStream and issue new URL
     setTimeout(function () {
-      log (" GO: " + id);
+      log(" GO: " + id);
       done(httpRoot + config.urlPrefix + id);
     }, config.throttleStreamOff * 1000 +
       Math.random() * config.throttleStreamAmp * 2000
@@ -168,9 +169,7 @@ exports.HttpProxy = function () {
     var prefix = config.urlPrefix,
       method = url.parse(req.url).pathname;
     if (method.substr(0, prefix.length) === prefix) {
-      return fetch(
-        method.substr(prefix.length), req, res
-      );
+      return fetch(method.substr(prefix.length), req, res);
     }
     return false;
   };

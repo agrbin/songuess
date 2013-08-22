@@ -8,11 +8,12 @@ var
   Syncer = require('./syncer.js').Syncer,
   SockWrapper = require('./sockwrap.js').SockWrapper;
 
-var httpServer = require('http').createServer(onHttpRequest);
-var media = new (require('./media.js').MediaGateway)();
-var proxy = new (require('./httpproxy.js').HttpProxy)();
-var chat = new (require('./chat.js').Chat)(media, proxy);
-var server = new ws.Server({server: httpServer});
+var onHttpRequest,
+  httpServer = require('http').createServer(onHttpRequest),
+  media = new (require('./media.js').MediaGateway)(),
+  proxy = new (require('./httpproxy.js').HttpProxy)(),
+  chat = new (require('./chat.js').Chat)(media, proxy),
+  server = new ws.Server({server: httpServer});
 
 function onHttpRequest(req, res) {
   if (!proxy.handleRequest(req, res)) {
