@@ -36,7 +36,9 @@ exports.SockWrapper = function (sock, syncRtt) {
   // can have a impact in game.
   function ping() {
     if (pingTimeout !== null) {
-      return sleepyCallback("server thinks that client is gone.");
+      if (sleepyCallback) {
+        return sleepyCallback("server thinks that client is gone.");
+      }
     }
     that.sendType('non-patient-firewall', null, stopwatch.reset);
     pingTimeout = setTimeout(ping, config.pingInterval * 1000);
@@ -45,10 +47,14 @@ exports.SockWrapper = function (sock, syncRtt) {
       pingTimeout = null;
       clockDifference = (clock.clock() - syncRtt / 2) - data.when;
       if (Math.abs(rtt - syncRtt) > 3000) {
-        sleepyCallback("network interupted");
+        if (sleepyCallback) {
+          sleepyCallback("network interupted");
+        }
       }
       if (clockDifference > 500 && clockDifference > 1.5 * syncRtt) {
-        sleepyCallback("clocks went off, or connection to slow (ping)");
+        if (sleepyCallback) {
+          sleepyCallback("clocks went off, or connection to slow (ping)");
+        }
       }
     });
   }
