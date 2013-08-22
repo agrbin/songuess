@@ -1,1 +1,2 @@
 exports.port = 8080;
+exports.chunkBaseURL = 'http://localhost:8081/chunk/';
