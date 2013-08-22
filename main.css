@@ -99,6 +99,7 @@ h1 {
   margin-left: 3px;
   overflow-y: hidden;
   height: 15px;
+  -webkit-animation-duration: 0.4s;
 }
 
 .chat .right .full-client span {
@@ -108,6 +109,12 @@ h1 {
 
 .chat .sys {
   color: gray;
+}
+
+@-webkit-keyframes blink-element {
+  0% {background: white;}
+  50% {background: lightgray; }
+  100% {background: white; }
 }
 
 /* media */
