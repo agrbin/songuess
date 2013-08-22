@@ -1,23 +1,56 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var ws = require('ws');
+var ws = require('ws')
+  , config = require('./config.js').socket
+  , clock = require('./clock.js');
 
-exports.SockWrapper = function (sock) {
+exports.SockWrapper = function (sock, syncRtt) {
 
   var that = this,
     messageCallbacks = {},
     closeCallbacks = [],
     sleepyTimeout,
-    sleepyCallback;
+    sleepyCallback,
+    pingTimeout = null,
+    stopwatch = new clock.Timer();
 
   function tickSleepy() {
     clearTimeout(sleepyTimeout);
     sleepyTimeout = setTimeout(function () {
       if (sleepyCallback) {
-        sleepyCallback();
+        sleepyCallback(config.sleepyPeriod + " seconds of inactivity");
       }
-    }, 30 * 60 * 1000);
+    }, config.sleepyPeriod * 1000);
+  }
+
+  // this function has some stupid constants to assure that clocks are synced
+  // at all times.
+  // in human: Every pingInterval seconds ping will be sent to a client. Client
+  // will answer to that ping at once with his clock value.
+  // Round trip time will be compared with round trip time from sync process.
+  // If difference is larger than 3 seconds, client is killed.
+  // If client's clock is different from projected clock time by more than 0.5
+  // seconds and by synced round trip by 50%, client is killed.
+  // client will never be killed for a few milliseconds skew, but few seconds
+  // can have a impact in game.
+  function ping() {
+    if (pingTimeout !== null) {
+      return sleepyCallback("server thinks that client is gone.");
+    }
+    that.sendType('non-patient-firewall', null, stopwatch.reset);
+    pingTimeout = setTimeout(ping, config.pingInterval * 1000);
+    that.onMessageType('non-patient-firewall', function (data) {
+      var clockDifference, rtt = stopwatch.get();
+      pingTimeout = null;
+      clockDifference = (clock.clock() - syncRtt / 2) - data.when;
+      if (Math.abs(rtt - syncRtt) > 3000) {
+        sleepyCallback("network interupted");
+      }
+      if (clockDifference > 500 && clockDifference > 1.5 * syncRtt) {
+        sleepyCallback("clocks went off, or connection to slow (ping)");
+      }
+    });
   }
 
   this.onMessageType = function (type, callback) {
@@ -68,11 +101,13 @@ exports.SockWrapper = function (sock) {
 
   sock.onmessage = function (message) {
     var type, data;
-    tickSleepy();
     try {
       data = JSON.parse(message.data);
     } catch (err) {
       that.close("recieved message is not json.");
+    }
+    if (type !== 'non-patient-firewall') {
+      tickSleepy();
     }
     for (type in messageCallbacks) {
       if (messageCallbacks.hasOwnProperty(type)) {
@@ -91,6 +126,9 @@ exports.SockWrapper = function (sock) {
     clearTimeout(sleepyTimeout);
   };
 
-  tickSleepy();
+  (function() {
+    tickSleepy();
+    setTimeout(ping, config.pingInterval * 1000);
+  }());
 
 };

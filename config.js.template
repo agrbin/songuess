@@ -8,6 +8,15 @@ exports.server = {
   httpRoot : 'http://xfer.hr:8080'
 };
 
+// ping will be sent  every pingInterval seconds to client
+// to keep the connection alive across non patient firewalls.
+// if socket notices sleepyPeriod seconds without user activity, that user will
+// be disconnected.
+exports.socket = {
+  pingInterval : 60,
+  sleepyPeriod : 30 * 60
+};
+
 // server and client have synced clocks. if chunk is to be played less than
 // sendAhead seconds in the future, dispatch process for that chunk will begin.
 // every setTimeout-ed 0.5 seconds streamer will check above condition.

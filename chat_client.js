@@ -29,8 +29,8 @@ exports.ChatClient = function (wsock, user, chat) {
     chat.kill(that, "connection lost.");
   });
 
-  wsock.onSleepy(function () {
-    kill("30 minutes of inactivity.");
+  wsock.onSleepy(function (reason) {
+    kill(reason);
   });
 
   this.setRoom = function (room) {

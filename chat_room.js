@@ -130,7 +130,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     var id;
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
-        if (!(except && except.id === id)) {
+        if (!(except && except.id() === id)) {
           clients[id].send(type, msg);
         }
       }
