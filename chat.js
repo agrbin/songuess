@@ -4,7 +4,7 @@ function Chat(wsock, user, media, onFatal) {
     commandCallbacks = {},
     ui = new ChatUI(this, user),
     clients = {}, ids = [], playlist,
-    player = new Player(myClock.clock, null);
+    player; // = new Player(myClock.clock, null);
 
   function initialize() {
     var init_room = location.hash;

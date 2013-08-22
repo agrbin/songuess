@@ -50,11 +50,21 @@ function ChatUI(chat, user) {
     $(body).empty();
   };
 
-  this.updateList = function () {
+  this.updateList = function (idWithCorrectAnswer) {
+    var
+      it,
+      client,
+      clientElement;
+
     $(list).empty();
-    for (it = 0; it < chat.getNumberOfClients(); ++it)
-      $(list)
-        .append(pretty.fullClient(chat.getClient(it)));
+    for (it = 0; it < chat.getNumberOfClients(); ++it) {
+      client = chat.getClient(it);
+      clientElement = $(pretty.fullClient(client));
+      $(list).append(clientElement);
+      if (idWithCorrectAnswer && idWithCorrectAnswer === client.id) {
+        clientElement.css('webkitAnimationName', 'blink-element');
+      }
+    }
   };
 
   this.addNotice = function (what) {
@@ -115,7 +125,7 @@ function ChatUI(chat, user) {
       "! The song was " +
       pretty.song(desc.answer) + ".");
 
-    this.updateList();
+    this.updateList(client.id);
   };
 
   this.calledReset = function (desc) {
