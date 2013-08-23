@@ -159,8 +159,8 @@ exports.HttpProxy = function () {
     setTimeout(function () {
       log(" GO: " + id);
       done(
-        config.cdnHttpRoot + config.urlPrefix + id,
-        config.httpRoot + config.urlPrefix + id
+        config.cdnHttpRoot + config.urlPrefix + id + config.urlSuffix,
+        config.httpRoot + config.urlPrefix + id + config.urlSuffix
       );
     }, config.throttleStreamOff * 1000 +
       Math.random() * config.throttleStreamAmp * 2000
@@ -171,9 +171,12 @@ exports.HttpProxy = function () {
   // false if request should be handled afterwards.
   this.handleRequest = function (req, res) {
     var prefix = config.urlPrefix,
-      method = url.parse(req.url).pathname;
+      method = url.parse(req.url).pathname,
+      id;
     if (method.substr(0, prefix.length) === prefix) {
-      return fetch(method.substr(prefix.length), req, res);
+      id = method.substr(prefix.length);
+      id = id.substr(0, id.length - config.urlSuffix.length);
+      return fetch(id, req, res);
     }
     return false;
   };

@@ -80,6 +80,9 @@ exports.proxy = {
   // where will proxy serve chunks
   urlPrefix : '/c/',
 
+  // you can add extension to a chunk
+  urlSuffix : '',
+
   // maximum number of seconds for media server to
   // send a chunk. after this we will issue 504 gateway
   // timeout to clients requesting that chunk.
@@ -90,9 +93,9 @@ exports.proxy = {
 
   // primary url sent to clients
   // if this timeout's secondary url will be queried
-  cdnHttpRoot : 'http://sg.anton-grbin.from.hr',
+  cdnHttpRoot : 'http://localhost:8080',
 
   // secondary url.
-  httpRoot : 'http://xfer.hr:8080'
+  httpRoot : null
 
 };
