@@ -27,7 +27,7 @@ exports.SockWrapper = function (sock, syncRtt) {
   function clockDifference(delta) {
     if (delta > 500 && delta > 1.5 * syncRtt) {
       if (sleepyCallback) {
-        sleepyCallback("clocks went off, or connection to slow (ping)");
+        sleepyCallback("clocks went off or ping changed");
       }
     }
   }
@@ -118,8 +118,8 @@ exports.SockWrapper = function (sock, syncRtt) {
     if (type !== 'non-patient-firewall') {
       tickSleepy();
     }
-    if (data.type.hasOwnProperty('when')) {
-      clockDifference(clock.clock() - syncRtt / 2 - data.type.when);
+    if (data.data.hasOwnProperty('when')) {
+      clockDifference(clock.clock() - syncRtt / 2 - data.data.when);
     }
     for (type in messageCallbacks) {
       if (messageCallbacks.hasOwnProperty(type)) {
