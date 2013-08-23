@@ -118,8 +118,8 @@ exports.SockWrapper = function (sock, syncRtt) {
     if (type !== 'non-patient-firewall') {
       tickSleepy();
     }
-    if (data.hasOwnProperty('when')) {
-      clockDifference(clock.clock() - syncRtt / 2 - data.when);
+    if (data.type.hasOwnProperty('when')) {
+      clockDifference(clock.clock() - syncRtt / 2 - data.type.when);
     }
     for (type in messageCallbacks) {
       if (messageCallbacks.hasOwnProperty(type)) {
