@@ -1,9 +1,9 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var ws = require('ws')
-  , config = require('./config.js').socket
-  , clock = require('./clock.js');
+var ws = require('ws'),
+  config = require('./config.js').socket,
+  clock = require('./clock.js');
 
 exports.SockWrapper = function (sock, syncRtt) {
 
@@ -22,6 +22,14 @@ exports.SockWrapper = function (sock, syncRtt) {
         sleepyCallback(config.sleepyPeriod + " seconds of inactivity");
       }
     }, config.sleepyPeriod * 1000);
+  }
+
+  function clockDifference(delta) {
+    if (delta > 500 && delta > 1.5 * syncRtt) {
+      if (sleepyCallback) {
+        sleepyCallback("clocks went off, or connection to slow (ping)");
+      }
+    }
   }
 
   // this function has some stupid constants to assure that clocks are synced
@@ -43,19 +51,14 @@ exports.SockWrapper = function (sock, syncRtt) {
     that.sendType('non-patient-firewall', null, stopwatch.reset);
     pingTimeout = setTimeout(ping, config.pingInterval * 1000);
     that.onMessageType('non-patient-firewall', function (data) {
-      var clockDifference, rtt = stopwatch.get();
+      var rtt = stopwatch.get();
       pingTimeout = null;
-      clockDifference = (clock.clock() - syncRtt / 2) - data.when;
       if (Math.abs(rtt - syncRtt) > 3000) {
         if (sleepyCallback) {
           sleepyCallback("network interupted");
         }
       }
-      if (clockDifference > 500 && clockDifference > 1.5 * syncRtt) {
-        if (sleepyCallback) {
-          sleepyCallback("clocks went off, or connection to slow (ping)");
-        }
-      }
+      clockDifference(clock.clock() - syncRtt / 2 - data.when);
     });
   }
 
@@ -115,6 +118,9 @@ exports.SockWrapper = function (sock, syncRtt) {
     if (type !== 'non-patient-firewall') {
       tickSleepy();
     }
+    if (data.hasOwnProperty('when')) {
+      clockDifference(clock.clock() - syncRtt / 2 - data.when);
+    }
     for (type in messageCallbacks) {
       if (messageCallbacks.hasOwnProperty(type)) {
         if (type === data.type) {
@@ -132,7 +138,7 @@ exports.SockWrapper = function (sock, syncRtt) {
     clearTimeout(sleepyTimeout);
   };
 
-  (function() {
+  (function () {
     tickSleepy();
     setTimeout(ping, config.pingInterval * 1000);
   }());

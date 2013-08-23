@@ -181,7 +181,7 @@ exports.HttpProxy = function () {
     return false;
   };
 
-  (function() {
+  (function () {
     chunksSentPM = 0;
     setTimeout(bandwidthStat, 60 * 1000);
   }());

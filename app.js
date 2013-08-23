@@ -20,7 +20,8 @@ var onHttpRequest,
 function onHttpRequest(req, res) {
   if (proxy.handleRequest(req, res)) {
     return;
-  } else if (req.url === "/" && landingHtml !== null) {
+  }
+  if (req.url === "/" && landingHtml !== null) {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'max-age=3600');
