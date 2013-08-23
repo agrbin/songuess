@@ -140,7 +140,7 @@ var Player = function(getTime, volumeElement) {
     // play the chunk if it is in the future
     // log the issues.
     if (startTime > currentTime) {
-      if (startTime - currentTime) {
+      if (startTime - currentTime < 1) {
         console.log("chunk almost late: ", startTime - currentTime);
       }
       source.noteOn(startTime);
