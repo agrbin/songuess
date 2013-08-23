@@ -1,8 +1,7 @@
 /*
  * Auth will communicate with google to obtain acces token that can be
  * verified with server. location.hash will remain unchanged in process.
- * ClientID and scope can be changed in OAuthParams var at the top of the
- * class.
+ * ClientID and scope can be changed in window.songuess config params.
  * This class have myClock for dependency.
  *
  * Constructor:
@@ -38,12 +37,10 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
   var that = this,
     oAuthParams = {
       response_type : 'token',
-      client_id     : '156401229517.apps.googleusercontent.com',
+      client_id     : window.songuess.authClientID,
       redirect_uri  : document.URL.replace(/#.*/, ''),
-      scope :
-        'https://www.googleapis.com/auth/userinfo.email' +
-        ' https://www.googleapis.com/auth/userinfo.profile',
-      state : location.hash || ""
+      scope         : window.songuess.authScope,
+      state         : location.hash || ""
     },
     COOKIE_FILE_NAME = "cookie",
     token;

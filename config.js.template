@@ -1,13 +1,20 @@
 window.songuess = {
+  // nodejs master server
   master_server : "ws://localhost:8080/",
 
-  /*
-   * can be DummyStorage, or FileStorage
-   */
+  // can be DummyStorage, or FileStorage
   cookie_storage : FileStorage,
 
   // for each chunk client gets primary and secondary URL.
   // client should download primary URL and only
   // if this timeout passes, secondary URL is queried.
-  primaryChunkDownloadTimeout : 1000
+  primaryChunkDownloadTimeout : 1000,
+
+  // client ID for google oAuth
+  authClientID : 'XYZ.apps.googleusercontent.com',
+
+  // scope for google oAuth
+  authScope :
+        'https://www.googleapis.com/auth/userinfo.email ' +
+        'https://www.googleapis.com/auth/userinfo.profile'
 };
