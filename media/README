@@ -2,6 +2,10 @@ dependencies:
 - lame
 - mpgcat (found in mpgtx package)
 
+on debian:
+
+apt-get install lame mpgtx
+
 mp3s to host should be put in /mp3 folder.
 utils/rescan_library.js is used to update library.
 every new or modified mp3 must be resampled and chunkified, this lasts 5-6 seconds per song.

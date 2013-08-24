@@ -1,4 +1,3 @@
-#!/opt/local/bin/node
 /*jslint regexp: true, stupid: true, indent: 2, plusplus: true */
 "use strict";
 
