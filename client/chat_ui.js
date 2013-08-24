@@ -2,38 +2,13 @@
 // user is current logged in user.
 function ChatUI(chat, user) {
 
-  var body, users_list, input, user;
-  var announceTimer;
-
-  function initialize() {
-    var it;
-    body = $(".chat .left")[0];
-    users_list = new UsersList($(".chat .right")[0]);
-    input = $(".chat input")[0];
-    $(".chat form").submit(function () {
-      if ($(input).val().length > 0) {
-        chat.handleSend($(input).val());
-        $(input).val("");
-      }
-      return false;
-    });
-    $("h1").hide();
-    $(".chat div,.chat input").css('border-color',
-                 pretty.colorStyle(user.id));
-    $(".layout.chat").show();
-    $(".chat .col").click(function () {
-      $(input).focus();
-    });
-    $(input).focus();
-    $(window)
-      .on('hashchange', function() {
-        chat.triggerCommand("/join " + location.hash);
-      })
-      .on('resize', function() {
-        $(body)
-          .scrollTop(body.scrollHeight);
-      });
-  }
+  var
+    body, 
+    users_list, 
+    input, 
+    user,
+    announceTimer,
+    that = this;
 
   function entry (type, what) {
     $("<div>")
@@ -48,8 +23,6 @@ function ChatUI(chat, user) {
   this.clear = function () {
     $(body).empty();
   };
-
-  this.updateList = users_list.updateList;
 
   this.addNotice = function (what) {
     entry("sys",
@@ -143,6 +116,36 @@ function ChatUI(chat, user) {
       + pretty.text(msg.what));
   };
 
-  initialize();
+  (function () {
+    var it;
+    body = $(".chat .left")[0];
+    input = $(".chat input")[0];
+    $(".chat form").submit(function () {
+      if ($(input).val().length > 0) {
+        chat.handleSend($(input).val());
+        $(input).val("");
+      }
+      return false;
+    });
+    $("h1").hide();
+    $(".chat div,.chat input").css('border-color',
+                 pretty.colorStyle(user.id));
+    $(".layout.chat").show();
+    $(".chat .col").click(function () {
+      $(input).focus();
+    });
+    $(input).focus();
+    $(window)
+      .on('hashchange', function() {
+        chat.triggerCommand("/join " + location.hash);
+      })
+      .on('resize', function() {
+        $(body)
+          .scrollTop(body.scrollHeight);
+      });
+
+    users_list = new UsersList($(".chat .right")[0]);
+    that.updateList = users_list.updateList;
+  }());
 
 }
