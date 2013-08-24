@@ -58,7 +58,7 @@ exports.Server = function () {
     var file = files[req.url], header;
     if (req.url === "/config.js") {
       res.statusCode = 200;
-      res.setHeader('Content-Type', 'application/x-javasciprt');
+      res.setHeader('Content-Type', 'application/x-javascript');
       res.setHeader('Content-Length', clientConfig.length);
       res.setHeader('Cache-Control', cacheHeader);
       res.end(clientConfig);
