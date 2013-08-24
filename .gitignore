@@ -1,10 +1,9 @@
-node_modules
-
 *.swp
 
 # this file can be used to change default config on server
 server/config.override.js
+server/config.override.js.backup
+server/node_modules
 
 # generate from client using minify.js
-index.min.html
-
+client/index.min.html

@@ -3,6 +3,7 @@
 
 var
   config = require("./config.js").media,
+  servers = config.servers,
   request = require('request');
 
 exports.MediaGateway = function () {
@@ -10,14 +11,14 @@ exports.MediaGateway = function () {
 
   function api(server, method, param, done) {
     var url;
-    if (config[server] === undefined) {
+    if (servers[server] === undefined) {
       return done(null, "no such server");
     }
-    url = config[server].endpoint + method;
+    url = servers[server].endpoint + method;
     if (param) {
       url += encodeURIComponent(param);
     }
-    request({url: url, timeout: 500}, function (e, response, body) {
+    request({url: url, timeout: config.timeout}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {
           done(JSON.parse(body));
@@ -32,13 +33,13 @@ exports.MediaGateway = function () {
 
   function getMediaProviders() {
     var name, sol = [];
-    for (name in config) {
-      if (config.hasOwnProperty(name)) {
+    for (name in servers) {
+      if (servers.hasOwnProperty(name)) {
         sol.push({
           name : name,
           apath : [name],
           type : "server",
-          desc : config[name].desc
+          desc : servers[name].desc
         });
       }
     }
@@ -161,10 +162,10 @@ exports.MediaGateway = function () {
 
   this.expandApi = function (server, input, onResult) {
     var url;
-    if (config[server] === undefined) {
+    if (servers[server] === undefined) {
       return onResult(null, null, "no such server");
     }
-    url = config[server].endpoint + "/expand/";
+    url = servers[server].endpoint + "/expand/";
     request({uri: url, body: input}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {

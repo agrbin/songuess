@@ -13,7 +13,7 @@ function finish(min_css, min_js, buf) {
   process.exit(0);
 }
 
-// this work only for our (nice) index.html
+// this work only for our specific index.html!
 function minifyHtml(lines) {
   var it, line, css_regex, js_regex, m
     , css_content = "", js_content = "", buf = "";
@@ -27,9 +27,11 @@ function minifyHtml(lines) {
       continue;
     }
     if (m = js_regex.exec(lines[it])) {
-      if (js_content === "") buf += "<script><!--js--></script>";
-      js_content += fs.readFileSync(m[1]) + "\n";
-      continue;
+      if (m[1] !== 'config.js') {
+        if (js_content === "") buf += "<script><!--js--></script>";
+        js_content += fs.readFileSync(m[1]) + "\n";
+        continue;
+      }
     }
     buf += line.trim();
   }

@@ -68,10 +68,16 @@ exports.sync = {
 };
 
 exports.media = {
-  'local-media' : {
-    endpoint  : 'http://localhost:8081',
-    desc      : 'default media server'
-  },
+  // seconds to wait before media server will be flagged as unavailable.
+  timetout : 1,
+
+  // list servers.
+  servers : {
+    'local-media' : {
+      endpoint  : 'http://localhost:8081',
+      desc      : 'default media server'
+    }
+  }
 };
 
 exports.auth = {
@@ -95,7 +101,7 @@ exports.client = {
   // for each chunk client gets primary and secondary URL.
   // client should download primary URL and only
   // if this timeout passes, secondary URL is queried.
-  primaryChunkDownloadTimeout : 1000,
+  primaryChunkDownloadTimeout : 1500,
 
   // copied values from server config to client config
   authClientID : exports.auth.clientID,
