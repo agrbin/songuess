@@ -17,12 +17,15 @@ exports.HttpProxy = function () {
     //console.log( (new Date()).toString() + " proxy: " + what);
   }
 
+  // ovo na vise mjesta treba
   function remoteAddr(req) {
-    var ip = req.headers['x-real-ip'];
-    if (ip === undefined) {
-      ip = req.connection.remoteAddres;
+    var ipFields = ['x-real-ip', 'x-forwarded-for'], it;
+    for (it = 0; it < ipFields.length; ++it) {
+      if (req.headers[ipFields[it]] !== undefined) {
+        return req.headers[ipFields[it]];
+      }
     }
-    return ip;
+    return req.connection.remoteAddres;
   }
 
   // this is called only when we are sure that resourceData has the id data.

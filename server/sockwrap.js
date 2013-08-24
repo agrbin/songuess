@@ -25,7 +25,7 @@ exports.SockWrapper = function (sock, syncRtt) {
   }
 
   function clockDifference(delta) {
-    if (delta > 500 && delta > 1.5 * syncRtt) {
+    if (delta > 1000 && delta > 3 * syncRtt) {
       if (sleepyCallback) {
         sleepyCallback("clocks went off or ping changed: " + delta);
       }
