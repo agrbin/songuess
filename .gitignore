@@ -1,14 +1,9 @@
-lib-cov
-*.seed
-*.log
-*.csv
-*.dat
-*.out
-*.pid
-*.gz
+node_modules
 
-pids
-logs
-results
+*.swp
 
-npm-debug.log
+# use config.js.template to create config.js
+config.js
+
+# this file can be generated from songuess-client repos using minify.js
+index.min.html

@@ -1,4 +1,4 @@
 songuess
 ========
 
-songuess is a html 5 game.
+Songuess is a HTML5 game.

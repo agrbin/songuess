@@ -1,0 +1,15 @@
+{
+  "name": "streamer",
+  "subdomain": "agrbin-streamer",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "version": "0.0.0-3",
+  "engines": {
+    "node": "0.8.x"
+  },
+  "dependencies": {
+    "ws": "0.4.x",
+    "request": "2.x.0"
+  }
+}
