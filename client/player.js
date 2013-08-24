@@ -27,6 +27,7 @@ var Player = function(getTime, volumeElement) {
     , audioContext = new webkitAudioContext()
     , masterGain = null
     , timeOffset = null
+    , overlapTime = window.songuess.overlapTime
     , warmUpCalled = false
     ; 
 
@@ -123,7 +124,6 @@ var Player = function(getTime, volumeElement) {
     var source = audioContext.createBufferSource()
       , gainNode = audioContext.createGainNode()
       , duration = buffer.duration
-      , overlapTime = 0.048
       , startTime = transponseTime(srvTime)
       , currentTime = audioContext.currentTime;
 

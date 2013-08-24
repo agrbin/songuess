@@ -2,7 +2,9 @@
 "use strict";
 
 var fs = require('fs'),
-  config = require('./config.js').server;
+  config = require('./config.js').server,
+  clientConfig = "window.songuess = " +
+    JSON.stringify(require('./config.js').client) + ";";
 
 exports.Server = function () {
 
@@ -54,6 +56,14 @@ exports.Server = function () {
 
   this.handleRequest = function (req, res) {
     var file = files[req.url], header;
+    if (req.url === "/config.js") {
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/x-javasciprt');
+      res.setHeader('Content-Length', clientConfig.length);
+      res.setHeader('Cache-Control', cacheHeader);
+      res.end(clientConfig);
+      return;
+    }
     if (file === undefined) {
       res.statusCode = 404;
       res.end();
@@ -95,7 +105,7 @@ exports.Server = function () {
         } else {
           for (it = 0; it < files.length; ++it) {
             if (files[it][0] !== '.') {
-              readAndAdd("/" + files[it], config.htdocsDir + "/" + files[it]);
+              readAndAdd("/" + files[it], config.htdocsDir + files[it]);
             }
           }
         }

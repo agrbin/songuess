@@ -157,10 +157,11 @@ exports.HttpProxy = function () {
 
     // hold off for throttleStream and issue new URL
     setTimeout(function () {
+      var path = config.urlPrefix + id + config.urlSuffix;
       log(" GO: " + id);
       done(
-        config.cdnHttpRoot + config.urlPrefix + id + config.urlSuffix,
-        config.httpRoot + config.urlPrefix + id + config.urlSuffix
+        config.primaryHttpRoot + path,
+        config.secondaryHttpRoot ? config.secondaryHttpRoot + path : null
       );
     }, config.throttleStreamOff * 1000 +
       Math.random() * config.throttleStreamAmp * 2000

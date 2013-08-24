@@ -39,7 +39,7 @@ function Auth(storage, onReady, isOAuthReturn, onError) {
       response_type : 'token',
       client_id     : window.songuess.authClientID,
       redirect_uri  : document.URL.replace(/#.*/, ''),
-      scope         : window.songuess.authScope,
+      scope         : window.songuess.authScope.join(" "),
       state         : location.hash || ""
     },
     COOKIE_FILE_NAME = "cookie",

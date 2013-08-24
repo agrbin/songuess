@@ -18,7 +18,7 @@ function initiateEverything(onReady, isOAuthReturn) {
     if (!window.hasOwnProperty("songuess")) {
       return fatalError("config.js is missing");
     }
-    storage = new songuess.cookie_storage(fatalError);
+    storage = new window[songuess.cookieStorage](fatalError);
     auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
   }
 
@@ -44,14 +44,14 @@ function initiateEverything(onReady, isOAuthReturn) {
     if (!window.hasOwnProperty("songuess")) {
       return fatalError("config.js not available.");
     }
-    socket = new WebSocket(songuess.master_server);
+    socket = new WebSocket(songuess.masterServer);
     socket.onopen = function() {
       clearTimeout(timer);
       auth.verifyToken(socket, onVerified);
     }
     timer = setTimeout(function() {
       if (socket.readyState != WebSocket.OPEN)
-        fatalError("master server at " + songuess.master_server
+        fatalError("master server at " + songuess.masterServer
                    + " not responding.");
       socket.onopen = null;
     }, 3000);

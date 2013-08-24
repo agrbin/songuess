@@ -2,8 +2,9 @@ node_modules
 
 *.swp
 
-# use config.js.template to create config.js
-config.js
+# this file can be used to change default config on server
+server/config.override.js
 
 # generate from client using minify.js
 index.min.html
+
