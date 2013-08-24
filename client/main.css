@@ -1,0 +1,165 @@
+html, body {
+  margin: 2px;
+  padding: 2px;
+  zoom: 1.2;
+  -moz-transform: scale(1.2);
+  -moz-transform-origin: 0 0;
+}
+
+h1 {
+  text-align: center;
+  color: gray;
+}
+
+.layout .container {
+  border: 1px solid gray;
+  font-family: monospace;
+}
+
+.layout .col {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.layout .right {
+  float: right;
+  width: 20%;
+}
+
+.layout .left {
+  border-right: 1px solid gray;
+}
+
+.layout .bold {
+  font-weight: bold;
+}
+
+.layout input {
+  border-radius: 0px;
+  -webkit-appearance: none;
+  width: 100%;
+}
+
+/* chat */
+
+.layout.chat .col {
+  height: -webkit-calc(100% - 23px);
+  height: calc(100% - 23px);
+}
+
+.layout.chat {
+  position: fixed !important;
+  position: relative;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  bottom: 2px;
+}
+
+.layout.chat input {
+  margin-top: -1px;
+  padding: 3px 2px;
+  border: 1px gray solid;
+  font-family: monospace;
+  margin-bottom: 0px;
+  line-height: 14px;
+}
+
+.layout.chat form {
+  margin: 0px;
+}
+
+.layout.chat input:focus {
+  outline: 0px;
+}
+
+.layout.chat .left .entry.correct {
+}
+
+.layout.chat .left .entry.wrong {
+}
+
+.layout.chat .left .entry:first-child {
+  margin-top: 3px;
+  margin-bottom: 1px;
+}
+
+.layout.chat .left .entry {
+  margin-left: 3px;
+}
+
+.chat .time {
+  color: gray;
+}
+
+.chat .right .full-client {
+  display: block;
+  font-weight: bold;
+  margin-top: 3px;
+  margin-left: 3px;
+  overflow-y: hidden;
+  height: 15px;
+  -webkit-animation-duration: 0.6s;
+}
+
+.chat .right .full-client span {
+  float: right;
+  margin-right: 5px;
+}
+
+.chat .sys {
+  color: gray;
+}
+
+@-webkit-keyframes blink-element {
+  0% {background: white;}
+  50% {background: lightgray; }
+  100% {background: white; }
+}
+
+/* media */
+
+.layout.media {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.layout.media .col {
+  height: 300px;
+}
+
+.layout.media .right {
+  width: 50%;
+}
+
+.media .entry {
+  height: 20px;
+  border-bottom: 1px #eee dashed;
+  line-height: 20px;
+  overflow: hidden;
+}
+
+.media .entry.hover {
+  background-color: #eef;
+  cursor: pointer;
+}
+
+.media .entry .num {
+  float: left;
+  width: 35px;
+  margin-left: 3px;
+}
+
+.media .entry .desc {
+  float: right;
+  margin-right: 5px;
+}
+
+.media form {
+  margin-bottom: 3px;
+}
+
+.media input {
+  margin-bottom: 5px;
+}

@@ -1,0 +1,56 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="main.css"/>
+    <script src="sockwrap.js" type="text/javascript"></script>
+    <script src="filestorage.js" type="text/javascript"></script>
+    <script src="dummystorage.js" type="text/javascript"></script>
+    <script src="auth.js" type="text/javascript"></script>
+    <script src="clock.js" type="text/javascript"></script>
+    <script src="syncer.js" type="text/javascript"></script>
+    <script src="pretty.js" type="text/javascript"></script>
+    <script src="media.js" type="text/javascript"></script>
+    <script src="media_ui.js" type="text/javascript"></script>
+    <script src="chat.js" type="text/javascript"></script>
+    <script src="chat_ui.js" type="text/javascript"></script>
+    <script src="jquery.js" type="text/javascript"></script>
+    <script src="player.js" type="text/javascript"></script>
+    <script src="config.js" type="text/javascript"></script>
+    <script src="main.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <h1>songuess is loading.</h1>
+    <div class="layout chat" style="display: none;">
+      <div class="container">
+        <div class="right col"></div>
+        <div class="left col"></div>
+      </div>
+      <form>
+        <input type="text"/>
+      </form>
+    </div>
+    <div class="layout media" style="display: none;">
+      <form>
+        <label>
+          Room name:
+          <input id="name" type="text"/>
+        </label>
+        <label>
+          Room description:
+          <input id="desc" type="text"/>
+        </label>
+        <label>
+          Playlist:
+        </label>
+        <div class="container">
+          <div class="right col"></div>
+          <div class="left col"></div>
+        </div>
+        <label>
+          <input id="submit" value="Create and join room!" type="submit"/>
+        </label>
+        <input id="cmd" type="text"/>
+      </form>
+    </div>
+  </body>
+</html>
+
