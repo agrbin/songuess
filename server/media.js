@@ -315,6 +315,9 @@ exports.MediaGateway = function () {
     return true;
   };
 
-  purgeOldServers();
+  (function () {
+    purgeOldServers();
+    loadServersFromConfig();
+  }());
 
 };
