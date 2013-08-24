@@ -1,6 +1,9 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
+// chooses colors around the HSB circle
+// doesn't work very well, might regres to random
+
 function ColorAssigner() {
   var
     assignedColors = {},

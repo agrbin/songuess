@@ -128,8 +128,6 @@ function ChatUI(chat, user) {
       return false;
     });
     $("h1").hide();
-    $(".chat div,.chat input").css('border-color',
-                 pretty.colorStyle(user.id));
     $(".layout.chat").show();
     $(".chat .col").click(function () {
       $(input).focus();
