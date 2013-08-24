@@ -1,7 +1,18 @@
-/mp3/
-/chunks/
-/utils/create_chunks
-/node_modules/
-library.json
 *.swp
+
+# this file can be used to change default config on server
+server/config.override.js
+server/config.override.js.backup
+server/node_modules
+
+# generate from client using minify.js
+client/index.min.html
+server/index.min.html
+
+# media ignore files
+media/mp3/
+media/chunks/
+media/utils/create_chunks
+media/node_modules/
+media/library.json
 

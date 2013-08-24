@@ -1,68 +1,50 @@
-/*jslint indent: 2, plusplus: true */
+/*jslint indent: 2, plusplus: true*/
 "use strict";
 
-var app = {
-  http: require('http'),
-  PORT: require('./config.js').port,
-  url: require('url'),
-  library: require('../library/library.js'),
-  handlerNames: [ 'ls', 'expand', 'get_chunks', 'chunk', 'search' ],
-  handlers: [],
-  chunksTable: {}, // shared by get_chunks and chunk handlers
-  initHandlers: function () {
-    var
-      i,
-      handler;
+var
+  ws = require('ws'),
+  fs = require('fs'),
+  config = require('./config.js').server,
+  verifyToken = require('./auth.js').verifyToken,
+  Syncer = require('./syncer.js').Syncer,
+  SockWrapper = require('./sockwrap.js').SockWrapper;
 
-    for (i = 0; i < this.handlerNames.length; ++i) {
-      handler = require('./' + this.handlerNames[i]);
-      if (handler.init) {
-        handler.init(this);
-      }
-      this.handlers.push(handler);
-    }
-  },
-  run: function () {
-    var that = this;
+var onHttpRequest,
+  httpServer = require('http').createServer(onHttpRequest),
+  media = new (require('./media.js').MediaGateway)(),
+  proxy = new (require('./httpproxy.js').HttpProxy)(),
+  chat = new (require('./chat.js').Chat)(media, proxy),
+  server = new ws.Server({server: httpServer}),
+  staticServer = new (require('./static_server').Server)();
 
-    this.library.loadLibrary(function (filesFound) {
-      console.log(filesFound + ' files found in library');
-      console.log('listening on: ' + that.PORT);
-
-      that.http.createServer(function (req, res) {
-        var
-          parsedUrl = that.url.parse(req.url, true),
-          method = parsedUrl.pathname,
-          params = parsedUrl.query,
-          i;
-
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'text/plain');
-
-        console.log('method: ' + method);
-        console.log('params: ' + JSON.stringify(params));
-        console.log('');
-
-        function sendError(msg) {
-          var o = { error: msg };
-          res.end(JSON.stringify(o));
-        }
-
-        for (i = 0; i < that.handlers.length; ++i) {
-          if (that.handlers[i].canHandleMethod(method)) {
-            that.handlers[i].handle(method, params, req, res, sendError);
-            break;
-          }
-        }
-
-        if (i === that.handlers.length) {
-          sendError("unknown method");
-        }
-      }).listen(that.PORT);
-    });
+function onHttpRequest(req, res) {
+  if (!proxy.handleRequest(req, res)) {
+    staticServer.handleRequest(req, res);
   }
-};
+}
 
-app.initHandlers();
-app.run();
+function onVerified(sock, user) {
+  var syncer = new Syncer(sock, function (ping) {
+    var wsock = new SockWrapper(sock, ping);
+    user.ping = ping;
+    chat.connect(wsock, user);
+    media.serve(wsock);
+  });
+}
 
+server.on('connection', function (sock) {
+  sock.onmessage = function (message) {
+    verifyToken(message, function (user, err) {
+      // it looks like reason should not be too long.
+      if (err) {
+        sock.close(1000, err.toString().substr(0, 100));
+      } else {
+        sock.send(JSON.stringify(user), function () {
+          onVerified(sock, user);
+        });
+      }
+    });
+  };
+});
+
+httpServer.listen(config.port);
