@@ -7,3 +7,4 @@ server/node_modules
 
 # generate from client using minify.js
 client/index.min.html
+server/index.min.html
