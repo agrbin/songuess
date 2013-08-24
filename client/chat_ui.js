@@ -2,13 +2,13 @@
 // user is current logged in user.
 function ChatUI(chat, user) {
 
-  var body, list, input, user;
+  var body, users_list, input, user;
   var announceTimer;
 
   function initialize() {
     var it;
     body = $(".chat .left")[0];
-    list = $(".chat .right")[0];
+    users_list = new UsersList($(".chat .right")[0]);
     input = $(".chat input")[0];
     $(".chat form").submit(function () {
       if ($(input).val().length > 0) {
@@ -49,22 +49,7 @@ function ChatUI(chat, user) {
     $(body).empty();
   };
 
-  this.updateList = function (idWithCorrectAnswer) {
-    var
-      it,
-      client,
-      clientElement;
-
-    $(list).empty();
-    for (it = 0; it < chat.getNumberOfClients(); ++it) {
-      client = chat.getClient(it);
-      clientElement = $(pretty.fullClient(client));
-      $(list).append(clientElement);
-      if (idWithCorrectAnswer && idWithCorrectAnswer === client.id) {
-        clientElement.css('webkitAnimationName', 'blink-element');
-      }
-    }
-  };
+  this.updateList = users_list.updateList;
 
   this.addNotice = function (what) {
     entry("sys",
@@ -73,14 +58,14 @@ function ChatUI(chat, user) {
   };
 
   this.youEntered = function (data) {
-    var list = data.desc.playlist;
+    var playlist = data.desc.playlist;
     clearTimeout(announceTimer);
     pretty.relativeTime();
     this.addNotice("You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
-    if (list.length) {
-      this.addNotice("Playlist has " + list.length + " song"
-                   + (list.length > 1 ? "s." : "."));
+    if (playlist.length) {
+      this.addNotice("Playlist has " + playlist.length + " song"
+                   + (playlist.length > 1 ? "s." : "."));
       if (data.started) {
         entry("sys", 
           pretty.time(myClock.clock())
@@ -128,7 +113,7 @@ function ChatUI(chat, user) {
   };
 
   this.calledReset = function (desc) {
-    this.updateList();
+    this.updateList(null, chat.getClient(desc.who).id);
   };
 
   this.songEnded = function (desc) {
