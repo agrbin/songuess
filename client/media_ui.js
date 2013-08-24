@@ -140,6 +140,14 @@ function MediaUI(media) {
           url: media.apathToUrl(apath),
           apath: apath,
           name : ".."}));
+    } else {
+      return $("<div>")
+        .addClass("entry")
+        .append($("<div>").addClass("num").html("&nbsp;"))
+        .append(aPath({
+          url: media.apathToUrl(apath),
+          apath: apath,
+          name : "[refresh]"}));
     }
   }
 

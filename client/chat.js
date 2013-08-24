@@ -130,6 +130,10 @@ function Chat(wsock, user, media, onFatal) {
     wsock.sendType("next", {when: myClock.clock()});
   });
 
+  onCommand("token", function () {
+    wsock.sendType("token", {when: myClock.clock()});
+  });
+
   onCommand("reset", function () {
     wsock.sendType("reset_score", {when: myClock.clock()});
   });
@@ -185,6 +189,7 @@ function Chat(wsock, user, media, onFatal) {
   wsock.onMessage("next_song_announce", ui.announceSong);
   wsock.onMessage("called_next", ui.calledNext);
   wsock.onMessage("song_ended", ui.songEnded);
+  wsock.onMessage("token", ui.gotToken);
 
   wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;

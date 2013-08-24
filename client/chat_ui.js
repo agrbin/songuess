@@ -158,6 +158,12 @@ function ChatUI(chat, user) {
       + pretty.text(msg.what));
   };
 
+  this.gotToken = function (token) {
+    entry("sys",
+      pretty.time(desc.when, true) +
+      " You can use: " + pretty.text(token));
+  };
+
   initialize();
 
 }

@@ -23,7 +23,7 @@ exports.server = {
   // when set to true static file will be re-read for every request.
   // this option should not be used on production. this option will turn
   // off previous option (caching).
-  readFileOnRequest : false
+  readFileOnRequest : true
 };
 
 exports.socket = {
@@ -68,16 +68,31 @@ exports.sync = {
 };
 
 exports.media = {
+  // can log?
+  log : true,
+
   // seconds to wait before media server will be flagged as unavailable.
-  timetout : 1,
+  timeout : 1,
+
+  // when media server stays silent for this amount of time
+  // kick him off. must be greater than helloInterval on media.
+  timeToPurge : 120,
+
+  // these media servers will not have to have valid token
+  trustServers : {
+    '127.0.0.1' : true
+  },
 
   // list servers.
   servers : {
+    /*
     'local-media' : {
       endpoint  : 'http://localhost:8081',
       desc      : 'default media server'
     }
+    */
   }
+
 };
 
 exports.auth = {

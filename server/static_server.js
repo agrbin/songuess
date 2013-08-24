@@ -27,6 +27,10 @@ exports.Server = function () {
       html : 'text/html'
     };
 
+  function log(what) {
+    // console.log(what);
+  }
+
   function contentType(filename) {
     return contentTypeMap[filename.match(/\.([a-z]*)$/)[1]] || null;
   }
@@ -43,19 +47,34 @@ exports.Server = function () {
     };
   }
 
-  function readAndAdd(url, filename) {
+  function readAndAdd(url, filename, done) {
     fs.readFile(filename, function (err, data) {
       if (err) {
-        console.log("while loading " + filename + ": ", err);
+        log("while loading " + filename + ": ", err);
       } else {
         addFile(url, filename, data);
-        console.log(filename + " loaded.");
+        log(filename + " loaded.");
+      }
+      if (done) {
+        done();
       }
     });
   }
 
+  function serve (res, file) {
+    var header;
+    for (header in file.headers) {
+      if (file.headers.hasOwnProperty(header)) {
+        if (file.headers[header] !== null) {
+          res.setHeader(header, file.headers[header]);
+        }
+      }
+    }
+    res.end(file.data);
+  }
+
   this.handleRequest = function (req, res) {
-    var file = files[req.url], header;
+    var file = files[req.url];
     if (req.url === "/config.js") {
       res.statusCode = 200;
       res.setHeader('Content-Type', 'application/x-javascript');
@@ -70,23 +89,12 @@ exports.Server = function () {
       return;
     }
     res.statusCode = 200;
-    for (header in file.headers) {
-      if (file.headers.hasOwnProperty(header)) {
-        if (file.headers[header] !== null) {
-          res.setHeader(header, file.headers[header]);
-        }
-      }
-    }
     if (config.readFileOnRequest) {
-      fs.readFile(file.filename, function (err, data) {
-        if (err) {
-          res.end("error while reading file: " + err);
-        } else {
-          res.end(data);
-        }
+      readAndAdd(req.url, file.filename, function () {
+        serve(res, file);
       });
     } else {
-      res.end(file.data);
+      serve(res, file);
     }
   };
 
@@ -101,7 +109,7 @@ exports.Server = function () {
       fs.readdir(config.htdocsDir, function (err, files) {
         var it;
         if (err) {
-          console.log("while loading static dir: ", err);
+          log("while loading static dir: ", err);
         } else {
           for (it = 0; it < files.length; ++it) {
             if (files[it][0] !== '.') {

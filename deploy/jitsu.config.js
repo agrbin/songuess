@@ -9,9 +9,10 @@ module.exports = function(exports) {
   exports.streamer.sendAhead = 12;
 
   exports.media.servers = {
-    'xfer-hr-media' : {
+    'classical-media' : {
+      fixed     : true,
       endpoint  : 'http://xfer.hr:8081',
-      desc      : 'on album from beatles'
+      desc      : 'classical teacher'
     }
   };
 

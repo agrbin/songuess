@@ -14,5 +14,6 @@ media/mp3/
 media/chunks/
 media/utils/create_chunks
 media/node_modules/
-media/library.json
+media/library/library.json
+media/server/config.override.js
 

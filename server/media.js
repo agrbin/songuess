@@ -2,12 +2,82 @@
 "use strict";
 
 var
-  config = require("./config.js").media,
-  servers = config.servers,
-  request = require('request');
+  clock = require('./clock.js'),
+  config = require('./config.js').media,
+  request = require('request'),
+  remoteAddr = require('./httpproxy.js').remoteAddr,
+  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)();
 
 exports.MediaGateway = function () {
-  var that = this;
+  var that = this,
+    servers = {};
+
+  function log(what) {
+    if (config.log) {
+      console.log(what);
+    }
+  }
+
+  function loadServersFromConfig() {
+    for (var name in config.servers) {
+      if (config.servers.hasOwnProperty(name)) {
+        servers[name] = config.servers[name];
+        servers[name].fixed = true;
+        servers[name].last_seen = null;
+      }
+    }
+  }
+
+  function addServer(server, remoteIp) {
+    if (server.fixed) {
+      throw "your server can't be fixed";
+    }
+    if (server.access_point && server.access_point.endpoint !== null) {
+      server.endpoint = server.access_point.endpoint;
+      delete server.access_point;
+    } else {
+      server.endpoint = 'http://' + remoteIp
+        + ':' + (server.access_point.listen_port || 80);
+    }
+    if (!config.trustServers.hasOwnProperty(remoteIp)) {
+      if (server.owner !== mediaAuthenticator.checkToken(server.token)) {
+        throw "can't check owner: token invalid.";
+      }
+    }
+    if (servers.hasOwnProperty(server.name)) {
+      var old = servers[server.name];
+      if (old.owner !== server.owner) {
+        throw "other owner has media server with that name.";
+      }
+      if (old.fixed) {
+        if (old.endpoint !== server.enpoint) {
+          throw "can't change endpoint of fixed server";
+        }
+        server.fixed = true;
+      }
+      if (servers[server.name].timeout) {
+        clearTimeout(server.timeout);
+      }
+    } else {
+      log("Media: new server " + server.name);
+    }
+    server.last_seen = clock.clock();
+    servers[server.name] = server;
+    return server.name;
+  }
+
+  function purgeOldServers() {
+    for (var name in servers) {
+      if (servers.hasOwnProperty(name)) {
+        if (clock.clock() - servers[name].last_seen
+            > config.timeToPurge * 1000) {
+          log("Media: server gone " + server.name);
+          delete servers[name];
+        }
+      }
+    }
+    setTimeout(purgeOldServers, config.timeToPurge * 1000);
+  }
 
   function api(server, method, param, done) {
     var url;
@@ -18,15 +88,15 @@ exports.MediaGateway = function () {
     if (param) {
       url += encodeURIComponent(param);
     }
-    request({url: url, timeout: config.timeout}, function (e, response, body) {
+    request({url: url, timeout: config.timeout * 1000}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {
           done(JSON.parse(body));
         } catch (err) {
-          done(null, "error while querying media: " + err);
+          done(null, "error while querying media: " + e);
         }
       } else {
-        return done(null, "media server not available.");
+        return done(null, "media server not available: " + e);
       }
     });
   }
@@ -92,6 +162,25 @@ exports.MediaGateway = function () {
       );
     }
     return byServers;
+  }
+
+  function readPostBody(req, done) {
+    var content = '';
+    req.addListener('data', function (data) {
+      content += data;
+    });
+    req.addListener('end', function () {
+      if (content !== null) {
+        done(content);
+        content = null;
+      }
+    });
+    setTimeout(function () {
+      if (content !== null) {
+        done(null, "too slow");
+        content = null;
+      }
+    }, 1000);
   }
 
   /* room:
@@ -166,7 +255,7 @@ exports.MediaGateway = function () {
       return onResult(null, null, "no such server");
     }
     url = servers[server].endpoint + "/expand/";
-    request({uri: url, body: input}, function (e, response, body) {
+    request.post({uri: url, body: input}, function (e, response, body) {
       if (!e && response.statusCode === 200) {
         try {
           onResult(JSON.parse(body), server);
@@ -198,5 +287,34 @@ exports.MediaGateway = function () {
   this.getChunks = function (server, id, done) {
     api(server, '/get_chunks/?id=', id, done);
   };
+
+  this.handleRequest = function (req, res) {
+    if (req.url !== '/hello/' || req.method !== 'POST') {
+      return false;
+    }
+    function onError(err) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({error:err}));
+    }
+    readPostBody(req, function (data) {
+      var name;
+      try {
+        name = addServer(JSON.parse(data), remoteAddr(req));
+        api(name, "/ls/?path=", "/", function (result, err) {
+          if (!err) {
+            res.statusCode = 200;
+            res.end("i see you");
+          } else {
+            onError(err);
+          }
+        });
+      } catch (err) {
+        onError(err);
+      }
+    });
+    return true;
+  };
+
+  purgeOldServers();
 
 };

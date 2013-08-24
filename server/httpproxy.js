@@ -5,6 +5,17 @@ var config = require('./config.js').proxy,
   url = require('url'),
   request = require('request');
 
+
+exports.remoteAddr = function (req) {
+  var ipFields = ['x-real-ip', 'x-forwarded-for'], it;
+  for (it = 0; it < ipFields.length; ++it) {
+    if (req.headers[ipFields[it]] !== undefined) {
+      return req.headers[ipFields[it]];
+    }
+  }
+  return req.connection.remoteAddress;
+};
+
 exports.HttpProxy = function () {
 
   var that = this,
@@ -15,17 +26,6 @@ exports.HttpProxy = function () {
 
   function log(what) {
     //console.log( (new Date()).toString() + " proxy: " + what);
-  }
-
-  // ovo na vise mjesta treba
-  function remoteAddr(req) {
-    var ipFields = ['x-real-ip', 'x-forwarded-for'], it;
-    for (it = 0; it < ipFields.length; ++it) {
-      if (req.headers[ipFields[it]] !== undefined) {
-        return req.headers[ipFields[it]];
-      }
-    }
-    return req.connection.remoteAddres;
   }
 
   // this is called only when we are sure that resourceData has the id data.
@@ -49,7 +49,7 @@ exports.HttpProxy = function () {
       return res.end("Bad gateway (media server).");
     }
 
-    //log(" HIT from " + remoteAddr(req) + " :       " + id);
+    //log(" HIT from " + exports.remoteAddr(req) + " :       " + id);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'max-age=' + config.maxAge); // 1m

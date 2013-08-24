@@ -56,6 +56,38 @@ function fetchProfile(token, done) {
   });
 }
 
+// simple class that can:
+//  ::issueToken(email) -> returns hash
+//  ::checkToken(hash) -> returns email issued to.
+exports.MediaAuthenticator = (function () {
+  var tokens = {};
+  function rndString() {
+    return Math.random().toString(36).substring(2)
+     + Math.random().toString(36).substring(2);
+  }
+  return (function () {
+    var that = this;
+    this.issueToken = function (email) {
+      var sol = rndString();
+      if (!tokens.hasOwnProperty(email)) {
+        tokens[email] = {};
+      }
+      tokens[email][sol] = 1;
+      return sol;
+    };
+    this.checkToken = function (token) {
+      for (var email in tokens) {
+        if (tokens.hasOwnProperty(email)) {
+          if (tokens[email].hasOwnProperty(token)) {
+            return email;
+          }
+        }
+      }
+      return null;
+    };
+  });
+}());
+
 exports.verifyToken = function (tokenMessage, done) {
   var token, url, user;
 

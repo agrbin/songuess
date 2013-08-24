@@ -5,7 +5,8 @@ var
   clock = require('./clock.js'),
   Streamer = require('./streamer.js').Streamer,
   AnswerChecker = require('./answer_checker.js'),
-  PlaylistIterator = require('./shuffle_playlist_iterator.js');
+  PlaylistIterator = require('./shuffle_playlist_iterator.js'),
+  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)();
 
 exports.ChatRoom = function (desc, chat, proxy) {
   var
@@ -101,6 +102,13 @@ exports.ChatRoom = function (desc, chat, proxy) {
     playNext();
   }
 
+  function onToken(data, client) {
+    client.send(
+      'token',
+      mediaAuthenticator.issueToken(client.desc('email'))
+    );
+  }
+
   function onResetScore(data, client) {
     client.local('score', 0);
     that.broadcast('called_reset', {
@@ -169,6 +177,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('say', onSay);
     client.onMessage('new_room', onNewRoom);
     client.onMessage('next', onNext);
+    client.onMessage('token', onToken);
     client.onMessage('reset_score', onResetScore);
   };
 

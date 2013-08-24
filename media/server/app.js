@@ -6,6 +6,7 @@ var app = {
   PORT: require('./config.js').port,
   url: require('url'),
   library: require('../library/library.js'),
+  hello: require('./master_hello.js'),
   handlerNames: [ 'ls', 'expand', 'get_chunks', 'chunk', 'search' ],
   handlers: [],
   chunksTable: {}, // shared by get_chunks and chunk handlers
@@ -28,6 +29,7 @@ var app = {
     this.library.loadLibrary(function (filesFound) {
       console.log(filesFound + ' files found in library');
       console.log('listening on: ' + that.PORT);
+      that.hello(filesFound);
 
       that.http.createServer(function (req, res) {
         var
@@ -39,9 +41,11 @@ var app = {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/plain');
 
+        /*
         console.log('method: ' + method);
         console.log('params: ' + JSON.stringify(params));
         console.log('');
+        */
 
         function sendError(msg) {
           var o = { error: msg };

@@ -19,7 +19,9 @@ var onHttpRequest,
 
 function onHttpRequest(req, res) {
   if (!proxy.handleRequest(req, res)) {
-    staticServer.handleRequest(req, res);
+    if (!media.handleRequest(req, res)) {
+      staticServer.handleRequest(req, res);
+    }
   }
 }
 
