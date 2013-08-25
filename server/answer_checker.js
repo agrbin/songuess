@@ -2,9 +2,23 @@
 "use strict";
 
 module.exports = function (options) {
+  var 
+    nonAlphanum = /[^a-zA-Z0-9 ]/g,
+    mulSpace = /  +/g,
+    trimSpace = /^ | $/g;
+
+  this.normalize = function (str) {
+    str = str.toLowerCase();
+    str = str.replace(nonAlphanum, '');
+    str = str.replace(mulSpace, ' ');
+    str = str.replace(trimSpace, '');
+    return str;
+  }
+
   this.checkAnswer = function (playlistItem, answer) {
-    return playlistItem &&
-      answer.toLowerCase() === playlistItem.title.toLowerCase();
+    if (playlistItem === undefined) return false;
+
+    return normalize(answer) === normalize(playlistItem.title);
   };
 };
 
