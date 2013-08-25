@@ -56,7 +56,7 @@ function ChatUI(chat, user) {
                    + (playlist.length > 1 ? "s." : "."));
       if (chat.getRoomState().state === "playing") {
         entry("sys", 
-          + " Current song is @ "
+          " Current song is @ "
           + pretty.timeInterval(songOffset()) + "s.");
       }
     }
