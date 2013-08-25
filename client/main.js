@@ -48,13 +48,13 @@ function initiateEverything(onReady, isOAuthReturn) {
     socket.onopen = function() {
       clearTimeout(timer);
       auth.verifyToken(socket, onVerified);
-    }
+    };
     timer = setTimeout(function() {
       if (socket.readyState != WebSocket.OPEN)
         fatalError("master server at " + songuess.masterServer
                    + " not responding.");
       socket.onopen = null;
-    }, 3000);
+    }, 10000);
   }
 
   initialize();
