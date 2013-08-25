@@ -66,19 +66,6 @@ function Chat(wsock, user, media, onFatal) {
 
   // by sequential number or by id.
   this.getClient = function (id) {
-// used for user list animation testing
-/*
-    if (id >= that.getNumberOfClients()) return undefined;
-    var clientNames = [ "tomislav grbin", "anton grbin", "irma telarovic", "mirko telarovic", "gita telarovic", "novi korisnik"];
-    var score = (id*13)%17;
-    if (that.bla !== undefined && id === 1) score = 6;
-    return {
-      display: clientNames[id],
-      id: id,
-      score: score
-    };
-*/
-
     if (id >= 0 && id < ids.length) {
       return clients[ids[id]];
     }
@@ -202,7 +189,7 @@ function Chat(wsock, user, media, onFatal) {
     ++ client.score;
     copySharedToPidPeers(client);
     setTimeout(pretty.relativeTime, 3000);
-    setTimeout(player.pause, 3000);
+    setTimeout(player.pause, 6000);
     ui.correctAnswer(data);
   });
 
@@ -229,7 +216,7 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("called_next", function (data) {
     setTimeout(pretty.relativeTime, 3000);
-    setTimeout(player.pause, 3000);
+    setTimeout(player.pause, 6000);
     ui.calledNext(data);
   });
 
