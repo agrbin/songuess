@@ -27,7 +27,7 @@ exports.SockWrapper = function (sock, syncRtt) {
   function clockDifference(delta) {
     if (delta > 1000 && delta > 3 * syncRtt) {
       if (sleepyCallback) {
-        sleepyCallback("clocks went off or ping changed: " + delta);
+        sleepyCallback("network unstable.");
       }
     }
   }
@@ -45,7 +45,7 @@ exports.SockWrapper = function (sock, syncRtt) {
   function ping() {
     if (pingTimeout !== null) {
       if (sleepyCallback) {
-        return sleepyCallback("server thinks that client is gone.");
+        return sleepyCallback("connection lost.");
       }
     }
     that.sendType('non-patient-firewall', null, stopwatch.reset);
@@ -55,7 +55,7 @@ exports.SockWrapper = function (sock, syncRtt) {
       pingTimeout = null;
       if (Math.abs(rtt - syncRtt) > 3000) {
         if (sleepyCallback) {
-          sleepyCallback("network interupted");
+          sleepyCallback("network unstable..");
         }
       }
       clockDifference(clock.clock() - syncRtt / 2 - data.when);
