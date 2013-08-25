@@ -287,7 +287,10 @@ exports.MediaGateway = function () {
   };
 
   this.getChunks = function (server, id, done) {
-    api(server, '/get_chunks/?id=', id, function (chunks) {
+    api(server, '/get_chunks/?id=', id, function (chunks, err) {
+      if (err) {
+        return done(null, err);
+      }
       var it = 0;
       for (it = 0; it < chunks.length; ++it) {
         if (chunks[it][0] === '/') {

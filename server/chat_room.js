@@ -36,8 +36,14 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (!desc.playlist.length) {
       return;
     }
-    streamer.play(playlistIterator.nextItem(), function (songStartTime) {
-      that.broadcast('next_song_announce', songStartTime);
+    streamer.play(playlistIterator.nextItem(), function (songStartTime, err) {
+      if (err) {
+        console.log("tried to play next: " + err);
+        info("tried to play next with error (retry in 5s): " + err);
+        setTimeout(playNext, 5000);
+      } else {
+        that.broadcast('next_song_announce', songStartTime);
+      }
     });
   }
 
