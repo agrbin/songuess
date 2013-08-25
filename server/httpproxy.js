@@ -126,7 +126,7 @@ exports.HttpProxy = function () {
   // which should be routed to function fetch(sth);
   //
   this.proxify = function (url, done) {
-    var id;
+    var id, path;
 
     if (!config.enable) {
       return setTimeout(function () {done(url, null); }, 0);
@@ -159,16 +159,11 @@ exports.HttpProxy = function () {
     }, config.maxAge * 1000);
 
     // hold off for throttleStream and issue new URL
-    setTimeout(function () {
-      var path = config.urlPrefix + id + config.urlSuffix;
-      log(" GO: " + id);
-      done(
-        config.primaryHttpRoot + path,
-        config.secondaryHttpRoot ? config.secondaryHttpRoot + path : null
-      );
-    }, config.throttleStreamOff * 1000 +
-      Math.random() * config.throttleStreamAmp * 2000
-      - 1000);
+    path = config.urlPrefix + id + config.urlSuffix;
+    done(
+      config.primaryHttpRoot + path,
+      config.secondaryHttpRoot ? config.secondaryHttpRoot + path : null
+    );
   };
 
   // returns true if request was for us. in that case, response will be ended.

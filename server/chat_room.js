@@ -3,6 +3,8 @@
 
 var
   clock = require('./clock.js'),
+  proxyConfig = require('./config.js').proxy,
+  randomRange = require('./statistics.js').randomRange,
   Streamer = require('./streamer.js').Streamer,
   AnswerChecker = require('./answer_checker.js'),
   PlaylistIterator = require('./shuffle_playlist_iterator.js'),
@@ -171,9 +173,20 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   function chunkHandler(chunkInfo) {
     proxy.proxify(chunkInfo.url, function (url, url2) {
+      var id;
       chunkInfo.url = url;
       chunkInfo.backupUrl = url2;
-      that.broadcast('chunk', chunkInfo);
+      for (id in clients) {
+        if (clients.hasOwnProperty(id)) {
+          setTimeout(
+            clients[id].send.bind(this, "chunk", chunkInfo),
+            1000 * randomRange(
+              proxyConfig.throttleStreamOff,
+              proxyConfig.throttleStreamAmp
+            )
+          );
+        }
+      }
     });
   }
 

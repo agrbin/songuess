@@ -1,6 +1,10 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
+exports.randomRange = function (off, amp) {
+  return off + Math.random() * amp * 2 - 1;
+};
+
 // return average and biased standard deviation from array of samples
 exports.analyze = function (samples) {
   var N = samples.length, i, avg, std = 0;
