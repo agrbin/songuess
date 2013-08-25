@@ -34,7 +34,7 @@ var Player = function(getTime, volumeElement) {
   // this is called only once to get the AudioContext started and to set up
   // master volume meter.
   // function will play a test note.
-  (function() {
+  function playWarmUpNote() {
     if (warmUpCalled) return;
     else warmUpCalled = true;
     // set up master gain
@@ -58,14 +58,16 @@ var Player = function(getTime, volumeElement) {
     oscillator.connect(masterGain);
     oscillator.noteOn(0);
     oscillator.noteOff(0.2);
-  })();
+  }
 
   this.getMuted = function () {
+    if (!warmUpCalled) return;
     return muted;
   };
 
   // toggles mute volume
   this.toggleMute = function () {
+    if (!warmUpCalled) return;
     muted = !muted;
     if (muted) {
       masterGain.disconnect();
@@ -77,15 +79,18 @@ var Player = function(getTime, volumeElement) {
 
   // disables and enables playback.
   this.pause = function () {
+    if (!warmUpCalled) return;
     playPauseGain.gain.value = 0;
   };
 
   this.play = function () {
+    if (!warmUpCalled) return;
     playPauseGain.gain.value = 1;
   };
 
   // returns if ovlume is muted currently
   this.setVolume = function (value) {
+    if (!warmUpCalled) return;
     if (value === undefined) {
       return Math.round(masterGain.gain.value * 100) / 10;
     }
@@ -100,6 +105,9 @@ var Player = function(getTime, volumeElement) {
   // when message is received, start downloading mp3 chunk and decode it.
   this.addChunk = function(chunkInfo, secondary) {
     var request = new XMLHttpRequest(), done = false;
+    if (!warmUpCalled) {
+      return;
+    }
 
     // we have timeout only on primary URL
     request.open(
@@ -196,6 +204,14 @@ var Player = function(getTime, volumeElement) {
       console.log("chunk ignored. late for: ", currentTime - startTime);
     }
   }
+
+  (function() {
+    if (navigator.userAgent.match(/(iPad|iPhone|iPod)/g)) {
+      document.addEventListener('touchstart', playWarmUpNote);
+    } else {
+      playWarmUpNote();
+    }
+  })();
 
 };
 

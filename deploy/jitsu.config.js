@@ -1,6 +1,7 @@
 module.exports = function(exports) {
 
   exports.client.masterServer = "ws://songuess.jit.su/";
+  exports.client.cookieStorage = "DummyStorage";
 
   exports.server.indexHtml = "index.min.html";
   exports.server.htdocsDir = null;
