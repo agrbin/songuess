@@ -67,7 +67,9 @@ exports.SockWrapper = function (sock, syncRtt) {
   };
 
   this.onSleepy = function (callback) {
-    sleepyCallback = callback;
+    if (!config.ignoreNetworkProblems) {
+      sleepyCallback = callback;
+    }
   };
 
   this.onClose = function (callback) {

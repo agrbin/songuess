@@ -31,6 +31,9 @@ exports.socket = {
   // to keep the connection alive across non patient firewalls.
   pingInterval : 60,
 
+  // this will turn of clock skew checks and sleepyPeriod checks
+  ignoreNetworkProblems : false,
+
   // if socket notices sleepyPeriod seconds without user activity, that user
   // will get disconnected.
   sleepyPeriod : 30 * 60

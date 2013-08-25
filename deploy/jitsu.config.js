@@ -8,6 +8,7 @@ module.exports = function(exports) {
   exports.server.staticMaxAge = 3600;
 
   exports.streamer.sendAhead = 12;
+  exports.socket.ignoreNetworkProblems = true;
 
   exports.media.servers = {
     'classical-media' : {
