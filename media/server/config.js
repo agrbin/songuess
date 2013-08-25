@@ -3,7 +3,7 @@ exports.port = 8081;
 
 // URL where the chunks will be served
 // in future, chunks can be served by another web server
-exports.chunkBaseURL = "http://localhost:8081/chunk/";
+exports.chunkBaseURL = '/chunks/';
 
 // onto what master server we will publish media
 exports.masterServer = "http://localhost:8080";

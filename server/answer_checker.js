@@ -2,7 +2,7 @@
 "use strict";
 
 module.exports = function (options) {
-  var 
+  var
     nonAlphanum = /[^a-zA-Z0-9 ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g;
@@ -16,7 +16,9 @@ module.exports = function (options) {
   }
 
   this.checkAnswer = function (playlistItem, answer) {
-    if (playlistItem === undefined) return false;
+    if (playlistItem === undefined) {
+      return false;
+    }
 
     return normalize(answer) === normalize(playlistItem.title);
   };
