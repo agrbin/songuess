@@ -69,10 +69,12 @@ exports.MediaGateway = function () {
   function purgeOldServers() {
     for (var name in servers) {
       if (servers.hasOwnProperty(name)) {
-        if (clock.clock() - servers[name].last_seen
-            > config.timeToPurge * 1000) {
-          log("Media: server gone " + server.name);
-          delete servers[name];
+        if (!servers[name].fixed) {
+          if (clock.clock() - servers[name].last_seen
+              > config.timeToPurge * 1000) {
+            log("Media: server gone " + name);
+            delete servers[name];
+          }
         }
       }
     }

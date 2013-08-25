@@ -118,8 +118,23 @@ function Chat(wsock, user, media, onFatal) {
     }
   }
 
+  onCommand("mute", function () {
+    ui.addNotice(player.toggleMute() ?
+                 "sound turned off." : "sound turned on.");
+  });
+
+  onCommand("volume", function (value) {
+    try {
+      player.setVolume(value);
+    } catch (err) {
+      return ui.addNotice("error: " + err);
+    }
+    ui.addNotice("volume set to " + value + ".");
+  });
+
   onCommand("help", function () {
-    ui.addNotice("available commands are /clear and /join");
+    ui.addNotice("available commands are ");
+    ui.addNotice("   /clear, /join #ROOM, /mute, /volume [0-10]");
   });
 
   onCommand("hello", function () {
