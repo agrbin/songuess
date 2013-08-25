@@ -2,38 +2,13 @@
 // user is current logged in user.
 function ChatUI(chat, user) {
 
-  var body, list, input, user;
-  var announceTimer;
-
-  function initialize() {
-    var it;
-    body = $(".chat .left")[0];
-    list = $(".chat .right")[0];
-    input = $(".chat input")[0];
-    $(".chat form").submit(function () {
-      if ($(input).val().length > 0) {
-        chat.handleSend($(input).val());
-        $(input).val("");
-      }
-      return false;
-    });
-    $("h1").hide();
-    $(".chat div,.chat input").css('border-color',
-                 pretty.colorStyle(user.id));
-    $(".layout.chat").show();
-    $(".chat .col").click(function () {
-      $(input).focus();
-    });
-    $(input).focus();
-    $(window)
-      .on('hashchange', function() {
-        chat.triggerCommand("/join " + location.hash);
-      })
-      .on('resize', function() {
-        $(body)
-          .scrollTop(body.scrollHeight);
-      });
-  }
+  var
+    body, 
+    users_list, 
+    input, 
+    user,
+    announceTimer,
+    that = this;
 
   function entry (type, what) {
     $("<div>")
@@ -49,23 +24,6 @@ function ChatUI(chat, user) {
     $(body).empty();
   };
 
-  this.updateList = function (idWithCorrectAnswer) {
-    var
-      it,
-      client,
-      clientElement;
-
-    $(list).empty();
-    for (it = 0; it < chat.getNumberOfClients(); ++it) {
-      client = chat.getClient(it);
-      clientElement = $(pretty.fullClient(client));
-      $(list).append(clientElement);
-      if (idWithCorrectAnswer && idWithCorrectAnswer === client.id) {
-        clientElement.css('webkitAnimationName', 'blink-element');
-      }
-    }
-  };
-
   this.addNotice = function (what) {
     entry("sys",
       pretty.time(myClock.clock()) + " "
@@ -73,14 +31,14 @@ function ChatUI(chat, user) {
   };
 
   this.youEntered = function (data) {
-    var list = data.desc.playlist;
+    var playlist = data.desc.playlist;
     clearTimeout(announceTimer);
     pretty.relativeTime();
     this.addNotice("You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
-    if (list.length) {
-      this.addNotice("Playlist has " + list.length + " song"
-                   + (list.length > 1 ? "s." : "."));
+    if (playlist.length) {
+      this.addNotice("Playlist has " + playlist.length + " song"
+                   + (playlist.length > 1 ? "s." : "."));
       if (data.started) {
         entry("sys", 
           pretty.time(myClock.clock())
@@ -124,7 +82,7 @@ function ChatUI(chat, user) {
       "! The song was " +
       pretty.song(desc.answer) + ".");
 
-    this.updateList(client.id);
+    this.updateList();
   };
 
   this.calledReset = function (desc) {
@@ -164,6 +122,34 @@ function ChatUI(chat, user) {
       " You can use: " + pretty.text(token));
   };
 
-  initialize();
+  (function () {
+    var it;
+    body = $(".chat .left")[0];
+    input = $(".chat input")[0];
+    $(".chat form").submit(function () {
+      if ($(input).val().length > 0) {
+        chat.handleSend($(input).val());
+        $(input).val("");
+      }
+      return false;
+    });
+    $("h1").hide();
+    $(".layout.chat").show();
+    $(".chat .col").click(function () {
+      $(input).focus();
+    });
+    $(input).focus();
+    $(window)
+      .on('hashchange', function() {
+        chat.triggerCommand("/join " + location.hash);
+      })
+      .on('resize', function() {
+        $(body)
+          .scrollTop(body.scrollHeight);
+      });
+
+    users_list = new UsersList(chat, $(".chat .right"));
+    that.updateList = users_list.updateList;
+  }());
 
 }
