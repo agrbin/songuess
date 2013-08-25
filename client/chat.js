@@ -124,12 +124,14 @@ function Chat(wsock, user, media, onFatal) {
   });
 
   onCommand("volume", function (value) {
+    var vol;
     try {
-      player.setVolume(value);
+      vol = player.setVolume(value);
     } catch (err) {
       return ui.addNotice("error: " + err);
     }
-    ui.addNotice("volume set to " + value + ".");
+    ui.addNotice("volume is set to " + vol + "." +
+                (player.getMuted() ? " but /mute is on." : ""));
   });
 
   onCommand("help", function () {

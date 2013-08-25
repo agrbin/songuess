@@ -86,6 +86,10 @@ function ChatUI(chat, user) {
   };
 
   this.calledReset = function (desc) {
+    entry("sys",
+      pretty.time(desc.when, true) + " " +
+      pretty.nameClient(chat.getClient(desc.who)) +
+      " /reset-ed his score.");
     this.updateList();
   };
 

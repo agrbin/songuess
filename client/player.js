@@ -40,6 +40,8 @@ var Player = function(getTime, volumeElement) {
     else warmUpCalled = true;
     // set up master gain
     masterGain = audioContext.createGainNode();
+    // initial volume is 0.5
+    masterGain.gain.value = 0.5;
     masterGain.connect(audioContext.destination);
     // volumeElement can be null.
     if (volumeElement) {
@@ -57,6 +59,10 @@ var Player = function(getTime, volumeElement) {
     oscillator.noteOff(0.2);
   })();
 
+  this.getMuted = function () {
+    return muted;
+  };
+
   // toggles mute volume
   this.toggleMute = function () {
     muted = !muted;
@@ -70,11 +76,14 @@ var Player = function(getTime, volumeElement) {
 
   // returns if ovlume is muted currently
   this.setVolume = function (value) {
+    if (value === undefined) {
+      return Math.round(masterGain.gain.value * 100) / 10;
+    }
     if (value < 0 || value > 10) {
       throw "value must be in [0, 10]";
     }
     masterGain.gain.value = value / 10;
-    return muted;
+    return that.setVolume();
   };
 
   // socket.onmessage will be binded to this method.
