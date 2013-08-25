@@ -109,7 +109,7 @@ function ChatUI(chat, user) {
   this.calledReset = function (desc) {
     entry("sys cmd", " " +
       pretty.nameClient(chat.getClient(desc.who)) +
-      " /reset-ed his score.");
+      " /reset his score.");
     this.updateList();
   };
 
