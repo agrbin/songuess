@@ -15,6 +15,10 @@ module.exports = function (options) {
     return str;
   }
 
+  this.checkName = function (name1, name2) {
+    return normalize(name1) === normalize(name2);
+  };
+
   this.checkAnswer = function (playlistItem, answer) {
     if (playlistItem === undefined) {
       return false;

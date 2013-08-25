@@ -10,7 +10,22 @@ function ChatUI(chat, user) {
     announceTimer,
     that = this;
 
-  function entry (type, what) {
+  function entry (type, html, when) {
+    var t0 = chat.getRoomState().songStart, what;
+    when = when || myClock.clock();
+    state = chat.getRoomState().state;
+    if (state === "dead") {
+      what = pretty.delimit("#");
+    } else if (type.indexOf("cmd") !== -1) {
+      what = pretty.delimit(">");
+    } else if (type.indexOf("relative") !== -1) {
+      what = pretty.playTime(when - t0);
+    } else if (state === "suspense") {
+      what = pretty.delimit();
+    } else {
+      what = pretty.delimit("|");
+    }
+    what = what + " " + html;
     $("<div>")
       .addClass("entry")
       .addClass(type)
@@ -20,94 +35,100 @@ function ChatUI(chat, user) {
       .scrollTop(body.scrollHeight);
   }
 
+  function songOffset() {
+    if (chat.getRoomState().state === "playing") {
+      return myClock.clock() - chat.getRoomState().songStart;
+    } else {
+      return null;
+    }
+  }
+
   this.clear = function () {
     $(body).empty();
   };
 
-  this.addNotice = function (what) {
-    entry("sys",
-      pretty.time(myClock.clock()) + " "
-      + pretty.text(what));
-  };
-
   this.youEntered = function (data) {
     var playlist = data.desc.playlist;
-    pretty.relativeTime();
-    this.addNotice("You entered " + data.desc.name
+    entry("sys cmd", "You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
     if (playlist.length) {
-      this.addNotice("Playlist has " + playlist.length + " song"
+      entry("sys cmd", "Playlist has " + playlist.length + " song"
                    + (playlist.length > 1 ? "s." : "."));
-      if (data.started) {
+      if (chat.getRoomState().state === "playing") {
         entry("sys", 
-          pretty.time(myClock.clock())
           + " Current song is @ "
-          + pretty.timeInterval(myClock.clock() - data.started) + "s.");
-        pretty.relativeTime(data.started);
+          + pretty.timeInterval(songOffset()) + "s.");
       }
     }
   };
 
   this.userJoined = function (id, reason) {
-    entry("sys",
-      pretty.time(myClock.clock()) + " " +
+    entry("sys cmd",
       pretty.nameClient(chat.getClient(id))
       + " joined the room.");
   };
 
   this.userLeft = function (id, reason) {
-    entry("sys",
-      pretty.time(myClock.clock()) + " " +
+    entry("sys cmd",
       pretty.nameClient(chat.getClient(id))
       + " left: " + reason);
   };
 
   this.calledNext = function (desc) {
-    pretty.relativeTime();
     entry("sys wrong",
-      pretty.time(desc.when, true) +
       " The song was " +
       pretty.song(desc.answer) + ". " +
       pretty.nameClient(chat.getClient(desc.who)) +
       " called for a next one :/");
   };
 
+  this.honored = function (desc) {
+    entry("sys correct",
+      pretty.nameClient(chat.getClient(desc.from)) +
+      " honored his point to " +
+      pretty.nameClient(chat.getClient(desc.to)) +
+         "!");
+    that.updateList();
+  };
+
+  this.displayInfo = function (song) {
+    entry("sys cmd", " hmmm, You ask last song what was?");
+    entry("sys cmd", " artist: " + pretty.text(song.artist, "bold"));
+    entry("sys cmd", " album : " + pretty.text(song.album, "bold"));
+    entry("sys cmd", " title : " + pretty.text(song.title, "bold"));
+  };
+
   this.correctAnswer = function (desc) {
     var client = chat.getClient(desc.who);
     entry("sys correct",
-      pretty.time(myClock.clock(), 0, 1) + " Well done " +
-      pretty.nameClient(client) +
-      "! The song was " +
-      pretty.song(desc.answer) + ".");
+      " Well done " + pretty.nameClient(client) +
+      "! The song was " + pretty.song(desc.answer) + ".");
     this.updateList();
   };
 
   this.calledReset = function (desc) {
-    entry("sys",
-      pretty.time(desc.when, true) + " " +
+    entry("sys cmd", " " +
       pretty.nameClient(chat.getClient(desc.who)) +
       " /reset-ed his score.");
     this.updateList();
   };
 
   this.songEnded = function (desc) {
-    pretty.relativeTime();
-    entry("sys wrong",
-      pretty.time(desc.when) +
-      " No one got this one - " +
+    entry("sys wrong", " No one got this one - " +
       pretty.song(desc.answer));
   };
 
   this.announceSong = function (when) {
-    pretty.relativeTime(when);
-    entry("sys", pretty.time(myClock.clock()));
-    entry("sys",
-      pretty.time(myClock.clock(), true) + " Get ready!");
+    entry("sys", "");
+    entry("sys relative", " Get ready!"); // poseban
   };
 
   this.addMessage = function (msg) {
-    entry("say",
-      pretty.time(msg.when) + " " +
+    var rel = "", state = chat.getRoomState().state;
+    if (state === "playing" || state === "after") {
+      rel = " relative";
+    }
+    entry("say" + rel,
       (msg.from ?
         pretty.nameClient(chat.getClient(msg.from)) + ": "
         : "")
@@ -115,9 +136,11 @@ function ChatUI(chat, user) {
   };
 
   this.gotToken = function (token) {
-    entry("sys",
-      pretty.time(desc.when, true) +
-      " You can use: " + pretty.text(token));
+    entry("sys", " You can use: " + pretty.text(token));
+  };
+
+  this.addNotice = function (what) {
+    entry("sys", what);
   };
 
   (function () {

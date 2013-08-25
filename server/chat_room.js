@@ -9,6 +9,7 @@ var
   mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)();
 
 exports.ChatRoom = function (desc, chat, proxy) {
+
   var
     that = this,
     clients = {},
@@ -16,13 +17,29 @@ exports.ChatRoom = function (desc, chat, proxy) {
     numberOfClients = 0,
     playlistIterator,
     answerChecker,
-    streamer;
+    streamer,
+
+    // "dead", "playing", "suspense"
+    // if state is playing, when did the song started?
+    // if state is suspense, when will the next song start?
+    roomState = {
+      state : "dead",
+      songStart : null,
+      lastSong : null,
+      lastScore : null
+    };
 
   function packRoomState() {
     var id, sol = {
-      desc : desc,
+      desc : {
+        name : desc.name,
+        desc : desc.desc,
+        playlist : {
+          length : desc.playlist.length
+        }
+      },
       users : {},
-      started : streamer.getSongStartedTime() || null
+      state : roomState
     };
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
@@ -36,24 +53,45 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (!desc.playlist.length) {
       return;
     }
-    streamer.play(playlistIterator.nextItem(), function (songStartTime, err) {
+    streamer.play(playlistIterator.nextItem(), function (startTime, err) {
       if (err) {
         console.log("tried to play next: " + err);
         info("tried to play next with error (retry in 5s): " + err);
         setTimeout(playNext, 5000);
       } else {
-        that.broadcast('next_song_announce', songStartTime);
+        roomState.state = "after";
+        roomState.lastSong = playlistIterator.lastItem();
+        roomState.songStart = null;
+
+        setTimeout(function() {
+          roomState.state = "suspense";
+          roomState.songStart = startTime;
+          that.broadcast('next_song_announce', roomState);
+        }, Math.max(0, startTime - clock.clock() - 6000));
+
+        setTimeout(function() {
+          roomState.state = "playing";
+        }, Math.max(0, startTime - clock.clock()));
       }
     });
   }
 
-  function info(text) {
-    that.broadcast('say', {
-      when : clock.clock(),
-      to   : null,
-      from : null,
-      what : text
-    });
+  function info(text, to) {
+    if (to) {
+      to.send('say', {
+        when : clock.clock(),
+        to   : to.id(),
+        from : null,
+        what : text
+      });
+    } else {
+      that.broadcast('say', {
+        when : clock.clock(),
+        to   : null,
+        from : null,
+        what : text
+      });
+    }
   }
 
   // if local record for this person (pid) is missing,
@@ -81,8 +119,13 @@ exports.ChatRoom = function (desc, chat, proxy) {
       throw "to specified, but not in this room";
     }
     that.broadcast('say', data);
+    // only if state is playing check for correct answer.
+    if (roomState.state !== "playing") {
+      return;
+    }
     if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
       client.local('score', client.local('score') + 1);
+      roomState.lastScore = client.id();
       that.broadcast('correct_answer', {
         who: client.id(),
         answer: playlistIterator.currentItem(),
@@ -100,6 +143,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function onNext(data, client) {
+    if (roomState.state !== "playing") {
+      return;
+    }
     that.broadcast('called_next', {
       who: client.id(),
       answer: playlistIterator.currentItem(),
@@ -131,6 +177,26 @@ exports.ChatRoom = function (desc, chat, proxy) {
     });
   }
 
+  function onHonor(data, client) {
+    var target = that.getClientByName(data);
+    if (!target) {
+      return info("unknown or multiple match: " + data + ".", client);
+    }
+    if (roomState.state !== "after") {
+      return info("can't honor in this moment.", client);
+    }
+    if (target === client) {
+      return info("you are honored.. gee, well done!", client);
+    }
+    if (client.id() !== roomState.lastScore) {
+      return info("you didn't made the last score.", client);
+    }
+    client.local('score', client.local('score') - 1);
+    target.local('score', target.local('score') + 1);
+    roomState.lastScore = target.id();
+    that.broadcast('honored', {from: client.id(), to: target.id()});
+  }
+
   function songEndedHandler() {
     that.broadcast('song_ended', {
       answer : playlistIterator.currentItem(),
@@ -139,7 +205,31 @@ exports.ChatRoom = function (desc, chat, proxy) {
     playNext();
   }
 
+  function getClientByField(name, field) {
+    var id, sol, k = 0;
+    for (id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        if (answerChecker.checkName(clients[id].desc(field), name)) {
+          sol = clients[id];
+          ++k;
+        }
+      }
+    }
+    return k === 1 ? sol : null;
+  }
+
   this.desc = desc;
+
+  this.getClientByName = function (name) {
+    var sol, fields = "";
+    if (sol = getClientByField(name, "display")) {
+      return sol;
+    }
+    if (sol = getClientByField(name, "name")) {
+      return sol;
+    }
+    return null;
+  };
 
   this.broadcast = function (type, msg, except) {
     var id;
@@ -185,6 +275,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('next', onNext);
     client.onMessage('token', onToken);
     client.onMessage('reset_score', onResetScore);
+    client.onMessage('honor', onHonor);
   };
 
   // pop a client from a list of clients and
@@ -193,6 +284,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
     numberOfClients--;
     delete clients[client.id()];
     if (!numberOfClients) {
+      roomState.state = "dead";
+      roomState.songStart = null;
+      roomState.lastSong = null;
       streamer.stop();
     }
     this.broadcast('old_client', [client.id(), reason]);

@@ -6,7 +6,8 @@ module.exports = function (playlist) {
   var
     currentIndex = -1,
     randomOrder,
-    playlistLength = playlist.length;
+    playlistLength = playlist.length,
+    memoLastItem = null;
 
   (function () {
     var
@@ -27,11 +28,16 @@ module.exports = function (playlist) {
     }
   }());
 
+  this.lastItem = function () {
+    return memoLastItem;
+  };
+
   this.currentItem = function () {
     return playlist[randomOrder[currentIndex]];
   };
 
   this.nextItem = function () {
+    memoLastItem = this.currentItem();
     ++currentIndex;
     if (currentIndex === playlistLength) {
       currentIndex -= playlistLength;

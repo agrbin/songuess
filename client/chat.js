@@ -8,7 +8,12 @@ function Chat(wsock, user, media, onFatal) {
     ids = [],
     playlist,
     player = new Player(myClock.clock, null),
-    announceTimer;
+    announceTimer,
+    roomState = {
+      state : "dead",
+      songStart : null,
+      lastSong : null
+    };
 
   // checks whether the sending message is maybe
   // a command to chat itself
@@ -31,17 +36,6 @@ function Chat(wsock, user, media, onFatal) {
     return true;
   }
 
-  this.handleSend = function (text) {
-    if (!checkCommand(text)) {
-      wsock.sendType("say", {
-        from : user.id,
-        to   : null,
-        when : myClock.clock(),
-        what : text
-      });
-    }
-  };
-
   function updateClientIds() {
     ids = [];
     for (var id in clients) {
@@ -54,30 +48,6 @@ function Chat(wsock, user, media, onFatal) {
   function updatePlaylist() {
   }
 
-  this.getNumberOfClients = function () {
-// used for user list animation testing
-//    return 5; //that.bla === undefined? 5: 6;
-    return ids.length;
-  };
-
-  this.id2Pid = function (id) {
-    return id.split(".")[0];
-  };
-
-  // by sequential number or by id.
-  this.getClient = function (id) {
-    if (id >= 0 && id < ids.length) {
-      return clients[ids[id]];
-    }
-    if (!clients.hasOwnProperty(id)) {
-      console.log(
-        "tried to get client not in a room."
-      );
-      return {};
-    }
-    return clients[id];
-  };
-
   function onCommand(cmd, callback) {
     commandCallbacks[cmd] = callback;
   }
@@ -86,10 +56,6 @@ function Chat(wsock, user, media, onFatal) {
     return name
       && name.indexOf(" ") === -1
       && name[0] === "#";
-  }
-
-  this.triggerCommand = function (text) {
-    checkCommand(text);
   }
 
   // copies score value from client to every other client that shares pid with
@@ -131,12 +97,15 @@ function Chat(wsock, user, media, onFatal) {
     ui.addNotice("hello to you too.");
   });
 
+  onCommand("info", function () {
+    if (roomState.lastSong) {
+      ui.displayInfo(roomState.lastSong);
+    }
+  });
   onCommand("next", function () {
-// used for user list animation testing
-//    that.bla = true;
-//    ui.updateList();
-
-    wsock.sendType("next", {when: myClock.clock()});
+    if (roomState.state === "playing") {
+      wsock.sendType("next", {when: myClock.clock()});
+    }
   });
 
   onCommand("token", function () {
@@ -163,6 +132,10 @@ function Chat(wsock, user, media, onFatal) {
     wsock.sendType("new_room", room);
   });
 
+  onCommand("honor", function (a1, a2) {
+    wsock.sendType("honor", [a1, a2].join(" ").trim());
+  });
+
   wsock.onMessage("say", ui.addMessage);
 
   wsock.onMessage("chunk", function (chunk) {
@@ -171,6 +144,7 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
+    roomState = data.state;
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
@@ -187,10 +161,20 @@ function Chat(wsock, user, media, onFatal) {
   wsock.onMessage("correct_answer", function (data) {
     var client = that.getClient(data.who);
     ++ client.score;
+    roomState.lastSong = data.answer;
+    roomState.state = "after";
     copySharedToPidPeers(client);
-    setTimeout(pretty.relativeTime, 3000);
-    setTimeout(player.pause, 6000);
     ui.correctAnswer(data);
+  });
+
+  wsock.onMessage("honored", function (data) {
+    var from = that.getClient(data.from),
+      to = that.getClient(data.to);
+    ++ to.score;
+    -- from.score;
+    copySharedToPidPeers(from);
+    copySharedToPidPeers(to);
+    ui.honored(data);
   });
 
   wsock.onMessage("called_reset", function (data) {
@@ -203,15 +187,18 @@ function Chat(wsock, user, media, onFatal) {
   // 3 sec before song start display 'get ready!'
   // 0.1 sec before song call player.play() to enable
   // sound.
-  wsock.onMessage("next_song_announce", function (when) {
-    var interval;
+  wsock.onMessage("next_song_announce", function (state) {
+    var interval, when = state.songStart;
+    roomState = state;
+    player.pause();
     clearTimeout(announceTimer);
-    interval = (when - myClock.clock()) - 2990;
     announceTimer = setTimeout(function () {
       ui.announceSong(when);
-    }, (interval < 0 ? 0 : interval) );
-    interval = (when - myClock.clock()) - 100;
-    setTimeout(player.play, interval < 0 ? 0 : interval);
+      announceTimer = setTimeout(function () {
+        player.play();
+        roomState.state = "playing";
+      }, 2980);
+    }, when - myClock.clock() - 3010);
   });
 
   wsock.onMessage("called_next", function (data) {
@@ -244,6 +231,49 @@ function Chat(wsock, user, media, onFatal) {
       onFatal("server closed connection with no reason.");
     }
   });
+
+  this.triggerCommand = function (text) {
+    checkCommand(text);
+  }
+
+  this.getNumberOfClients = function () {
+// used for user list animation testing
+//    return 5; //that.bla === undefined? 5: 6;
+    return ids.length;
+  };
+
+  this.id2Pid = function (id) {
+    return id.split(".")[0];
+  };
+
+  this.getRoomState = function () {
+    return roomState;
+  };
+
+  // by sequential number or by id.
+  this.getClient = function (id) {
+    if (id >= 0 && id < ids.length) {
+      return clients[ids[id]];
+    }
+    if (!clients.hasOwnProperty(id)) {
+      console.log(
+        "tried to get client not in a room."
+      );
+      return {};
+    }
+    return clients[id];
+  };
+
+  this.handleSend = function (text) {
+    if (!checkCommand(text)) {
+      wsock.sendType("say", {
+        from : user.id,
+        to   : null,
+        when : myClock.clock(),
+        what : text
+      });
+    }
+  };
 
   (function () {
     var init_room = location.hash;
