@@ -6,11 +6,11 @@ exports.port = 8081;
 exports.chunkBaseURL = '/chunk/';
 
 // onto what master server we will publish media
-exports.masterServer = "http://localhost:8080";
+exports.masterServer = 'http://localhost:8080';
 
 // every helloInterval seconds we will send master current identification of
 // this server.
-exports.helloInterval = 6;
+exports.helloInterval = 60;
 
 // this datum will be used to identify ourselfs with master server
 exports.media = {
@@ -47,8 +47,8 @@ exports.media = {
   // you may not serve music to public without valid copyrights
   // NOT IMPLEMENTED YET
   acl : [
-    ["deny", "all"],
-    ["allow", "email", "your.email@gmail.com"]
+    ['deny', 'all'],
+    ['allow', 'email', 'your.email@gmail.com']
   ]
 };
 
