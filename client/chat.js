@@ -7,7 +7,7 @@ function Chat(wsock, user, media, onFatal) {
     clients = {},
     ids = [],
     playlist,
-    player; // = new Player(myClock.clock, null);
+    player = new Player(myClock.clock, null);
 
   // checks whether the sending message is maybe
   // a command to chat itself
