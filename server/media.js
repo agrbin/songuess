@@ -287,7 +287,15 @@ exports.MediaGateway = function () {
   };
 
   this.getChunks = function (server, id, done) {
-    api(server, '/get_chunks/?id=', id, done);
+    api(server, '/get_chunks/?id=', id, function (chunks) {
+      var it = 0;
+      for (it = 0; it < chunks.length; ++it) {
+        if (chunks[it][0] === '/') {
+          chunks[it] = servers[server].endpoint + chunks[it];
+        }
+      }
+      done(chunks);
+    });
   };
 
   this.handleRequest = function (req, res) {
