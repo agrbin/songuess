@@ -53,13 +53,6 @@ var pretty = {
       minutes,
       full;
 
-    if (pretty.t0 && !forceAbsolute) {
-      return $("<span>")
-        .addClass("time")
-        .attr('title', full) // TODO: ovaj full je tu undefined!
-        .html(pretty.timeInterval(when - pretty.t0))[0]
-        .outerHTML;
-    }
     if (!when) {
       when = myClock.clock();
     }
@@ -69,6 +62,15 @@ var pretty = {
     full = minutes + ":"
         + pretty.leadingZero(d.getSeconds()) + "."
         + pretty.leadingZero(d.getMilliseconds(), 3);
+
+    if (pretty.t0 && !forceAbsolute) {
+      return $("<span>")
+        .addClass("time")
+        .attr('title', full)
+        .html(pretty.timeInterval(when - pretty.t0))[0]
+        .outerHTML;
+    }
+
     return $("<span>")
       .addClass("time")
       .attr('title', full)
