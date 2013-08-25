@@ -72,7 +72,7 @@ exports.media = {
   log : true,
 
   // seconds to wait before media server will be flagged as unavailable.
-  timeout : 1,
+  timeout : 2,
 
   // when media server stays silent for this amount of time
   // kick him off. must be greater than helloInterval on media.
