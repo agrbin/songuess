@@ -7,7 +7,8 @@ function Chat(wsock, user, media, onFatal) {
     clients = {},
     ids = [],
     playlist,
-    player = new Player(myClock.clock, null);
+    player = new Player(myClock.clock, null),
+    announceTimer;
 
   // checks whether the sending message is maybe
   // a command to chat itself
@@ -183,6 +184,7 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
+    clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
     ui.youEntered(data);
@@ -193,10 +195,14 @@ function Chat(wsock, user, media, onFatal) {
     ui.updateList();
   });
 
+  // after 3sec's disable player (fade out music)
+  // and disable relative timing.
   wsock.onMessage("correct_answer", function (data) {
     var client = that.getClient(data.who);
     ++ client.score;
     copySharedToPidPeers(client);
+    setTimeout(pretty.relativeTime, 3000);
+    setTimeout(player.pause, 3000);
     ui.correctAnswer(data);
   });
 
@@ -207,8 +213,26 @@ function Chat(wsock, user, media, onFatal) {
     ui.calledReset(data);
   });
 
-  wsock.onMessage("next_song_announce", ui.announceSong);
-  wsock.onMessage("called_next", ui.calledNext);
+  // 3 sec before song start display 'get ready!'
+  // 0.1 sec before song call player.play() to enable
+  // sound.
+  wsock.onMessage("next_song_announce", function (when) {
+    var interval;
+    clearTimeout(announceTimer);
+    interval = (when - myClock.clock()) - 2990;
+    announceTimer = setTimeout(function () {
+      ui.announceSong(when);
+    }, (interval < 0 ? 0 : interval) );
+    interval = (when - myClock.clock()) - 100;
+    setTimeout(player.play, interval < 0 ? 0 : interval);
+  });
+
+  wsock.onMessage("called_next", function (data) {
+    setTimeout(pretty.relativeTime, 3000);
+    setTimeout(player.pause, 3000);
+    ui.calledNext(data);
+  });
+
   wsock.onMessage("song_ended", ui.songEnded);
   wsock.onMessage("token", ui.gotToken);
 

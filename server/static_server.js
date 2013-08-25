@@ -91,7 +91,7 @@ exports.Server = function () {
     res.statusCode = 200;
     if (config.readFileOnRequest) {
       readAndAdd(req.url, file.filename, function () {
-        serve(res, file);
+        serve(res, files[req.url]);
       });
     } else {
       serve(res, file);

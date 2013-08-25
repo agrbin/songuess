@@ -18,14 +18,13 @@
  *  the audioContext hardware clock and getTime() clock are synced only once,
  *  and because of that the scheduling is not affected by imprecise JavaScript
  *  clock.
- *  one can think of the time part in last 13 bytes as a sequential number of the
- *  chunk.
  */
 var Player = function(getTime, volumeElement) {
 
   var that = this
     , audioContext = new webkitAudioContext()
     , masterGain = null
+    , playPauseGain = null
     , timeOffset = null
     , overlapTime = window.songuess.overlapTime
     , warmUpCalled = false
@@ -40,9 +39,11 @@ var Player = function(getTime, volumeElement) {
     else warmUpCalled = true;
     // set up master gain
     masterGain = audioContext.createGainNode();
+    playPauseGain = audioContext.createGainNode();
     // initial volume is 0.5
     masterGain.gain.value = 0.5;
-    masterGain.connect(audioContext.destination);
+    masterGain.connect(playPauseGain);
+    playPauseGain.connect(audioContext.destination);
     // volumeElement can be null.
     if (volumeElement) {
       volumeElement.style.display = 'block';
@@ -72,6 +73,15 @@ var Player = function(getTime, volumeElement) {
       masterGain.connect(audioContext.destination);
     }
     return muted;
+  };
+
+  // disables and enables playback.
+  this.pause = function () {
+    playPauseGain.gain.value = 0;
+  };
+
+  this.play = function () {
+    playPauseGain.gain.value = 1;
   };
 
   // returns if ovlume is muted currently
@@ -140,7 +150,7 @@ var Player = function(getTime, volumeElement) {
     if (timeOffset !== null) {
       return (srvTime / 1000) - timeOffset;
     } else {
-      return -1;
+      return null;
     }
   }
 
@@ -156,6 +166,11 @@ var Player = function(getTime, volumeElement) {
       , duration = buffer.duration
       , startTime = transponseTime(srvTime)
       , currentTime = audioContext.currentTime;
+
+    // if audioContext is not ready yet.
+    if (startTime === null) {
+      return;
+    }
 
     // connect the components
     source.buffer = buffer;

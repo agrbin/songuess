@@ -32,7 +32,6 @@ function ChatUI(chat, user) {
 
   this.youEntered = function (data) {
     var playlist = data.desc.playlist;
-    clearTimeout(announceTimer);
     pretty.relativeTime();
     this.addNotice("You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
@@ -75,13 +74,11 @@ function ChatUI(chat, user) {
 
   this.correctAnswer = function (desc) {
     var client = chat.getClient(desc.who);
-    
     entry("sys correct",
-      pretty.time(myClock.clock(), true) + " Well done " +
+      pretty.time(myClock.clock(), 0, 1) + " Well done " +
       pretty.nameClient(client) +
       "! The song was " +
       pretty.song(desc.answer) + ".");
-
     this.updateList();
   };
 
@@ -102,13 +99,10 @@ function ChatUI(chat, user) {
   };
 
   this.announceSong = function (when) {
-    var interval = (when - myClock.clock()) - 3000;
-    clearTimeout(announceTimer);
-    announceTimer = setTimeout(function() {
-      pretty.relativeTime(when);
-      entry("sys line",
-        pretty.time(myClock.clock()) + " Get ready!");
-    }, (interval < 0 ? 0 : interval) );
+    pretty.relativeTime(when);
+    entry("sys", pretty.time(myClock.clock()));
+    entry("sys",
+      pretty.time(myClock.clock(), true) + " Get ready!");
   };
 
   this.addMessage = function (msg) {

@@ -28,9 +28,13 @@ var pretty = {
       pretty.t0 = songStarts;
     }
   },
-  timeInterval : function (ms) {
+  timeInterval : function (ms, okNegative) {
     var sol = (Math.round(ms) / 1000).toString();
-    if (sol[0] !== '-') {
+    if (sol[0] === '-') {
+      if (!okNegative) {
+        sol = "dddd|"
+      }
+    } else {
       sol = "+" + sol;
     }
     if (sol.indexOf('.') === -1) {
@@ -47,32 +51,22 @@ var pretty = {
     }
     return sol.replace(/d/g, '&nbsp;');
   },
-  time : function (when, forceAbsolute) {
+  time : function (when, okNeg, forceAbsolute) {
     var
       d,
       minutes,
       full;
-
     if (pretty.t0 && !forceAbsolute) {
       return $("<span>")
         .addClass("time")
         .attr('title', full) // TODO: ovaj full je tu undefined!
-        .html(pretty.timeInterval(when - pretty.t0))[0]
+        .html(pretty.timeInterval(when - pretty.t0, okNeg))[0]
         .outerHTML;
     }
-    if (!when) {
-      when = myClock.clock();
-    }
-    d = new Date(when);
-    minutes = pretty.leadingZero(d.getHours()) + ":"
-        + pretty.leadingZero(d.getMinutes());
-    full = minutes + ":"
-        + pretty.leadingZero(d.getSeconds()) + "."
-        + pretty.leadingZero(d.getMilliseconds(), 3);
     return $("<span>")
       .addClass("time")
       .attr('title', full)
-      .text(minutes)[0]
+      .html("&nbsp;&nbsp;&nbsp;&nbsp;|")[0]
       .outerHTML;
   },
   text : function (info, css_class) {
