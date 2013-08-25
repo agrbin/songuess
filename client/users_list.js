@@ -48,6 +48,8 @@ function UsersList(chat, listElement) {
       yPositions.push(o);
     });
 
+    console.log(yPositions);
+    
     yPositions.sort(function (a, b) {
       return a.y - b.y;
     });
@@ -110,7 +112,7 @@ function UsersList(chat, listElement) {
 
       children.each(function (index) {
         var id = $(this).attr('id');
-        if (chat.getClient(id) === undefined) {
+        if (chat.getClient(id).id === undefined) {
           removedIndex = index;
           $(this).fadeOut(ANIMATION_DURATION, function () { $(this).remove(); });
         }
