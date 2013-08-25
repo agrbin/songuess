@@ -29,6 +29,7 @@ var Player = function(getTime, volumeElement) {
     , timeOffset = null
     , overlapTime = window.songuess.overlapTime
     , warmUpCalled = false
+    , muted = false
     ; 
 
   // this is called only once to get the AudioContext started and to set up
@@ -55,6 +56,26 @@ var Player = function(getTime, volumeElement) {
     oscillator.noteOn(0);
     oscillator.noteOff(0.2);
   })();
+
+  // toggles mute volume
+  this.toggleMute = function () {
+    muted = !muted;
+    if (muted) {
+      masterGain.disconnect();
+    } else {
+      masterGain.connect(audioContext.destination);
+    }
+    return muted;
+  };
+
+  // returns if ovlume is muted currently
+  this.setVolume = function (value) {
+    if (value < 0 || value > 10) {
+      throw "value must be in [0, 10]";
+    }
+    masterGain.gain.value = value / 10;
+    return muted;
+  };
 
   // socket.onmessage will be binded to this method.
   // when message is received, start downloading mp3 chunk and decode it.
