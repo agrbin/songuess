@@ -7,7 +7,7 @@ module.exports = function (options) {
     mulSpace = /  +/g,
     trimSpace = /^ | $/g;
 
-  this.normalize = function (str) {
+  function normalize(str) {
     str = str.toLowerCase();
     str = str.replace(nonAlphanum, '');
     str = str.replace(mulSpace, ' ');
