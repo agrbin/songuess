@@ -87,6 +87,7 @@ var pretty = {
   fullClient : function (client) {
     return $("<div>")
       .addClass("full-client")
+      .attr('id', client.id)
       .css({color: pretty.colorStyle(client.id)})
       .text(client.display)
       .append($("<span>").text(client.score))[0]

@@ -1,28 +1,13 @@
 function Chat(wsock, user, media, onFatal) {
 
-  var that = this,
+  var
+    that = this,
     commandCallbacks = {},
     ui = new ChatUI(this, user),
-    clients = {}, ids = [], playlist,
-    player = new Player(myClock.clock, null);
-
-  function initialize() {
-    var init_room = location.hash;
-    if (init_room.length <= 1) {
-      init_room = "#root";
-    }
-    if (!roomNameOk(init_room)) {
-      return onFatal("initial room name '" + init_room
-                     + "' is not valid.");
-    }
-    wsock.sendType("initial_room", init_room);
-    // if init room doesn't exists.
-    wsock.onError(1, function () {
-      media.newRoomDialog(init_room, function (room) {
-        wsock.sendType("initial_room", room);
-      });
-    });
-  }
+    clients = {},
+    ids = [],
+    playlist,
+    player; // = new Player(myClock.clock, null);
 
   // checks whether the sending message is maybe
   // a command to chat itself
@@ -69,6 +54,8 @@ function Chat(wsock, user, media, onFatal) {
   }
 
   this.getNumberOfClients = function () {
+// used for user list animation testing
+//    return 5; //that.bla === undefined? 5: 6;
     return ids.length;
   };
 
@@ -78,6 +65,19 @@ function Chat(wsock, user, media, onFatal) {
 
   // by sequential number or by id.
   this.getClient = function (id) {
+// used for user list animation testing
+/*
+    if (id >= that.getNumberOfClients()) return undefined;
+    var clientNames = [ "tomislav grbin", "anton grbin", "irma telarovic", "mirko telarovic", "gita telarovic", "novi korisnik"];
+    var score = (id*13)%17;
+    if (that.bla !== undefined && id === 1) score = 6;
+    return {
+      display: clientNames[id],
+      id: id,
+      score: score
+    };
+*/
+
     if (id >= 0 && id < ids.length) {
       return clients[ids[id]];
     }
@@ -127,6 +127,10 @@ function Chat(wsock, user, media, onFatal) {
   });
 
   onCommand("next", function () {
+// used for user list animation testing
+//    that.bla = true;
+//    ui.updateList();
+
     wsock.sendType("next", {when: myClock.clock()});
   });
 
@@ -208,6 +212,22 @@ function Chat(wsock, user, media, onFatal) {
     }
   });
 
-  initialize();
+  (function () {
+    var init_room = location.hash;
+    if (init_room.length <= 1) {
+      init_room = "#root";
+    }
+    if (!roomNameOk(init_room)) {
+      return onFatal("initial room name '" + init_room
+                     + "' is not valid.");
+    }
+    wsock.sendType("initial_room", init_room);
+    // if init room doesn't exists.
+    wsock.onError(1, function () {
+      media.newRoomDialog(init_room, function (room) {
+        wsock.sendType("initial_room", room);
+      });
+    });
+  }());
 
 }

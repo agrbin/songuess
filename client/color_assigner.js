@@ -63,7 +63,7 @@ function ColorAssigner() {
   }
 
   function rgbForAngle(angle) {
-    var rgb = hsv2rgb(angle / MAX_USERS, 1, 1);
+    var rgb = hsv2rgb(firstColorAngle + angle / MAX_USERS, 1, 1);
     return "rgb(" + [rgb.r, rgb.g, rgb.b].join() + ")";
   }
 

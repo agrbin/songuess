@@ -82,11 +82,11 @@ function ChatUI(chat, user) {
       "! The song was " +
       pretty.song(desc.answer) + ".");
 
-    this.updateList(client.id);
+    this.updateList();
   };
 
   this.calledReset = function (desc) {
-    this.updateList(null, chat.getClient(desc.who).id);
+    this.updateList();
   };
 
   this.songEnded = function (desc) {
@@ -142,7 +142,7 @@ function ChatUI(chat, user) {
           .scrollTop(body.scrollHeight);
       });
 
-    users_list = new UsersList($(".chat .right")[0]);
+    users_list = new UsersList(chat, $(".chat .right"));
     that.updateList = users_list.updateList;
   }());
 
