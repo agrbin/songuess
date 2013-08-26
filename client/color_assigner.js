@@ -40,7 +40,7 @@ function ColorAssigner() {
 
   this.colorForId = function (id) {
     if (id.split('.')[0] === '1166224657908994156540') { // irma
-      return "purple";
+      return "darkorchid";
     }
 
     var color = assignedColors[id];
