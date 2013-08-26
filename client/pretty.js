@@ -71,20 +71,20 @@ var pretty = {
   song : function (song) {
     return '"' + pretty.text(song.title, "bold") + '"';
   },
-  fullClient : function (client) {
+  clientWithScore : function (client) {
     return $("<div>")
       .addClass("full-client")
       .attr('id', client.id)
       .css({color: pretty.colorStyle(client.id)})
-      .text(client.display)
+      .text(client.nsdisp)
       .append($("<span>").text(client.score))[0]
       .outerHTML;
   },
-  nameClient : function (client) {
+  client : function (client) {
     return $("<span>")
       .addClass("full-client")
       .css({color: pretty.colorStyle(client.id)})
-      .text(client.name)[0]
+      .text(client.nsdisp)[0]
       .outerHTML;
   }
 };

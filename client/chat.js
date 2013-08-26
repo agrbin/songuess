@@ -4,6 +4,7 @@ function Chat(wsock, user, media, onFatal) {
     that = this,
     commandCallbacks = {},
     ui = new ChatUI(this, user),
+    ns = new NameResolver(),
     clients = {},
     ids = [],
     playlist,
@@ -38,9 +39,17 @@ function Chat(wsock, user, media, onFatal) {
 
   function updateClientIds() {
     ids = [];
+    ns.clear();
     for (var id in clients) {
       if (clients.hasOwnProperty(id)) {
         ids.push(id);
+        ns.add(id, clients[id].display);
+      }
+    }
+    ns.rebuildDisplay();
+    for (var id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        clients[id].nsdisp = ns.display(id);
       }
     }
   }
@@ -132,8 +141,10 @@ function Chat(wsock, user, media, onFatal) {
     wsock.sendType("new_room", room);
   });
 
-  onCommand("honor", function (a1, a2) {
-    wsock.sendType("honor", [a1, a2].join(" ").trim());
+  onCommand("honor", function () {
+    var it = 0, arr = [];
+    for (it = 0; it < arguments.length; arr.push(arguments[it++]));
+    wsock.sendType("honor", {to: ns.whois(arr.join(" ").trim())});
   });
 
   wsock.onMessage("say", ui.addMessage);
@@ -256,9 +267,6 @@ function Chat(wsock, user, media, onFatal) {
       return clients[ids[id]];
     }
     if (!clients.hasOwnProperty(id)) {
-      console.log(
-        "tried to get client not in a room."
-      );
       return {};
     }
     return clients[id];

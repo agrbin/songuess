@@ -93,11 +93,11 @@ function UsersList(chat, listElement) {
       children = listElement.children(),
       width,
       removedIndex,
-      fullClient;
+      clientWithScore;
 
     if (children.length === 0) {
       for (i = 0; i < clientsLength; ++i) {
-        listElement.append(pretty.fullClient(clients[i]));
+        listElement.append(pretty.clientWithScore(clients[i]));
       }
     } else {
       pullOut();
@@ -122,10 +122,10 @@ function UsersList(chat, listElement) {
 
         yPos = listLayout.pos.top + listLayout.height * i;
 
-        fullClient = pretty.fullClient(clients[i]);
+        clientWithScore = pretty.clientWithScore(clients[i]);
 
         if (currentIndex === undefined) { // this entry was added
-          element = $(fullClient);
+          element = $(clientWithScore);
           if (i === clientsLength - 1) {
             listElement.append(element);
           } else {
@@ -141,7 +141,7 @@ function UsersList(chat, listElement) {
             .fadeIn(ANIMATION_DURATION);
         } else {
           $(children[currentIndex])
-            .html($(fullClient).html())
+            .html($(clientWithScore).html())
             .animate({ top: yPos }, ANIMATION_DURATION);
         }
       }

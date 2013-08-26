@@ -64,13 +64,13 @@ function ChatUI(chat, user) {
 
   this.userJoined = function (id, reason) {
     entry("sys cmd",
-      pretty.nameClient(chat.getClient(id))
+      pretty.client(chat.getClient(id))
       + " joined the room.");
   };
 
   this.userLeft = function (id, reason) {
     entry("sys cmd",
-      pretty.nameClient(chat.getClient(id))
+      pretty.client(chat.getClient(id))
       + " left: " + reason);
   };
 
@@ -78,15 +78,15 @@ function ChatUI(chat, user) {
     entry("sys wrong",
       " The song was " +
       pretty.song(desc.answer) + ". " +
-      pretty.nameClient(chat.getClient(desc.who)) +
+      pretty.client(chat.getClient(desc.who)) +
       " called for a next one :/");
   };
 
   this.honored = function (desc) {
     entry("sys correct",
-      pretty.nameClient(chat.getClient(desc.from)) +
+      pretty.client(chat.getClient(desc.from)) +
       " honored his point to " +
-      pretty.nameClient(chat.getClient(desc.to)) +
+      pretty.client(chat.getClient(desc.to)) +
          "!");
     that.updateList();
   };
@@ -101,14 +101,14 @@ function ChatUI(chat, user) {
   this.correctAnswer = function (desc) {
     var client = chat.getClient(desc.who);
     entry("sys correct",
-      " Well done " + pretty.nameClient(client) +
+      " Well done " + pretty.client(client) +
       "! The song was " + pretty.song(desc.answer) + ".");
     this.updateList();
   };
 
   this.calledReset = function (desc) {
     entry("sys cmd", " " +
-      pretty.nameClient(chat.getClient(desc.who)) +
+      pretty.client(chat.getClient(desc.who)) +
       " /reset his score.");
     this.updateList();
   };
@@ -124,13 +124,14 @@ function ChatUI(chat, user) {
   };
 
   this.addMessage = function (msg) {
-    var rel = "", state = chat.getRoomState().state;
+    var cl = [], state = chat.getRoomState().state;
     if (state === "playing" || state === "after") {
-      rel = " relative";
+      cl.push("relative");
     }
-    entry("say" + rel,
+    cl.push(msg.from === null ? "sys" : "say");
+    entry(cl.join(" "),
       (msg.from ?
-        pretty.nameClient(chat.getClient(msg.from)) + ": "
+        pretty.client(chat.getClient(msg.from)) + ": "
         : "")
       + pretty.text(msg.what));
   };

@@ -12,7 +12,8 @@ function ColorAssigner() {
     MAX_USERS = 1024,
     usedAngles = {},
     lastAngle = 0,
-    currentJumpSize = MAX_USERS;
+    currentJumpSize = MAX_USERS,
+    LUM = 0.75;
 
   // http://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately
   function hsv2rgb(h, s, v) {
@@ -56,9 +57,9 @@ function ColorAssigner() {
       break;
     }
     return {
-      r: Math.floor(r * 255),
-      g: Math.floor(g * 255),
-      b: Math.floor(b * 255)
+      r: Math.floor(r * 255 * LUM),
+      g: Math.floor(g * 255 * LUM),
+      b: Math.floor(b * 255 * LUM)
     };
   }
 

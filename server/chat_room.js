@@ -102,7 +102,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
   function initLocalData(client) {
     if (!localPersonData.hasOwnProperty(client.pid())) {
       localPersonData[client.pid()] = {
-        score : 0
+        score : 0,
+        num : 0 // numer of your accounts connected
       };
     }
     client.desc('local', localPersonData[client.pid()]);
@@ -191,10 +192,11 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function onHonor(data, client) {
-    var target = that.getClientByName(data);
-    if (!target) {
-      return info("unknown or multiple match: " + data + ".", client);
+    var target;
+    if (!clients.hasOwnProperty(data.to)) {
+      return info("target acc is not in da klub.");
     }
+    target = clients[data.id];
     if (roomState.state !== "after") {
       return info("can't honor in this moment.", client);
     }
@@ -218,31 +220,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     playNext();
   }
 
-  function getClientByField(name, field) {
-    var id, sol, k = 0;
-    for (id in clients) {
-      if (clients.hasOwnProperty(id)) {
-        if (answerChecker.checkName(clients[id].desc(field), name)) {
-          sol = clients[id];
-          ++k;
-        }
-      }
-    }
-    return k === 1 ? sol : null;
-  }
-
   this.desc = desc;
-
-  this.getClientByName = function (name) {
-    var sol, fields = "";
-    if (sol = getClientByField(name, "display")) {
-      return sol;
-    }
-    if (sol = getClientByField(name, "name")) {
-      return sol;
-    }
-    return null;
-  };
 
   this.broadcast = function (type, msg, except) {
     var id;
@@ -280,6 +258,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
     clients[client.id()] = client;
     client.setRoom(that);
     initLocalData(client);
+    client.local('num', client.local('num') + 1);
+    if (client.local('num') > 3) {
+      return client.kill("too many accounts in room");
+    }
 
     this.broadcast('new_client', client.publicInfo(), client);
     client.send('room_state', packRoomState());
@@ -295,6 +277,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
   // notify all other clients about the popping :)
   this.leave = function (client, reason) {
     numberOfClients--;
+    client.local('num', client.local('num') - 1);
     delete clients[client.id()];
     if (!numberOfClients) {
       roomState.state = "dead";
