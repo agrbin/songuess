@@ -58,7 +58,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     streamer.play(playlistIterator.nextItem(), function (startTime, err) {
       if (err) {
         console.log("tried to play next: " + err);
-        info("tried to play next with error (retry in 5s): " + err);
+        info("Tried to play next with error (retry in 5s): " + err);
         setTimeout(playNext, 5000);
       } else {
         roomState.state = "after";
@@ -194,17 +194,17 @@ exports.ChatRoom = function (desc, chat, proxy) {
   function onHonor(data, client) {
     var target;
     if (!clients.hasOwnProperty(data.to)) {
-      return info("target acc is not in da klub.");
+      return info("Target acc is not in da klub.");
     }
     target = clients[data.id];
     if (roomState.state !== "after") {
-      return info("can't honor in this moment.", client);
+      return info("Can't honor in this moment.", client);
     }
     if (target === client) {
-      return info("you are honored.. gee, well done!", client);
+      return info("You are honored.. gee, well done!", client);
     }
     if (client.id() !== roomState.lastScore) {
-      return info("you didn't made the last score.", client);
+      return info("You didn't made the last score.", client);
     }
     client.local('score', client.local('score') - 1);
     target.local('score', target.local('score') + 1);
@@ -260,7 +260,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     initLocalData(client);
     client.local('num', client.local('num') + 1);
     if (client.local('num') > 3) {
-      return client.kill("too many accounts in room");
+      return client.error("too many accounts in room");
     }
 
     this.broadcast('new_client', client.publicInfo(), client);
