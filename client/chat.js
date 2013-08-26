@@ -26,13 +26,13 @@ function Chat(wsock, user, media, onFatal) {
     params = text.substr(1).split(" ");
     cmd = params.shift();
     if (!commandCallbacks.hasOwnProperty(cmd)) {
-      ui.addNotice("command '" + cmd + "' unavailable.");
+      ui.addNotice("Command '" + cmd + "' unavailable.", "err");
       return true;
     }
     try {
       commandCallbacks[cmd].apply(that, params);
     } catch (e) {
-      ui.addNotice("error: " + e);
+      ui.addNotice("error: " + e, "err");
     }
     return true;
   }
@@ -83,7 +83,7 @@ function Chat(wsock, user, media, onFatal) {
 
   onCommand("mute", function () {
     ui.addNotice(player.toggleMute() ?
-                 "sound turned off." : "sound turned on.");
+                 "sound turned off." : "sound turned on.", "cmd");
   });
 
   onCommand("vol", function (value) {
@@ -91,20 +91,20 @@ function Chat(wsock, user, media, onFatal) {
     try {
       vol = player.setVolume(value);
     } catch (err) {
-      return ui.addNotice("error: " + err);
+      return ui.addNotice("error: " + err, "err");
     }
-    ui.addNotice("volume is set to " + vol + "." +
-                (player.getMuted() ? " but /mute is on." : ""));
+    ui.addNotice("Volume is set to " + vol + "." +
+                (player.getMuted() ? " but /mute is on." : ""), "cmd");
   });
 
   onCommand("help", function () {
-    ui.addNotice("available commands are ");
-    ui.addNotice("   /clear, /join #ROOM, /mute, /vol [0-10]");
-    ui.addNotice("   /sync, /reset");
+    ui.addNotice("Available commands are ", "cmd");
+    ui.addNotice("- /clear, /join #ROOM, /mute, /vol [0-10]", "cmd");
+    ui.addNotice("- /sync, /reset", "cmd");
   });
 
   onCommand("hello", function () {
-    ui.addNotice("hello to you too.");
+    ui.addNotice("hello to you too.", "cmd");
   });
 
   onCommand("info", function () {
@@ -132,7 +132,7 @@ function Chat(wsock, user, media, onFatal) {
     new Syncer(
       new SyncSocketWrap(wsock),
       function (n) {
-        ui.addNotice("Clock changed: " + Math.round(n*100)/100 + " ms.");
+        ui.addNotice("Clock changed: " + Math.round(n*100)/100 + " ms.", "cmd");
         player.resync(n > 1000);
       }
     );
@@ -158,7 +158,7 @@ function Chat(wsock, user, media, onFatal) {
 
   onCommand("join", function (room) {
     if (!roomNameOk(room)) {
-      return ui.addNotice("room name not valid.");
+      return ui.addNotice("Room name not valid.", "err");
     }
     wsock.onError(1, function (err) {
       media.newRoomDialog(room, function (room) {
@@ -186,6 +186,7 @@ function Chat(wsock, user, media, onFatal) {
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
+    player.pause();
     ui.youEntered(data);
     playlist = data.desc.playlist;
     clients = data.users;
@@ -247,6 +248,7 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("song_ended", ui.songEnded);
   wsock.onMessage("token", ui.gotToken);
+  wsock.onMessage("who", ui.showWho);
 
   wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;
