@@ -12,7 +12,7 @@ module.exports = function(exports) {
 
   exports.media.trustServers = {
     '161.53.19.109' : true, // xfer.hr
-    '192.31.186.112' : true // brahle.com
+    '91.121.68.92' : true // brahle.com
   };
 
   exports.media.servers = {};

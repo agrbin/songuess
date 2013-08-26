@@ -39,7 +39,7 @@ exports.media = {
 
     // this need not to be exports.port if we are
     // port-forwarding this port behind the router
-    listen_port : 8081
+    listen_port : exports.port
   },
 
   // who can create room with songs from this server?
