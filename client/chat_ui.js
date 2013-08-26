@@ -18,6 +18,8 @@ function ChatUI(chat, user) {
       what = pretty.delimit("#");
     } else if (type.indexOf("cmd") !== -1) {
       what = pretty.delimit(">");
+    } else if (type.indexOf("err") !== -1) {
+      what = pretty.delimit("!");
     } else if (type.indexOf("relative") !== -1) {
       what = pretty.playTime(when - t0);
     } else if (state === "suspense") {
@@ -140,8 +142,8 @@ function ChatUI(chat, user) {
     entry("sys", " You can use: " + pretty.text(token));
   };
 
-  this.addNotice = function (what) {
-    entry("sys", what);
+  this.addNotice = function (what, cls) {
+    entry("sys " + cls, what);
   };
 
   (function () {

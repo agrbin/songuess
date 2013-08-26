@@ -24,11 +24,15 @@ exports.SockWrapper = function (sock, syncRtt) {
     }, config.sleepyPeriod * 1000);
   }
 
+  function networkProblem(what) {
+    if (!config.ignoreNetworkProblems && sleepyCallback) {
+      sleepyCallback(what);
+    }
+  }
+
   function clockDifference(delta) {
     if (delta > 1000 && delta > 3 * syncRtt) {
-      if (sleepyCallback) {
-        sleepyCallback("network unstable.");
-      }
+      networkProblem("network unstable. your clock is off.");
     }
   }
 
@@ -44,9 +48,7 @@ exports.SockWrapper = function (sock, syncRtt) {
   // can have a impact in game.
   function ping() {
     if (pingTimeout !== null) {
-      if (sleepyCallback) {
-        return sleepyCallback("connection lost.");
-      }
+      return networkProblem("connection lost. dind't answer on ping.");
     }
     that.sendType('non-patient-firewall', null, stopwatch.reset);
     pingTimeout = setTimeout(ping, config.pingInterval * 1000);
@@ -54,9 +56,7 @@ exports.SockWrapper = function (sock, syncRtt) {
       var rtt = stopwatch.get();
       pingTimeout = null;
       if (Math.abs(rtt - syncRtt) > 3000) {
-        if (sleepyCallback) {
-          sleepyCallback("network unstable..");
-        }
+        networkProblem("your ping changed a lot.");
       }
       clockDifference(clock.clock() - syncRtt / 2 - data.when);
     });
@@ -67,9 +67,7 @@ exports.SockWrapper = function (sock, syncRtt) {
   };
 
   this.onSleepy = function (callback) {
-    if (!config.ignoreNetworkProblems) {
-      sleepyCallback = callback;
-    }
+    sleepyCallback = callback;
   };
 
   this.onClose = function (callback) {
@@ -87,9 +85,11 @@ exports.SockWrapper = function (sock, syncRtt) {
         { error: error, code : code }
       ), done);
     } catch (err) {
-      setTimeout(function () {
-        done(null, err);
-      }, 0);
+      if (done) {
+        setTimeout(function () {
+          done(null, err);
+        }, 0);
+      }
     }
   };
 
@@ -100,9 +100,11 @@ exports.SockWrapper = function (sock, syncRtt) {
         done
       );
     } catch (err) {
-      setTimeout(function () {
-        done(null, err);
-      }, 0);
+      if (done) {
+        setTimeout(function () {
+          done(null, err);
+        }, 0);
+      }
     }
   };
 
