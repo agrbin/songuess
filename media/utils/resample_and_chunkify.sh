@@ -12,7 +12,7 @@ mkdir -p "$chunks_folder" 2> /dev/null
 rm -f "$chunks_folder/*.mp3" 2> /dev/null
 
 # strip out id3
-mpgcat "$file" 2> /dev/null 1> "$stripped_file"
+cp "$file" "$stripped_file"
 
 # encode to what chrome likes
 lame --quiet -t --resample 48 --nores --cbr -b 96 \
