@@ -24,7 +24,7 @@ function ColorAssigner() {
     RND_COMPONENT_MARGIN = 50;
 
   function randomComponent() {
-    return RND_COMPONENT_MARGIN + Math.floor(Math.random() * 255 - 2 * RND_COMPONENT_MARGIN);
+    return RND_COMPONENT_MARGIN + Math.floor(Math.random() * (255 - 2 * RND_COMPONENT_MARGIN));
   }
 
   function newColor() {
