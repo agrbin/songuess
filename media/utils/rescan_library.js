@@ -1,3 +1,4 @@
+#!/opt/local/bin/node
 /*jslint regexp: true, stupid: true, indent: 2, plusplus: true */
 "use strict";
 
@@ -139,14 +140,16 @@ function rescan(done) {
             console.log(stderr);
           }
           if (error !== null) {
-            done(error);
+            console.log(error);
+            console.log('');
+            afterChunk();
           } else {
             afterChunk(stdout.toString(), file);
           }
         }
       );
     } else {
-      done(null);
+      done();
     }
   }
 
@@ -171,15 +174,11 @@ library.loadLibrary(function (filesFound) {
   console.log(modifiedFilesCount + '\t\tfiles were modified');
   console.log(needsRescan.length + '\t\tfiles need to be rescanned\n');
 
-  rescan(function(error) {
-    if (error) {
-      console.log("error while scanning:", error);
-    } else {
-      console.log('done rescanning\n');
-      console.log('saving library..');
-      library.saveLibrary(newLibrary, function () {
-        console.log('done!');
-      });
-    }
+  rescan(function() {
+    console.log('done rescanning\n');
+    console.log('saving library..');
+    library.saveLibrary(newLibrary, function () {
+      console.log('done!');
+    });
   });
 });
