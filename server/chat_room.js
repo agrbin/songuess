@@ -195,9 +195,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
   function onHonor(data, client) {
     var target;
     if (!clients.hasOwnProperty(data.to)) {
-      return info("Target acc is not in da klub.");
+      return info("Target acc is not in da klub.", client);
     }
-    target = clients[data.id];
+    target = clients[data.to];
     if (roomState.state !== "after") {
       return info("Can't honor in this moment.", client);
     }
