@@ -248,8 +248,6 @@ function Chat(wsock, user, media, onFatal) {
   }
 
   this.getNumberOfClients = function () {
-// used for user list animation testing
-//    return 5; //that.bla === undefined? 5: 6;
     return ids.length;
   };
 
