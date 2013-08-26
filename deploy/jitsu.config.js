@@ -10,13 +10,12 @@ module.exports = function(exports) {
   exports.streamer.sendAhead = 12;
   exports.socket.ignoreNetworkProblems = true;
 
-  exports.media.servers = {
-    'classical-media' : {
-      fixed     : true,
-      endpoint  : 'http://xfer.hr:8081',
-      desc      : 'classical teacher'
-    }
+  exports.media.trustServers = {
+    '161.53.19.109' : true, // xfer.hr
+    '192.31.186.112' : true // brahle.com
   };
+
+  exports.media.servers = {};
 
   exports.proxy.throttleStreamOff = 3;
   exports.proxy.throttleStreamAmp = 3;

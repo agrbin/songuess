@@ -100,6 +100,7 @@ function Chat(wsock, user, media, onFatal) {
   onCommand("help", function () {
     ui.addNotice("available commands are ");
     ui.addNotice("   /clear, /join #ROOM, /mute, /vol [0-10]");
+    ui.addNotice("   /sync, /reset");
   });
 
   onCommand("hello", function () {
@@ -132,6 +133,7 @@ function Chat(wsock, user, media, onFatal) {
       new SyncSocketWrap(wsock),
       function (n) {
         ui.addNotice("Clock changed: " + Math.round(n*100)/100 + " ms.");
+        player.resync(n > 1000);
       }
     );
   });

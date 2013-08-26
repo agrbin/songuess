@@ -29,6 +29,7 @@ var Player = function(getTime, volumeElement) {
     , overlapTime = window.songuess.overlapTime
     , warmUpCalled = false
     , muted = false
+    , maxScheduledPoint = 0
     ; 
 
   // this is called only once to get the AudioContext started and to set up
@@ -59,6 +60,20 @@ var Player = function(getTime, volumeElement) {
     oscillator.noteOn(0);
     oscillator.noteOff(0.2);
   }
+
+  // this will work only for future scheduled chunks.
+  // it will mute everything that is already scheduled to avoid double play.
+  this.resync = function (muteIt) {
+    if (muteIt) {
+      this.pause();
+      setTimeout(
+        this.play,
+        1000 * Math.max(0, maxScheduledPoint - audioContext.currentTime)
+      );
+    }
+    maxScheduledPoint = 0;
+    timeOffset = null;
+  };
 
   this.getMuted = function () {
     if (!warmUpCalled) return;
@@ -197,9 +212,11 @@ var Player = function(getTime, volumeElement) {
         console.log("chunk almost late: ", startTime - currentTime);
       }
       source.noteOn(startTime);
+      maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
     } else if (startTime + duration > currentTime) {
       console.log("chunk played with offset. late for: ", currentTime - startTime);
       source.start(currentTime, currentTime - startTime);
+      maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
     } else {
       console.log("chunk ignored. late for: ", currentTime - startTime);
     }
@@ -208,6 +225,9 @@ var Player = function(getTime, volumeElement) {
   (function() {
     if (navigator.userAgent.match(/(iPad|iPhone|iPod)/g)) {
       document.addEventListener('touchstart', playWarmUpNote);
+      window.addEventListener('pageshow', function() {
+        that.resync(true);
+      });
     } else {
       playWarmUpNote();
     }
