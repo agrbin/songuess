@@ -14,7 +14,7 @@ var Syncer = function(ws, done) {
       // don't sync on next non-emtpy message.
       ws.onmessage = function() {};
       myClock.skew(Number(buf.data));
-      done();
+      done(Number(buf.data));
     }
   };
   // initiate sync

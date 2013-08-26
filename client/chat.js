@@ -111,6 +111,31 @@ function Chat(wsock, user, media, onFatal) {
       ui.displayInfo(roomState.lastSong);
     }
   });
+
+  // used as a wrapper to Syncer class.
+  function SyncSocketWrap() {
+    var that = this;
+    this.onmessage = null;
+    this.send = function (msg) {
+      wsock.sendType("sync", msg);
+    }
+    wsock.onMessage("sync", function (msg) {
+      if (that.onmessage) {
+        that.onmessage({data:msg});
+      }
+    });
+  }
+
+  onCommand("sync", function () {
+    wsock.sendType("sync_start", {});
+    new Syncer(
+      new SyncSocketWrap(wsock),
+      function (n) {
+        ui.addNotice("Clock changed: " + Math.round(n*100)/100 + " ms.");
+      }
+    );
+  });
+
   onCommand("next", function () {
     if (roomState.state === "playing") {
       wsock.sendType("next", {when: myClock.clock()});

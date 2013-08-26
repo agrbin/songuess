@@ -4,6 +4,7 @@
 var
   clock = require('./clock.js'),
   proxyConfig = require('./config.js').proxy,
+  Syncer = require('./syncer.js').Syncer,
   randomRange = require('./statistics.js').randomRange,
   Streamer = require('./streamer.js').Streamer,
   AnswerChecker = require('./answer_checker.js'),
@@ -220,6 +221,27 @@ exports.ChatRoom = function (desc, chat, proxy) {
     playNext();
   }
 
+  // used as a wrapper to Syncer class.
+  function SyncSocketWrap(client) {
+    var that = this;
+    this.onmessage = null;
+    this.send = function (msg, done) {
+      client.send("sync", msg, done);
+    }
+    client.onMessage("sync", function (msg) {
+      if (that.onmessage) {
+        that.onmessage({data:msg});
+      }
+    });
+  }
+
+  function onStartSync(data, client) {
+    Syncer(
+      new SyncSocketWrap(client),
+      function() {}
+    );
+  }
+
   this.desc = desc;
 
   this.broadcast = function (type, msg, except) {
@@ -271,6 +293,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('token', onToken);
     client.onMessage('reset_score', onResetScore);
     client.onMessage('honor', onHonor);
+    client.onMessage('sync_start', onStartSync);
   };
 
   // pop a client from a list of clients and
