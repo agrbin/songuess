@@ -86,7 +86,7 @@ function Chat(wsock, user, media, onFatal) {
                  "sound turned off." : "sound turned on.");
   });
 
-  onCommand("volume", function (value) {
+  onCommand("vol", function (value) {
     var vol;
     try {
       vol = player.setVolume(value);
@@ -99,7 +99,7 @@ function Chat(wsock, user, media, onFatal) {
 
   onCommand("help", function () {
     ui.addNotice("available commands are ");
-    ui.addNotice("   /clear, /join #ROOM, /mute, /volume [0-10]");
+    ui.addNotice("   /clear, /join #ROOM, /mute, /vol [0-10]");
   });
 
   onCommand("hello", function () {
