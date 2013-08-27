@@ -6,12 +6,12 @@ module.exports = function (options) {
     nonAlpha = /[^a-zA-Z ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
-    trimParentheses = /\([^)]*\)/g;
+    trimParentheses = /\([^)]*\)/g,
     trimSquare = /\[[^]]*\]/g;
 
 
   function normalize(str) {
-    if (str === null || str === undefined) {
+    if (typeof str !== 'string') {
       return "null";
     }
     str = str.toLowerCase();
@@ -35,4 +35,3 @@ module.exports = function (options) {
     return normalize(answer) === normalize(playlistItem.title);
   };
 };
-
