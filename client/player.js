@@ -30,6 +30,7 @@ var Player = function(getTime, volumeElement) {
     , warmUpCalled = false
     , muted = false
     , maxScheduledPoint = 0
+    , streamEnabled = true
     ; 
 
   // this is called only once to get the AudioContext started and to set up
@@ -92,6 +93,11 @@ var Player = function(getTime, volumeElement) {
     return muted;
   };
 
+  this.toggleStream = function () {
+    streamEnabled = !streamEnabled;
+    return streamEnabled;
+  };
+
   // disables and enables playback.
   this.pause = function () {
     if (!warmUpCalled) return;
@@ -119,6 +125,9 @@ var Player = function(getTime, volumeElement) {
   // socket.onmessage will be binded to this method.
   // when message is received, start downloading mp3 chunk and decode it.
   this.addChunk = function(chunkInfo, secondary) {
+    if (!streamEnabled) {
+      return;
+    }
     var request = new XMLHttpRequest(), done = false;
     if (!warmUpCalled) {
       return;

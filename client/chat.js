@@ -103,9 +103,14 @@ function Chat(wsock, user, media, onFatal) {
     wsock.sendType("change_group", {when:myClock.clock(), group:target});
   });
 
+  onCommand("stream", function (what) {
+    ui.addNotice(player.toggleStream() ?
+                 "Streaming turned on." : "Streaming turned off.");
+  });
+
   onCommand("mute", function () {
     ui.addNotice(player.toggleMute() ?
-                 "sound turned off." : "sound turned on.");
+                 "Sound turned off." : "Sound turned on.");
   });
 
   onCommand("vol", function (value) {
@@ -118,7 +123,7 @@ function Chat(wsock, user, media, onFatal) {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
     ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
-    ui.addNotice("- /playlist");
+    ui.addNotice("- /playlist, /stream");
   });
 
   onCommand("hello", function () {
