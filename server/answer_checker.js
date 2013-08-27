@@ -8,7 +8,7 @@ module.exports = function (options) {
     trimSpace = /^ | $/g;
 
   function normalize(str) {
-    if (str === null) {
+    if (str === null || str === undefined) {
       return "null";
     }
     str = str.toLowerCase();

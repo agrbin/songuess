@@ -100,6 +100,22 @@ function ChatUI(chat, user) {
     entry("sys", " title : " + pretty.text(song.title, "bold"));
   };
 
+  this.displayPlaylist = function (playlist) {
+    var it, arr;
+    if (playlist.length) {
+      entry("sys", " Playlist contains:");
+    } else {
+      return entry("sys", " This room has no songs.");
+    }
+    for (it = 0; it < playlist.content.length; ++it) {
+      arr = playlist.content[it];
+      entry("sys", arr[1] + " song" + (arr[1] > 1 ? "s" : "")
+            + " from " + pretty.text(arr[0][1], "bold")
+            + " by " + pretty.text(arr[0][0], "bold") + ".");
+    }
+    entry("sys", "enjoy!");
+  };
+
   this.displayRow = function (desc) {
     if (chat.getNumberOfPersons() <= 1) {
       return;

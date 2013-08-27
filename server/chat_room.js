@@ -22,7 +22,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     answerChecker,
     streamer,
 
-    // "dead", "playing", "suspense"
+    // "dead", "playing", "after", "suspense"
     // if state is playing, when did the song started?
     // if state is suspense, when will the next song start?
     roomState = {
@@ -32,13 +32,29 @@ exports.ChatRoom = function (desc, chat, proxy) {
       lastScore : null
     };
 
+  function packPlaylist() {
+    var playlist = desc.playlist, sol = [], it = 0, bio = {}, key;
+    for (it = 0; it < playlist.length; ++it) {
+      key = JSON.stringify([playlist[it].artist, playlist[it].album]);
+      if (!bio.hasOwnProperty(key)) {
+        bio[key] = 0;
+      }
+      ++bio[key];
+    }
+    for (key in bio) {
+      sol.push( [JSON.parse(key), bio[key]] );
+    }
+    return sol;
+  }
+
   function packRoomState() {
     var id, sol = {
       desc : {
         name : desc.name,
         desc : desc.desc,
         playlist : {
-          length : desc.playlist.length
+          length : desc.playlist.length,
+          content : packPlaylist()
         }
       },
       users : {},

@@ -118,6 +118,7 @@ function Chat(wsock, user, media, onFatal) {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
     ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
+    ui.addNotice("- /playlist");
   });
 
   onCommand("hello", function () {
@@ -132,6 +133,10 @@ function Chat(wsock, user, media, onFatal) {
     if (roomState.lastSong) {
       ui.displayInfo(roomState.lastSong);
     }
+  });
+
+  onCommand("playlist", function () {
+    ui.displayPlaylist(playlist);
   });
 
   // used as a wrapper to Syncer class.
