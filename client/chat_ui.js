@@ -100,6 +100,16 @@ function ChatUI(chat, user) {
     entry("sys", " title : " + pretty.text(song.title, "bold"));
   };
 
+  this.displayRow = function (desc) {
+    if (chat.getNumberOfPersons() <= 1) {
+      return;
+    }
+    chat.getPlayer().rowSound(desc.row);
+    entry("sys correct",
+      pretty.client(chat.getClient(desc.who)) + " is " +
+      pretty.rowMessage(desc.row));
+  };
+
   this.correctAnswer = function (desc) {
     var client = chat.getClient(desc.who);
     entry("sys correct",

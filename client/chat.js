@@ -7,6 +7,7 @@ function Chat(wsock, user, media, onFatal) {
     ns = new NameResolver(),
     clients = {},
     ids = [],
+    pids = [],
     playlist,
     player = new Player(myClock.clock, null),
     announceTimer,
@@ -39,10 +40,17 @@ function Chat(wsock, user, media, onFatal) {
   }
 
   function updateClientIds() {
+    var bio = {}, pid;
     ids = [];
+    pids = [];
     ns.clear();
     for (var id in clients) {
       if (clients.hasOwnProperty(id)) {
+        pid = that.id2Pid(id);
+        if (!bio.hasOwnProperty(pid)) {
+          pids.push(pid);
+          bio[pid] = 1;
+        }
         ids.push(id);
         ns.add(id, clients[id].display);
       }
@@ -253,6 +261,7 @@ function Chat(wsock, user, media, onFatal) {
   wsock.onMessage("token", ui.gotToken);
   wsock.onMessage("say", ui.addMessage);
   wsock.onMessage("who", ui.displayWho);
+  wsock.onMessage("row", ui.displayRow);
 
   wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;
@@ -284,6 +293,10 @@ function Chat(wsock, user, media, onFatal) {
     return ids.length;
   };
 
+  this.getNumberOfPersons = function () {
+    return pids.length;
+  };
+
   this.id2Pid = function (id) {
     return id.split(".")[0];
   };
@@ -312,6 +325,10 @@ function Chat(wsock, user, media, onFatal) {
         what : text
       });
     }
+  };
+
+  this.getPlayer = function () {
+    return player;
   };
 
   (function () {

@@ -222,6 +222,9 @@ var Player = function(getTime, volumeElement) {
     }
   }
 
+  this.rowSound = function (row) {
+  };
+
   (function() {
     if (navigator.userAgent.match(/(iPad|iPhone|iPod)/g)) {
       document.addEventListener('touchstart', playWarmUpNote);

@@ -104,10 +104,28 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (!localPersonData.hasOwnProperty(client.pid())) {
       localPersonData[client.pid()] = {
         score : 0,
+        row : 0, // number of correct answers in a row
         num : 0 // numer of your accounts connected
       };
     }
     client.desc('local', localPersonData[client.pid()]);
+  }
+
+  function grantScore(client) {
+    client.local('score', client.local('score') + 1);
+    // update in-a-row
+    if (roomState.lastScore === client.id()) {
+      client.local('row', client.local('row') + 1);
+    } else {
+      if (clients.hasOwnProperty(roomState.lastScore)) {
+        clients[roomState.lastScore].local('row', 0);
+      }
+      client.local('row', 1);
+    }
+    roomState.lastScore = client.id();
+    if (client.local('row') > 2) {
+      that.broadcast('row', {who:client.id(), row:client.local('row')});
+    }
   }
 
   function onSay(data, client) {
@@ -128,8 +146,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
       return;
     }
     if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
-      client.local('score', client.local('score') + 1);
-      roomState.lastScore = client.id();
+      grantScore(client);
       that.broadcast('correct_answer', {
         who: client.id(),
         answer: playlistIterator.currentItem(),
@@ -167,6 +184,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   function onResetScore(data, client) {
     client.local('score', 0);
+    client.local('row', 0);
     that.broadcast('called_reset', {
       who: client.id(),
       when: data.when
