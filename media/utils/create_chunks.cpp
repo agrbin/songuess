@@ -118,12 +118,21 @@ int load_frame(FILE *fp, int n, char *frame) {
   return framelength;
 }
 
+int last_opened = -1;
+
 // lots of open operations, but it isn't botleneck
 void write_to(int chunk_num, int bytes, char *buffer, int n, long long chunk_folder) {
   static char filename[1<<16];
+  FILE *out;
   snprintf(filename, sizeof filename, "%lld/%d.mp3", chunk_folder, chunk_num);
 
-  FILE *out = fopen(filename, "a");
+  if (chunk_num > last_opened) {
+    out = fopen(filename, "w");
+    last_opened = chunk_num;
+  } else {
+    out = fopen(filename, "a");
+  }
+
   if (fwrite(buffer, bytes, 1, out) != 1) {
     err("error while writing chunk.", n);
   }

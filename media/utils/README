@@ -2,3 +2,11 @@ resample_and_chunkify.sh prima putanju do mp3ice
 ta skripta napravi resample, i pozove create_chunks
 create_chunks prima koji fajl da razbije, i u koji folder da stavi dijelove
 folder se kreira kao podfolder od /chunks/
+
+if we want to re-encode and re-chunkify and re-read id3:
+rm -rf ../chunks ../library/library.json
+node rescan_library.js
+
+if we want to re-chunkify and re-read id3:
+rm -rf ../chunks/[0-9]* ../library/library.json
+node rescan_library.js

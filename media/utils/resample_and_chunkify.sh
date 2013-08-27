@@ -5,18 +5,14 @@ set -e
 
 basename=$(basename "$file" mp3)
 chunks_folder=$(dirname $0)/../chunks
-stripped_file=$chunks_folder/${basename}stripped.mp3
 out_file=$chunks_folder/${basename}resampled.mp3
 
 mkdir -p "$chunks_folder" 2> /dev/null
 rm -f "$chunks_folder/*.mp3" 2> /dev/null
 
-# strip out id3
-cp "$file" "$stripped_file"
-
-# encode to what chrome likes
-lame --quiet -t --resample 48 --nores --cbr -b 96 \
-  "$stripped_file" "$out_file"
+[ -f "$out_file" ] || \
+  lame --quiet -t --resample 48 --nores --cbr -b 96 \
+    "$file" "$out_file"
 
 # it looks like linux and osx have different format_flag
 # option in stat program?
@@ -32,4 +28,5 @@ cd "$chunks_folder"
 mkdir -p $inode 2> /dev/null
 ../utils/create_chunks "$out_file" $inode
 
-rm -f "$stripped_file" "$out_file"
+# leave it..
+# rm -f "$out_file"
