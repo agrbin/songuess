@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "id3": "0.0.2",
+    "node-ffprobe": "1.2.x",
     "request": "2.x.0",
     "ws": "0.4.x"
   }

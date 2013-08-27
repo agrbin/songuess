@@ -4,7 +4,7 @@
 
 var
   fs = require('fs'),
-  Id3 = require('id3'),
+  probe = require('node-ffprobe'),
   exec = require('child_process').exec,
   newFilesCount = 0,
   modifiedFilesCount = 0,
@@ -60,7 +60,7 @@ function walk(folderPath) {
     entryPath,
     entryStat,
     results = [],
-    regexp = /.*\.mp3/i;
+    regexp = /.*\.mp3$/i;
 
   for (i = 0; i < entries.length; ++i) {
     entryPath = folderPath + '/' + entries[i];
@@ -111,25 +111,7 @@ function cleanRemoved() {
 function rescan(done) {
   var it = 0;
 
-  function afterChunk(shellResult, file) {
-    var id3Data;
-
-    if (file !== undefined) {
-      file.numberOfChunks = parseInt(shellResult, 10);
-      console.log('created ' + file.numberOfChunks + ' chunks');
-      console.log('reading id3..');
-      id3Data = new Id3(fs.readFileSync(file.fullPath));
-      id3Data.parse();
-      file.artist = id3Data.get('artist');
-      file.album = id3Data.get('album');
-      file.title = id3Data.get('title');
-      file.duration = Math.floor(file.numberOfChunks * 2.4);
-      file.scannedTimestamp = (new Date()).getTime();
-      delete file.fullPath;
-      console.log(file);
-      console.log('');
-    }
-
+  function callNext(file) {
     if (it < needsRescan.length) {
       file = needsRescan[it++];
       console.log('resampling and chunkifying: "' + file.name + '"');
@@ -140,6 +122,7 @@ function rescan(done) {
             console.log(stderr);
           }
           if (error !== null) {
+            file.error = 1;
             console.log(error);
             console.log('');
             afterChunk();
@@ -150,6 +133,36 @@ function rescan(done) {
       );
     } else {
       done();
+    }
+  }
+
+  function onMetaRead(file, data) {
+    file.artist = data.metadata.artist;
+    file.album = data.metadata.album;
+    file.title = data.metadata.title;
+    file.duration = data.format.duration;
+    file.scannedTimestamp = (new Date()).getTime();
+    delete file.fullPath;
+    console.log(file);
+    console.log('');
+    callNext(file);
+  }
+
+  function afterChunk(shellResult, file) {
+    if (file !== undefined) {
+      file.numberOfChunks = parseInt(shellResult, 10);
+      console.log('created ' + file.numberOfChunks + ' chunks');
+      console.log('reading id3..');
+      probe(file.fullPath, function (err, data) {
+        if (err) {
+          console.log(err);
+          callNext(file);
+        } else {
+          onMetaRead(file, data);
+        }
+      });
+    } else {
+      callNext(file);
     }
   }
 
