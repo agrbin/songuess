@@ -5,13 +5,16 @@ module.exports = function (options) {
   var
     nonAlphanum = /[^a-zA-Z0-9 ]/g,
     mulSpace = /  +/g,
-    trimSpace = /^ | $/g;
+    trimSpace = /^ | $/g,
+    trimParentheses = /\([^)]*\)/g;
+
 
   function normalize(str) {
     if (str === null || str === undefined) {
       return "null";
     }
     str = str.toLowerCase();
+    str = str.replace(trimParentheses, '');
     str = str.replace(nonAlphanum, '');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
