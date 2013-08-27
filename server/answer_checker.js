@@ -8,6 +8,9 @@ module.exports = function (options) {
     trimSpace = /^ | $/g;
 
   function normalize(str) {
+    if (str === null) {
+      return "null";
+    }
     str = str.toLowerCase();
     str = str.replace(nonAlphanum, '');
     str = str.replace(mulSpace, ' ');
