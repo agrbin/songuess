@@ -205,7 +205,9 @@ function Chat(wsock, user, media, onFatal) {
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
-    player.pause();
+    if (roomState.state !== "playing") {
+      player.pause();
+    }
     ui.youEntered(data);
     playlist = data.desc.playlist;
     clients = data.users;
