@@ -23,6 +23,18 @@ exports.Chat = function (media, proxy) {
     }
   }
 
+  function onWho(data, client) {
+    var room, sol = {};
+    for (room in rooms) {
+      if (rooms.hasOwnProperty(room)) {
+        if (!(data.room && data.room !== room)) {
+          sol[room] = rooms[room].packWhoData();
+        }
+      }
+    }
+    client.send("who", sol);
+  }
+
   this.media = media;
 
   this.getRoomByName = function (name) {
@@ -95,6 +107,7 @@ exports.Chat = function (media, proxy) {
       // entering the room
       log(user.email + " initial room " + data);
       client = new ChatClient(wsock, user, that);
+      client.onMessage('who', onWho);
       where_is[client.id()] = rooms[data];
       rooms[data].enter(client);
       bio = true;

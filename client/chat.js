@@ -29,6 +29,7 @@ function Chat(wsock, user, media, onFatal) {
       ui.addNotice("Command '" + cmd + "' unavailable.", "err");
       return true;
     }
+    ui.addNotice(text, "say");
     try {
       commandCallbacks[cmd].apply(that, params);
     } catch (e) {
@@ -107,6 +108,10 @@ function Chat(wsock, user, media, onFatal) {
     ui.addNotice("hello to you too.", "cmd");
   });
 
+  onCommand("who", function (room) {
+    wsock.sendType("who", {when:myClock.clock(), room:room || null});
+  });
+
   onCommand("info", function () {
     if (roomState.lastSong) {
       ui.displayInfo(roomState.lastSong);
@@ -173,8 +178,6 @@ function Chat(wsock, user, media, onFatal) {
     for (it = 0; it < arguments.length; arr.push(arguments[it++]));
     wsock.sendType("honor", {to: ns.whois(arr.join(" ").trim())});
   });
-
-  wsock.onMessage("say", ui.addMessage);
 
   wsock.onMessage("chunk", function (chunk) {
     player.addChunk(chunk);
@@ -248,7 +251,8 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("song_ended", ui.songEnded);
   wsock.onMessage("token", ui.gotToken);
-  wsock.onMessage("who", ui.showWho);
+  wsock.onMessage("say", ui.addMessage);
+  wsock.onMessage("who", ui.displayWho);
 
   wsock.onMessage("new_client", function (user) {
     clients[user.id] = user;

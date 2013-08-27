@@ -138,6 +138,22 @@ function ChatUI(chat, user) {
       + pretty.text(msg.what));
   };
 
+  this.displayWho = function (data) {
+    var name, display;
+    entry("sys cmd", "You asked hmhmhm, who is where?");
+    for (name in data) {
+      if (data.hasOwnProperty(name)) {
+        for (display in data[name]) {
+          if (data[name].hasOwnProperty(display)) {
+            entry("sys",
+                  display + " is in " + name +
+                  " with " + data[name][display] + ".");
+          }
+        }
+      }
+    }
+  };
+
   this.gotToken = function (token) {
     entry("sys", " You can use: " + pretty.text(token));
   };

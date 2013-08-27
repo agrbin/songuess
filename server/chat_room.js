@@ -311,6 +311,18 @@ exports.ChatRoom = function (desc, chat, proxy) {
     this.broadcast('old_client', [client.id(), reason]);
   };
 
+  this.packWhoData = function () {
+    var id, client, sol = {};
+    for (id in clients) {
+      if (clients.hasOwnProperty(id)) {
+        client = clients[id];
+        sol[ client.desc('display') ]
+          = client.local('score');
+      }
+    }
+    return sol;
+  };
+
   (function () {
     playlistIterator = new PlaylistIterator(desc.playlist);
     answerChecker = new AnswerChecker({});
