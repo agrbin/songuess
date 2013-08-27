@@ -75,6 +75,7 @@ h1 {
 }
 
 .layout.chat .left .entry.correct {
+  background-color: #efe;
 }
 
 .layout.chat .left .entry.wrong {
