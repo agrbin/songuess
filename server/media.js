@@ -212,11 +212,17 @@ exports.MediaGateway = function () {
       return done(null, "room name should start with #.");
     }
 
+    function filterBadSongs(playlist) {
+      return playlist.filter(function (o) {
+        return o.artist && o.album && o.title;
+      });
+    }
+
     function finish() {
       if (expanded.length === 0) {
         return done(null, "playlist should not be empty");
       }
-      done(expanded);
+      done(filterBadSongs(expanded));
     }
 
     function partialDone(partialExpanded, server, err) {
