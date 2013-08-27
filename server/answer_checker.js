@@ -3,7 +3,7 @@
 
 module.exports = function (options) {
   var
-    nonAlphanum = /[^a-zA-Z0-9 ]/g,
+    nonAlpha = /[^a-zA-Z ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
     trimParentheses = /\([^)]*\)/g;
@@ -15,7 +15,7 @@ module.exports = function (options) {
     }
     str = str.toLowerCase();
     str = str.replace(trimParentheses, '');
-    str = str.replace(nonAlphanum, '');
+    str = str.replace(nonAlpha, '');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
     return str;
