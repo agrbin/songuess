@@ -11,9 +11,13 @@ module.exports = function (options) {
 
 
   function normalize(str) {
-    if (typeof str !== 'string') {
+    if (str === undefined) {
+      return "undefined";
+    }
+    if (str === null) {
       return "null";
     }
+    str = str.toString();
     str = str.toLowerCase();
     str = str.replace(trimParentheses, '');
     str = str.replace(trimSquare, '');
