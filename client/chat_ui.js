@@ -66,7 +66,7 @@ function ChatUI(chat, user) {
 
   this.userJoined = function (id, reason) {
     entry("sys",
-      pretty.client(chat.getClient(id))
+      pretty.clientFullName(chat.getClient(id))
       + " joined the room.");
   };
 
@@ -163,7 +163,7 @@ function ChatUI(chat, user) {
       (msg.from ?
         pretty.client(chat.getClient(msg.from)) + ": "
         : "")
-      + pretty.text(msg.what));
+      + pretty.text(msg.what), msg.when);
   };
 
   this.displayWho = function (data) {

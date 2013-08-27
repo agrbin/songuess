@@ -97,6 +97,13 @@ var pretty = {
       .append($("<span>").text(client.score))[0]
       .outerHTML;
   },
+  clientFullName : function (client) {
+    return $("<span>")
+      .addClass("full-client")
+      .css({color: pretty.colorStyle(client.id)})
+      .text(client.display)[0]
+      .outerHTML;
+  },
   client : function (client) {
     return $("<span>")
       .addClass("full-client")
