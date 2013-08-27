@@ -25,29 +25,6 @@ void err(const char *what, int n) {
   exit(1);
 }
 
-// every header starts with 11 one bits (aligned to a whole byte?)
-int seek_to_frame_start(FILE *fp, int n) {
-  for (;;) {
-    int byte = fgetc(fp);
-    if (byte == EOF) {
-      return -1;
-    }
-    if (byte == 0xff) {
-      int next = fgetc(fp);
-      if ((next >> 5) == 7) {
-        ungetc(next, fp);
-        ungetc(byte, fp);
-        return 0;
-      } else {
-        ungetc(next, fp);
-      }
-    }
-    if (n > 0) {
-      err("next frame sync expected.", n);
-    }
-  }
-}
-
 // padded bit is bit G in the header. note endianes.
 // AAAAAAAA   AAABBCCD   EEEEFFGH   IIJJKLMM
 // in our endianes:
@@ -58,39 +35,58 @@ int is_padded(uchar *header) {
   return ((header[2] >> 1) & 1);
 }
 
-void assert_format(uchar *header, int n) {
+int check_format(uchar *header) {
   // bitrate
   if (!((header[2] >> 4) == BITRATE_INDEX)) {
-    err("bitrate is not valid.", n);
+    return 1;
   }
   // frequency
   if (!(((header[2] >> 2) & 3) == FREQUENCY_INDEX)) {
-    err("sampling freq is not valid.", n);
+    return 2;
   }
   if (!(header[1] & 1)) {
-    err("we have crc protection and we don't want it.", n);
+    return 3;
   }
+  return 0;
 }
 
-// layer and mpeg versions are extracted from
-// http://www.multiweb.cz/twoinches/mp3inside.htm
-int samples_in_frame(uchar *header) {
-  static int samples_per_frame[2][3] = {
-    {   // MPEG Version 1
-        384,    // Layer1
-        1152,   // Layer2
-        1152    // Layer3
-    },
-      {   // MPEG Version 2 & 2.5
-        384,    // Layer1
-        1152,   // Layer2
-        576     // Layer3
+void assert_format(uchar *header, int n) {
+  int sol = check_format(header);
+  if (sol == 1) err("bitrate is not valid.", n);
+  if (sol == 2) err("sampling freq is not valid.", n);
+  if (sol == 3) err("we have crc protection and we don't want it.", n);
+}
+
+// every header starts with 11 one bits (aligned to a whole byte?)
+int seek_to_frame_start(FILE *fp, int n) {
+  uchar header[4];
+  for (;;) {
+    int byte = fgetc(fp);
+    if (byte == EOF) {
+      return -1;
+    }
+    if (byte == 0xff) {
+      int next = fgetc(fp);
+      if ((next >> 5) == 7) {
+        ungetc(next, fp);
+        ungetc(byte, fp);
+        // output only frames with correct header.
+        fread(header, 4, 1, fp);
+        fseek(fp, ftell(fp) - 4, SEEK_SET);
+        if (check_format(header)) {
+          fprintf(stderr, "found frame but with wrong audio params\n");
+          fgetc(fp);
+          continue;
+        }
+        return 0;
+      } else {
+        ungetc(next, fp);
       }
-  };
-  int mpeg_ver1 = (((header[1] >> 3) & 3) == 3);
-  int layer = ((header[1] >> 1) & 3);
-  if (layer & 1) layer ^= 2; // that's the table lookup.
-  return samples_per_frame[mpeg_ver1][layer];
+    }
+    if (n > 0) {
+      err("next frame sync expected.", n);
+    }
+  }
 }
 
 // load frame into char* and return frame size.
