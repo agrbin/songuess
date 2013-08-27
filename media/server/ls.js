@@ -35,6 +35,9 @@ module.exports = {
         if (child.children) { // folder
           o.type = 'directory';
           o.count = child.filesCount;
+          if (o.count === 0) {
+            continue;
+          }
         } else {
           o.type = 'file';
         }
