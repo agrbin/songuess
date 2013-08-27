@@ -25,11 +25,11 @@ function Chat(wsock, user, media, onFatal) {
     }
     params = text.substr(1).split(" ");
     cmd = params.shift();
+    ui.addNotice(text, "cmd");
     if (!commandCallbacks.hasOwnProperty(cmd)) {
       ui.addNotice("Command '" + cmd + "' unavailable.", "err");
       return true;
     }
-    ui.addNotice(text, "say");
     try {
       commandCallbacks[cmd].apply(that, params);
     } catch (e) {
@@ -84,7 +84,7 @@ function Chat(wsock, user, media, onFatal) {
 
   onCommand("mute", function () {
     ui.addNotice(player.toggleMute() ?
-                 "sound turned off." : "sound turned on.", "cmd");
+                 "sound turned off." : "sound turned on.");
   });
 
   onCommand("vol", function (value) {
@@ -95,17 +95,17 @@ function Chat(wsock, user, media, onFatal) {
       return ui.addNotice("error: " + err, "err");
     }
     ui.addNotice("Volume is set to " + vol + "." +
-                (player.getMuted() ? " but /mute is on." : ""), "cmd");
+                (player.getMuted() ? " but /mute is on." : ""));
   });
 
   onCommand("help", function () {
-    ui.addNotice("Available commands are ", "cmd");
-    ui.addNotice("- /clear, /join #ROOM, /mute, /vol [0-10]", "cmd");
-    ui.addNotice("- /sync, /reset", "cmd");
+    ui.addNotice("Available commands are ");
+    ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
+    ui.addNotice("- /sync, /reset, /who [#room]");
   });
 
   onCommand("hello", function () {
-    ui.addNotice("hello to you too.", "cmd");
+    ui.addNotice("hello to you too.");
   });
 
   onCommand("who", function (room) {
@@ -137,7 +137,7 @@ function Chat(wsock, user, media, onFatal) {
     new Syncer(
       new SyncSocketWrap(wsock),
       function (n) {
-        ui.addNotice("Clock changed: " + Math.round(n*100)/100 + " ms.", "cmd");
+        ui.addNotice("Clock changed: " + Math.round(n*100)/100 + " ms.");
         player.resync(n > 1000);
       }
     );

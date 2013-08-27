@@ -14,12 +14,12 @@ function ChatUI(chat, user) {
     var t0 = chat.getRoomState().songStart, what;
     when = when || myClock.clock();
     state = chat.getRoomState().state;
-    if (state === "dead") {
-      what = pretty.delimit("#");
-    } else if (type.indexOf("cmd") !== -1) {
+    if (type.indexOf("cmd") !== -1) {
       what = pretty.delimit(">");
     } else if (type.indexOf("err") !== -1) {
       what = pretty.delimit("!");
+    } else if (state === "dead") {
+      what = pretty.delimit("|");
     } else if (type.indexOf("relative") !== -1) {
       what = pretty.playTime(when - t0);
     } else if (state === "suspense") {
@@ -51,10 +51,10 @@ function ChatUI(chat, user) {
 
   this.youEntered = function (data) {
     var playlist = data.desc.playlist;
-    entry("sys cmd", "You entered " + data.desc.name
+    entry("sys", "You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
     if (playlist.length) {
-      entry("sys cmd", "Playlist has " + playlist.length + " song"
+      entry("sys", "Playlist has " + playlist.length + " song"
                    + (playlist.length > 1 ? "s." : "."));
       if (chat.getRoomState().state === "playing") {
         entry("sys", 
@@ -65,13 +65,13 @@ function ChatUI(chat, user) {
   };
 
   this.userJoined = function (id, reason) {
-    entry("sys cmd",
+    entry("sys",
       pretty.client(chat.getClient(id))
       + " joined the room.");
   };
 
   this.userLeft = function (id, reason) {
-    entry("sys cmd",
+    entry("sys",
       pretty.client(chat.getClient(id))
       + " left: " + reason);
   };
@@ -94,10 +94,10 @@ function ChatUI(chat, user) {
   };
 
   this.displayInfo = function (song) {
-    entry("sys cmd", " hmmm, You ask last song what was?");
-    entry("sys cmd", " artist: " + pretty.text(song.artist, "bold"));
-    entry("sys cmd", " album : " + pretty.text(song.album, "bold"));
-    entry("sys cmd", " title : " + pretty.text(song.title, "bold"));
+    entry("sys", " hmmm, You ask last song what was?");
+    entry("sys", " artist: " + pretty.text(song.artist, "bold"));
+    entry("sys", " album : " + pretty.text(song.album, "bold"));
+    entry("sys", " title : " + pretty.text(song.title, "bold"));
   };
 
   this.correctAnswer = function (desc) {
@@ -109,7 +109,7 @@ function ChatUI(chat, user) {
   };
 
   this.calledReset = function (desc) {
-    entry("sys cmd", " " +
+    entry("sys", " " +
       pretty.client(chat.getClient(desc.who)) +
       " /reset his score.");
     this.updateList();
@@ -140,7 +140,7 @@ function ChatUI(chat, user) {
 
   this.displayWho = function (data) {
     var name, display;
-    entry("sys cmd", "You asked hmhmhm, who is where?");
+    entry("sys", "You asked hmhmhm, who is where?");
     for (name in data) {
       if (data.hasOwnProperty(name)) {
         for (display in data[name]) {
