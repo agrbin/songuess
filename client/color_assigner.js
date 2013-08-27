@@ -42,6 +42,9 @@ function ColorAssigner() {
     if (id.split('.')[0] === '1166224657908994156540') { // irma
       return "darkorchid";
     }
+    if (id.split('.')[0] === '1025491752763741231750') { // braut
+      return "rgb(243, 227, 38)";
+    }
 
     var color = assignedColors[id];
     if (color === undefined) {
