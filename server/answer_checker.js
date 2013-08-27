@@ -7,6 +7,7 @@ module.exports = function (options) {
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
     trimParentheses = /\([^)]*\)/g;
+    trimSquare = /\[[^]]*\]/g;
 
 
   function normalize(str) {
@@ -15,6 +16,7 @@ module.exports = function (options) {
     }
     str = str.toLowerCase();
     str = str.replace(trimParentheses, '');
+    str = str.replace(trimSquare, '');
     str = str.replace(nonAlpha, '');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
