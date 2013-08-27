@@ -198,7 +198,7 @@ function ChatUI(chat, user) {
           .scrollTop(body.scrollHeight);
       });
 
-    users_list = new UsersList(chat, $(".chat .right"));
+    users_list = new GroupedUsersList(chat, $(".chat .right"));
     that.updateList = users_list.updateList;
   }());
 

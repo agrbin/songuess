@@ -2,11 +2,97 @@
 /*globals $, pretty*/
 "use strict";
 
-function UsersList(chat, listElement) {
+var ANIMATION_DURATION = 300;
+
+function GroupedUsersList(chat, listElement) {
+  var containers = [], divs = [], usersLists = [],
+    MAX_GROUPS = 10;
+
+  // helper class
+  function ClientContainer(group) {
+    var score = null, size = null, that = this,
+      ids = [];
+    this.refresh = function () {
+      var it, client, bio = {}, pid;
+      score = 0; size = 0; ids = [];
+      for (it = 0; it < chat.getNumberOfClients(); ++it) {
+        client = chat.getClient(it);
+        pid = chat.id2Pid(client.id);
+        if (client.group === group) {
+          if (!bio.hasOwnProperty(pid)) {
+            score += client.score;
+            bio[pid] = 1;
+          }
+          ids.push(client.id);
+          ++size;
+        }
+      }
+    };
+    // returns client with this id only if it's in a group group.
+    this.getClient = function (id) {
+      var sol;
+      if (score === null) throw "call refresh firstly";
+      if (id < size) {
+        sol = chat.getClient(ids[id]);
+      } else {
+        sol = chat.getClient(id);
+      }
+      if (sol.group !== group) {
+        return {};
+      }
+      return sol;
+    };
+    // returns number of clients in group group
+    this.getNumberOfClients = function () {
+      if (score === null) throw "call refresh firstly";
+      return size;
+    };
+    // only after getNumberOfClients is called!
+    this.getScore = function () {
+      if (score === null) throw "call refresh firstly";
+      return score;
+    };
+  };
+
+  this.updateList = function () {
+    var it;
+    for (it = 0; it < MAX_GROUPS; ++it) {
+      containers[it].refresh();
+      containers[it].getNumberOfClients() ?
+        divs[it].show() : divs[it].hide();
+      $('.group-score', divs[it]).text(containers[it].getScore());
+      usersLists[it].updateList();
+    }
+  };
+
+  // creates everything for one user list.
+  function createGroup(it) {
+    var
+      innerDiv = $('<div>'),
+      scoreSpan = $('<span>')
+          .addClass('group-score')
+          .text(''),
+      outerDiv = $('<div>')
+          .hide()
+          .addClass('grouped-users ' + (it ? '' : 'zero-group'))
+          .append(scoreSpan).append(innerDiv).appendTo(listElement);
+    if (!it) scoreSpan.hide();
+    divs.push(outerDiv);
+    containers.push(new ClientContainer(it));
+    usersLists.push(new UsersList(containers[it], innerDiv, outerDiv));
+  }
+
+  $(function () {
+    var it = 0;
+    for (it = 0; it < MAX_GROUPS; ++it)
+      createGroup(it);
+  });
+}
+
+function UsersList(clientContainer, listElement, outerElement) {
   var
     currentPositionForId,
-    currentIndexForId,
-    ANIMATION_DURATION = 300;
+    currentIndexForId;
 
   function pullOut() {
     var children = listElement.children();
@@ -66,11 +152,11 @@ function UsersList(chat, listElement) {
     var
       result = [],
       i,
-      len = chat.getNumberOfClients(),
+      len = clientContainer.getNumberOfClients(),
       client;
 
     for (i = 0; i < len; ++i) {
-      client = chat.getClient(i);
+      client = clientContainer.getClient(i);
       result.push(client);
     }
 
@@ -93,13 +179,16 @@ function UsersList(chat, listElement) {
       children = listElement.children(),
       width,
       removedIndex,
-      clientWithScore;
+      clientWithScore,
+      layoutHeight;
 
     if (children.length === 0) {
       for (i = 0; i < clientsLength; ++i) {
         listElement.append(pretty.clientWithScore(clients[i]));
       }
     } else {
+      layoutHeight = outerElement.height();
+      outerElement.css('height', layoutHeight);
       pullOut();
 
       element = $(children[0]);
@@ -110,7 +199,7 @@ function UsersList(chat, listElement) {
 
       children.each(function (index) {
         var id = $(this).attr('id');
-        if (chat.getClient(id).id === undefined) {
+        if (clientContainer.getClient(id).id === undefined) {
           removedIndex = index;
           $(this).fadeOut(ANIMATION_DURATION, function () { $(this).remove(); });
         }
@@ -131,6 +220,7 @@ function UsersList(chat, listElement) {
           } else {
             $(children[i]).before(element);
           }
+          outerElement.css('height', layoutHeight + element.outerHeight());
           width = element.width();
           element
             .css('position', 'absolute')
@@ -146,7 +236,10 @@ function UsersList(chat, listElement) {
         }
       }
 
-      setTimeout(putBack, ANIMATION_DURATION);
+      setTimeout(function () {
+        putBack();
+        outerElement.css('height', '');
+      }, ANIMATION_DURATION);
     }
   };
 }

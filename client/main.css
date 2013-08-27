@@ -94,10 +94,14 @@ h1 {
   color: gray;
 }
 
+/*
+ * using vertical margin here will break users_list
+ * animations.
+ */
 .chat .right .full-client {
   display: block;
   font-weight: bold;
-  margin-top: 3px;
+  padding-top: 3px;
   margin-left: 3px;
   overflow-y: hidden;
   height: 15px;
@@ -107,6 +111,29 @@ h1 {
 .chat .right .full-client span {
   float: right;
   margin-right: 5px;
+}
+
+/*
+ * using vertical margin here will break users_list
+ * animations.
+ */
+.chat .right .grouped-users {
+  border-top: 1px #ccc dashed;
+  padding-bottom: 10px;
+}
+
+.chat .right .grouped-users .group-score {
+  font-weight: bold;
+  font-size: 10px;
+  margin-left: 2px;
+  position: relative;
+  top: 2px;
+}
+
+.chat .right .grouped-users.zero-group {
+  border-top: 0px;
+  min-height: 30px;
+  padding-bottom: 30px;
 }
 
 .chat .sys {

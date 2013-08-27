@@ -85,10 +85,23 @@ function Chat(wsock, user, media, onFatal) {
       if (clients.hasOwnProperty(id)) {
         if (that.id2Pid(id) === src_pid) {
           clients[id].score = src_client.score;
+          clients[id].row = src_client.row;
+          clients[id].group = src_client.group;
         }
       }
     }
   }
+
+  onCommand("group", function (target) {
+    if (target === undefined) {
+      return ui.addNotice("Use /group {0, 1, 2, ...}.");
+    }
+    target = Math.floor(Number(target));
+    if (target < 0 || target > 10) {
+      throw "Invalid target group.";
+    }
+    wsock.sendType("change_group", {when:myClock.clock(), group:target});
+  });
 
   onCommand("mute", function () {
     ui.addNotice(player.toggleMute() ?
@@ -96,12 +109,7 @@ function Chat(wsock, user, media, onFatal) {
   });
 
   onCommand("vol", function (value) {
-    var vol;
-    try {
-      vol = player.setVolume(value);
-    } catch (err) {
-      return ui.addNotice("error: " + err, "err");
-    }
+    var vol = player.setVolume(value);
     ui.addNotice("Volume is set to " + vol + "." +
                 (player.getMuted() ? " but /mute is on." : ""));
   });
@@ -109,7 +117,7 @@ function Chat(wsock, user, media, onFatal) {
   onCommand("help", function () {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
-    ui.addNotice("- /sync, /reset, /who [#room]");
+    ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
   });
 
   onCommand("hello", function () {
@@ -229,9 +237,22 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("called_reset", function (data) {
     var client = that.getClient(data.who);
+    if (!client.id) {
+      return;
+    }
     client.score = 0;
     copySharedToPidPeers(client);
     ui.calledReset(data);
+  });
+
+  wsock.onMessage("change_group", function (data) {
+    var who = that.getClient(data.who);
+    if (!who.id) {
+      return;
+    }
+    who.group = data.group;
+    copySharedToPidPeers(who);
+    ui.updateList();
   });
 
   // 3 sec before song start display 'get ready!'

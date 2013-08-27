@@ -105,7 +105,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
       localPersonData[client.pid()] = {
         score : 0,
         row : 0, // number of correct answers in a row
-        num : 0 // numer of your accounts connected
+        num : 0, // number of your accounts connected
+        group : 0 // what is your group?
       };
     }
     client.desc('local', localPersonData[client.pid()]);
@@ -260,6 +261,14 @@ exports.ChatRoom = function (desc, chat, proxy) {
     );
   }
 
+  function onChangeGroup(data, client) {
+    if (client.local('group') === data.group) {
+      return;
+    }
+    client.local('group', data.group);
+    that.broadcast('change_group', {who:client.id(), group:data.group});
+  }
+
   this.desc = desc;
 
   this.broadcast = function (type, msg, except) {
@@ -312,6 +321,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('reset_score', onResetScore);
     client.onMessage('honor', onHonor);
     client.onMessage('sync_start', onStartSync);
+    client.onMessage('change_group', onChangeGroup);
   };
 
   // pop a client from a list of clients and
