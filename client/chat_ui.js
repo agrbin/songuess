@@ -173,7 +173,7 @@ function ChatUI(chat, user) {
           if (data[name].hasOwnProperty(display)) {
             entry("sys",
                   display + " is in " + name +
-                  " with " + data[name][display] + ".");
+                  " with score " + data[name][display] + ".");
           }
         }
       }
