@@ -122,7 +122,6 @@ function rescan(done) {
             console.log(stderr);
           }
           if (error !== null) {
-            file.error = 1;
             console.log(error);
             console.log('');
             afterChunk();

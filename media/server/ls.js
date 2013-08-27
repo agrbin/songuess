@@ -25,6 +25,9 @@ module.exports = {
     } else {
       for (i = 0; i < node.children.length; ++i) {
         child = node.children[i];
+        if (!child.numberOfChunks) {
+          continue;
+        }
 
         o = { path: pathPrefix + child.name };
         o.name = child.name;
