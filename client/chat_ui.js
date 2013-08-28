@@ -192,22 +192,37 @@ function ChatUI(chat, user) {
     entry("sys " + cls, what);
   };
 
-  (function () {
-    var it;
-    body = $(".chat .left")[0];
-    input = $(".chat input")[0];
+  function prepareInputElement() {
+    var lastInput = '';
     $(".chat form").submit(function () {
       if ($(input).val().length > 0) {
         chat.handleSend($(input).val());
+        lastInput = $(input).val();
         $(input).val("");
       }
       return false;
     });
+    $(input).on('keydown', function (evt) {
+      if (evt.keyCode === 38) {
+        var that = this;
+        this.value = lastInput;
+        setTimeout(function() {
+          that.setSelectionRange(lastInput.length, lastInput.length);
+        }, 0);
+      }
+      if (evt.keyCode === 40) {
+        this.value = '';
+      }
+    });
+  }
+
+  (function () {
+    var it;
+    body = $(".chat .left")[0];
+    input = $(".chat input")[0];
+    prepareInputElement();
     $("h1").hide();
     $(".layout.chat").show();
-    $(".chat .col").click(function () {
-      $(input).focus();
-    });
     $(input).focus();
     $(window)
       .on('hashchange', function() {
