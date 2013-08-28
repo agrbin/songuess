@@ -33,7 +33,6 @@ module.exports = function (options) {
       // regexp used so all occurences are replaced
       str = str.replace(new RegExp(replacePairs[i][0], 'g'), replacePairs[i][1]);
     }
-    console.log(str);
     return str;
   }
 
