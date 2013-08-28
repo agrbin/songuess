@@ -1,27 +1,23 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
-// chooses colors around the HSB circle
-// doesn't work very well, might regres to random
-
-var predefinedColors = [
-  "mediumblue",
-  "crimson",
-  "green",
-  "saddlebrown",
-  "dodgerblue",
-  "magenta",
-  "darkorange",
-  "limegreen",
-  "orangered",
-  "mediumpurple"
-];
-
 function ColorAssigner() {
   var
     assignedColors = {},
     assignedColorsCount = 0,
-    RND_COMPONENT_MARGIN = 50;
+    RND_COMPONENT_MARGIN = 50,
+    predefinedColors = [
+      "mediumblue",
+      "crimson",
+      "green",
+      "saddlebrown",
+      "dodgerblue",
+      "magenta",
+      "darkorange",
+      "limegreen",
+      "orangered",
+      "mediumpurple"
+    ];
 
   function randomComponent() {
     return RND_COMPONENT_MARGIN + Math.floor(Math.random() * (255 - 2 * RND_COMPONENT_MARGIN));

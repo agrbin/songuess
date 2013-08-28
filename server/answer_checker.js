@@ -3,18 +3,23 @@
 
 module.exports = function (options) {
   var
-    nonAlpha = /[^a-zA-Z ]/g,
+    nonAlpha = /[^a-zA-Zšđčćž ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
     trimParentheses = /\([^)]*\)/g,
-    trimSquare = /\[[^]]*\]/g;
-
+    trimSquare = /\[[^\]]*\]/g,
+    replacePairs = [
+      ['ć', 'c'],
+      ['č', 'c'],
+      ['š', 's'],
+      ['đ', 'dj'],
+      ['ž', 'z']
+    ];
 
   function normalize(str) {
-    if (str === undefined) {
-      return "undefined";
-    }
-    if (str === null) {
+    var i;
+
+    if (str === null || str === undefined) {
       return "null";
     }
     str = str.toString();
@@ -24,6 +29,11 @@ module.exports = function (options) {
     str = str.replace(nonAlpha, '');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
+    for (i = 0; i < replacePairs.length; ++i) {
+      // regexp used so all occurences are replaced
+      str = str.replace(new RegExp(replacePairs[i][0], 'g'), replacePairs[i][1]);
+    }
+    console.log(str);
     return str;
   }
 
