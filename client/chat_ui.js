@@ -20,7 +20,7 @@ function ChatUI(chat, user) {
       what = pretty.delimit("!");
     } else if (state === "dead") {
       what = pretty.delimit("|");
-    } else if (type.indexOf("relative") !== -1) {
+    } else if (t0 && type.indexOf("relative") !== -1) {
       what = pretty.playTime(when - t0);
     } else if (state === "suspense") {
       what = pretty.delimit();
