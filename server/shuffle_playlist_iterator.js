@@ -9,7 +9,7 @@ module.exports = function (playlist) {
     playlistLength = playlist.length,
     memoLastItem = null;
 
-  (function () {
+  function randomize() {
     var
       i,
       j,
@@ -26,7 +26,7 @@ module.exports = function (playlist) {
       randomOrder[i] = randomOrder[j];
       randomOrder[j] = tmp;
     }
-  }());
+  }
 
   this.lastItem = function () {
     return memoLastItem;
@@ -40,9 +40,12 @@ module.exports = function (playlist) {
     memoLastItem = this.currentItem();
     ++currentIndex;
     if (currentIndex === playlistLength) {
+      randomize();
       currentIndex -= playlistLength;
     }
     return this.currentItem();
   };
+
+  randomize();
 };
 
