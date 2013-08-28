@@ -53,6 +53,9 @@ function ChatUI(chat, user) {
     var playlist = data.desc.playlist;
     entry("sys", "You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
+    if (data.desc.name === "#root") {
+      entry("sys", "Type /help for help.");
+    }
     if (playlist.length) {
       entry("sys", "Playlist has " + playlist.length + " song"
                    + (playlist.length > 1 ? "s." : "."));
