@@ -10,7 +10,8 @@ var checkPairs = [
   ['šalica', 'salica'],
   ['šaš', 'sas'],
   ['šas', 'saš'],
-  ['šalica kafe vozi džip u đakovu', 'salica kafe vozi dzip u djakovu']
+  ['šalica kafe vozi džip u đakovu', 'salica kafe vozi dzip u djakovu'],
+  ['aanton', 'aantoj']
 ];
 
 for (var i = 0; i < checkPairs.length; ++i) {
