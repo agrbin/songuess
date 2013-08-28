@@ -25,6 +25,7 @@ var Player = function(getTime, volumeElement) {
     , audioContext = new webkitAudioContext()
     , masterGain = null
     , playPauseGain = null
+    , playEnabled = true
     , timeOffset = null
     , overlapTime = window.songuess.overlapTime
     , warmUpCalled = false
@@ -46,6 +47,7 @@ var Player = function(getTime, volumeElement) {
     masterGain.gain.value = 0.5;
     masterGain.connect(playPauseGain);
     playPauseGain.connect(audioContext.destination);
+    playPauseGain.gain.setValueAtTime(1, 0);
     // volumeElement can be null.
     if (volumeElement) {
       volumeElement.style.display = 'block';
@@ -101,12 +103,16 @@ var Player = function(getTime, volumeElement) {
   // disables and enables playback.
   this.pause = function () {
     if (!warmUpCalled) return;
-    playPauseGain.gain.value = 0;
+    if (!playEnabled) return;
+    playEnabled = false;
+    playPauseGain.gain.setTargetAtTime(0, audioContext.currentTime + 1, 1);
   };
 
   this.play = function () {
     if (!warmUpCalled) return;
-    playPauseGain.gain.value = 1;
+    if (playEnabled) return;
+    playEnabled = true;
+    playPauseGain.gain.setValueAtTime(1, audioContext.currentTime);
   };
 
   // returns if ovlume is muted currently
