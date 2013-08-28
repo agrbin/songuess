@@ -77,11 +77,13 @@ function ChatUI(chat, user) {
   };
 
   this.calledNext = function (desc) {
-    entry("sys wrong",
-      " The song was " +
-      pretty.song(desc.answer) + ". " +
-      pretty.client(chat.getClient(desc.who)) +
-      " called for a next one :/");
+    if (desc.hasOwnProperty('answer')) {
+      entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /next.");
+      entry("sys wrong",
+            " The song was " + pretty.song(desc.answer) + ".");
+    } else {
+      entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /next.");
+    }
   };
 
   this.honored = function (desc) {

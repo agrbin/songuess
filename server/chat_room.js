@@ -29,7 +29,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
       state : "dead",
       songStart : null,
       lastSong : null,
-      lastScore : null
+      lastScore : null,
+      nextVotes : null
     };
 
   function packPlaylist() {
@@ -72,16 +73,16 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (!desc.playlist.length) {
       return;
     }
+    roomState.state = "after";
+    roomState.lastSong = playlistIterator.currentItem();
+    roomState.songStart = null;
+
     streamer.play(playlistIterator.nextItem(), function (startTime, err) {
       if (err) {
         console.log("tried to play next: " + err);
         info("Tried to play next with error (retry in 5s): " + err);
         setTimeout(playNext, 5000);
       } else {
-        roomState.state = "after";
-        roomState.lastSong = playlistIterator.lastItem();
-        roomState.songStart = null;
-
         setTimeout(function() {
           roomState.state = "suspense";
           roomState.songStart = startTime;
@@ -90,6 +91,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
         setTimeout(function() {
           roomState.state = "playing";
+          roomState.nextVotes = 0;
         }, Math.max(0, startTime - clock.clock()));
       }
     });
@@ -184,12 +186,21 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (roomState.state !== "playing") {
       return;
     }
-    that.broadcast('called_next', {
-      who: client.id(),
-      answer: playlistIterator.currentItem(),
-      when : data.when
-    });
-    playNext();
+    ++roomState.nextVotes;
+    if (roomState.nextVotes > 1 + numberOfClients / 2) {
+      that.broadcast('called_next', {
+        who: client.id(),
+        answer: playlistIterator.currentItem(),
+        when : data.when
+      });
+      roomState.lastScore = null;
+      playNext();
+    } else {
+      that.broadcast('called_next', {
+        who: client.id(),
+        when : data.when
+      });
+    }
   }
 
   function onToken(data, client) {
@@ -253,6 +264,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
       answer : playlistIterator.currentItem(),
       when : clock.clock()
     });
+    roomState.lastScore = null;
     playNext();
   }
 

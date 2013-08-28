@@ -285,8 +285,10 @@ function Chat(wsock, user, media, onFatal) {
   });
 
   wsock.onMessage("called_next", function (data) {
-    setTimeout(pretty.relativeTime, 3000);
-    setTimeout(player.pause, 6000);
+    if (data.hasOwnProperty('answer')) {
+      setTimeout(pretty.relativeTime, 3000);
+      setTimeout(player.pause, 6000);
+    }
     ui.calledNext(data);
   });
 
