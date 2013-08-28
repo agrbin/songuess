@@ -1,5 +1,5 @@
-var as = require('./answer_checker');
-as = new as();
+var ac = require('./answer_checker');
+ac = new ac();
 
 var checkPairs = [
   ['djakovo', 'đakovo'],
@@ -15,7 +15,7 @@ var checkPairs = [
 for (var i = 0; i < checkPairs.length; ++i) {
   console.log(checkPairs[i][0]);
   console.log(checkPairs[i][1]);
-  var passed = as.checkAnswer({ title: checkPairs[i][0] }, checkPairs[i][1]);
+  var passed = ac.checkAnswer({ title: checkPairs[i][0] }, checkPairs[i][1]);
   console.log(passed? 'OK!': 'FAIL.');
   console.log('');
 }
