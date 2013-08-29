@@ -4,6 +4,7 @@
 var
   clock = require("./clock.js"),
   config = require("./config.js").chat,
+  mediaConfig = require("./config.js").media,
   ChatRoom = require("./chat_room.js").ChatRoom,
   ChatClient = require("./chat_client.js").ChatClient;
 
@@ -123,6 +124,33 @@ exports.Chat = function (media, proxy) {
         }
       });
     });
+  };
+
+  media.onDefaultMedia = function (rootDirEntries) {
+    var it = 0, entries = [], query;
+    if (rooms.hasOwnProperty('#default')) {
+      return;
+    }
+    for (it = 0; it < rootDirEntries.length; ++it) {
+      entries.push([mediaConfig.defaultMedia, rootDirEntries[it].name]);
+    }
+    query = {
+      room : {name : '#default', desc : 'default room.'},
+      playlist : entries
+    };
+    try {
+      media.expandPlaylist(query, function (playlist, err) {
+        if (!err) {
+          query.room.playlist = playlist;
+          that.createRoom(query.room);
+        } else {
+          throw err;
+        }
+      });
+    } catch (err) {
+      console.log(err);
+      // dont crush the server.
+    }
   };
 
   // @param client ChatClient

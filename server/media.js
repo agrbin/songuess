@@ -278,6 +278,8 @@ exports.MediaGateway = function () {
     start();
   };
 
+  this.onDefaultMedia = null;
+
   this.expandApi = function (server, input, onResult) {
     var url;
     if (servers[server] === undefined) {
@@ -344,6 +346,11 @@ exports.MediaGateway = function () {
           if (!err) {
             res.statusCode = 200;
             res.end("i see you");
+            if (name === config.defaultMedia) {
+              if (that.onDefaultMedia) {
+                that.onDefaultMedia(result);
+              }
+            }
           } else {
             onError(err);
           }

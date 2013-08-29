@@ -86,15 +86,7 @@ exports.media = {
     '127.0.0.1' : true
   },
 
-  // list servers.
-  servers : {
-    /*
-    'local-media' : {
-      endpoint  : 'http://localhost:8081',
-      desc      : 'default media server'
-    }
-    */
-  }
+  defaultMedia : 'default-media'
 
 };
 
