@@ -16,6 +16,7 @@ module.exports = function(exports) {
   };
 
   exports.media.servers = {};
+  exports.media.timeout = 5;
 
   exports.proxy.throttleStreamOff = 3;
   exports.proxy.throttleStreamAmp = 3;
