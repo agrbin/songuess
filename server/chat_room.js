@@ -30,7 +30,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
       songStart : null,
       lastSong : null,
       lastScore : null,
-      nextVotes : null
+      nextVotes : null,
+      whoNextVotes : null
     };
 
   function packPlaylist() {
@@ -92,6 +93,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
         setTimeout(function() {
           roomState.state = "playing";
           roomState.nextVotes = 0;
+          roomState.whoNextVotes = {};
         }, Math.max(0, startTime - clock.clock()));
       }
     });
@@ -186,8 +188,12 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (roomState.state !== "playing") {
       return;
     }
+    if (roomState.whoNextVotes.hasOwnProperty(client.id())) {
+      return;
+    }
+    roomState.whoNextVotes[client.id()] = 1;
     ++roomState.nextVotes;
-    if (roomState.nextVotes > 1 + numberOfClients / 2) {
+    if (roomState.nextVotes >= 1 + Math.floor(numberOfClients / 2)) {
       that.broadcast('called_next', {
         who: client.id(),
         answer: playlistIterator.currentItem(),

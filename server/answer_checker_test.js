@@ -11,7 +11,8 @@ var checkPairs = [
   ['šaš', 'sas'],
   ['šas', 'saš'],
   ['šalica kafe vozi džip u đakovu', 'salica kafe vozi dzip u djakovu'],
-  ['aanton', 'aantoj']
+  ['aanton', 'aantoj'],
+  ['antonantonantonanaaaaaaaaaatonanton', 'antonantonantonanaaaaaaaaaatonanton33']
 ];
 
 for (var i = 0; i < checkPairs.length; ++i) {
