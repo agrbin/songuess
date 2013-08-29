@@ -43,11 +43,8 @@ exports.media = {
   },
 
   // who can create room with songs from this server?
-  // currently only 'email' and 'all' types are implemented.
-  // you may not serve music to public without valid copyrights
-  // NOT IMPLEMENTED YET
+  // currently only 'allow' and 'email' rules are implemented
   acl : [
-    ['deny', 'all'],
     ['allow', 'email', 'your.email@gmail.com']
   ]
 };

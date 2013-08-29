@@ -40,6 +40,18 @@ function MediaUI(media) {
     $(".layout.chat input").focus();
   }
 
+  function addMediaHelp() {
+    return $("<div>")
+      .addClass("entry")
+      .append($("<div>").addClass("num").html("&nbsp;"))
+      .append(
+        "No media here! ",
+        $("<a>")
+          .attr('href', 'https://github.com/agrbin/songuess/wiki/Add-media')
+          .text('How to add media to songuess.')
+      );
+  }
+
   this.populateLeft = function (list, apath) {
     var it, map = {
       "server" : srvEntry,
@@ -52,6 +64,9 @@ function MediaUI(media) {
       $(left).append(
         map[list[it].type](list[it])
       );
+    }
+    if (!apath.length && !list.length) {
+      $(left).append(addMediaHelp());
     }
     disableSelect();
   };

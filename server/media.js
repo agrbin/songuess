@@ -81,10 +81,29 @@ exports.MediaGateway = function () {
     setTimeout(purgeOldServers, config.timeToPurge * 1000);
   }
 
-  function api(server, method, param, done) {
+  function checkAcl(server, user) {
+    var it = 0, entry;
+    server = servers[server];
+    try {
+      for (it = 0; it < server.acl.length; ++it) {
+        entry = server.acl[it];
+        if (entry[0] !== 'allow') return false;
+        if (entry[1] !== 'email') return false;
+        if (entry[2] === user.email) return true;
+      }
+    } catch (err) {
+      return false;
+    }
+    return false;
+  }
+
+  function api(server, method, param, done, user) {
     var url;
     if (servers[server] === undefined) {
       return done(null, "no such server");
+    }
+    if (user && !checkAcl(server, user)) {
+      return done(null, "no such server (EPERM)");
     }
     url = servers[server].endpoint + method;
     if (param) {
@@ -103,22 +122,24 @@ exports.MediaGateway = function () {
     });
   }
 
-  function getMediaProviders() {
+  function getMediaServers(user) {
     var name, sol = [];
     for (name in servers) {
       if (servers.hasOwnProperty(name)) {
-        sol.push({
-          name : name,
-          apath : [name],
-          type : "server",
-          desc : servers[name].desc
-        });
+        if (checkAcl(name, user)) {
+          sol.push({
+            name : name,
+            apath : [name],
+            type : "server",
+            desc : servers[name].desc
+          });
+        }
       }
     }
     return sol;
   }
 
-  function processLs(query, done) {
+  function processLs(query, user, done) {
     var
       server,
       path;
@@ -128,7 +149,7 @@ exports.MediaGateway = function () {
     }
 
     if (query.apath.length === 0) {
-      return done(getMediaProviders());
+      return done(getMediaServers(user));
     }
 
     server = query.apath[0];
@@ -143,7 +164,7 @@ exports.MediaGateway = function () {
         entries[i].apath = query.apath.concat(entries[i].name);
       }
       done(entries);
-    });
+    }, user);
   }
 
   function dispatchByServers(playlist) {
@@ -276,10 +297,10 @@ exports.MediaGateway = function () {
     });
   };
 
-  this.serve = function (wsock) {
+  this.serve = function (wsock, user) {
     wsock.onMessageType("media", function (query) {
       if (query.type === "ls") {
-        processLs(query, function (result, err) {
+        processLs(query, user, function (result, err) {
           if (err) {
             wsock.sendError(err);
           } else {

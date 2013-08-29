@@ -30,7 +30,7 @@ function onVerified(sock, user) {
     var wsock = new SockWrapper(sock, ping);
     user.ping = ping;
     chat.connect(wsock, user);
-    media.serve(wsock);
+    media.serve(wsock, user);
   });
 }
 
