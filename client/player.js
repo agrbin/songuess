@@ -112,6 +112,7 @@ var Player = function(getTime, volumeElement) {
     if (!warmUpCalled) return;
     if (playEnabled) return;
     playEnabled = true;
+    playPauseGain.gain.cancelScheduledValues(audioContext.currentTime);
     playPauseGain.gain.setValueAtTime(1, audioContext.currentTime);
   };
 
