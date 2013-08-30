@@ -280,8 +280,8 @@ function Chat(wsock, user, media, onFatal) {
       announceTimer = setTimeout(function () {
         player.play();
         roomState.state = "playing";
-      }, 2980);
-    }, when - myClock.clock() - 3010);
+      }, myClock.timeTo(when - 10));
+    }, myClock.timeTo(when - 3010));
   });
 
   wsock.onMessage("called_next", function (data) {

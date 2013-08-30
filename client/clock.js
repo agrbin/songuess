@@ -3,18 +3,22 @@
  */
 var myClock = new (function() {
 
-  var offset = 0;
+  var that = this, offset = 0;
 
-  this.originalClock = function() {
+  this.originalClock = function () {
     return (new Date().getTime());
   };
 
-  this.clock = function() {
+  this.clock = function () {
     return (new Date().getTime() + offset);
   };
 
-  this.skew = function(x) {
+  this.skew = function (x) {
     offset += x;
+  };
+
+  this.timeTo = function (when) {
+    return Math.max(0, when - that.clock());
   };
 
 })();

@@ -148,7 +148,7 @@ var Player = function(getTime, volumeElement) {
     request.responseType = 'arraybuffer';
 
     if (!secondary) {
-      if (downloadDurationStat.n > 5) {
+      if (downloadDurationStat.n > 2) {
         timeout = downloadDurationStat.avg * 1.5;
       } else {
         timeout = window.songuess.primaryChunkDownloadTimeout;
