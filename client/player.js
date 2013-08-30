@@ -32,7 +32,7 @@ var Player = function(getTime, volumeElement) {
     , muted = false
     , maxScheduledPoint = 0
     , streamEnabled = true
-    ; 
+    , downloadDurationStat = {n: 0, sum: 0, avg:null};
 
   // this is called only once to get the AudioContext started and to set up
   // master volume meter.
@@ -135,7 +135,7 @@ var Player = function(getTime, volumeElement) {
     if (!streamEnabled) {
       return;
     }
-    var request = new XMLHttpRequest(), done = false;
+    var request = new XMLHttpRequest(), done = false, downloadStarted;
     if (!warmUpCalled) {
       return;
     }
@@ -147,22 +147,47 @@ var Player = function(getTime, volumeElement) {
     );
     request.responseType = 'arraybuffer';
 
+    if (!secondary) {
+      if (downloadDurationStat.n > 5) {
+        timeout = downloadDurationStat.avg * 1.5;
+      } else {
+        timeout = window.songuess.primaryChunkDownloadTimeout;
+      }
+    } else {
+      timeout = chunkInfo.start - myClock.clock() + 500;
+    }
+
+    if (timeout < 0) {
+      console.log("chunk ignored. wont even start download.");
+      return;
+    }
+
     // after timeout query the backupUrl only if:
     //  this is primary query
     //  primary query is not finished
     //  we have backup url
     setTimeout(function () {
       if (!secondary && !done && chunkInfo.backupUrl) {
-        console.log("using backup URL for chunk.");
+        console.log("using backup URL for chunk. timeout was: " + timeout);
         request.abort();
         return that.addChunk(chunkInfo, true);
       }
-    }, window.songuess.primaryChunkDownloadTimeout);
+      if (secondary && !done) {
+        console.log("chunk ignored. didn't finish download in time.");
+        request.abort();
+      }
+    }, timeout);
 
     // register onload.
     request.addEventListener('load', function(evt) {
       done = true;
       if (evt.target.status != 200) return;
+      // calculate avg download time
+      downloadDurationStat.n ++;
+      downloadDurationStat.sum += myClock.clock() - downloadStarted;
+      downloadDurationStat.avg =
+        downloadDurationStat.sum / downloadDurationStat.n;
+
       audioContext.decodeAudioData(
         evt.target.response,
         function(decoded) {
@@ -171,6 +196,7 @@ var Player = function(getTime, volumeElement) {
       );
     }, false);
 
+    downloadStarted = myClock.clock();
     request.send();
   };
 
