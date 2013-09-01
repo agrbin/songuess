@@ -286,6 +286,7 @@ function Chat(wsock, user, media, onFatal) {
 
   wsock.onMessage("called_next", function (data) {
     if (data.hasOwnProperty('answer')) {
+      roomState.lastSong = data.answer;
       setTimeout(pretty.relativeTime, 3000);
       setTimeout(player.pause, 3000);
     }
