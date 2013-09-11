@@ -11,7 +11,8 @@ function MediaUI(media) {
     $(".media form").submit(function () {
       media.handleNewRoom({
         name : $("#name").val(),
-        desc : $("#desc").val()
+        desc : $("#desc").val(),
+        streamFromMiddle : $("#stream_from_middle").prop('checked')
       });
       return false;
     });
