@@ -3,14 +3,15 @@
 
 var
   clock = require('./clock.js'),
-  config = require('./config.js').streamer;
+  config = require('./config.js').streamer,
+  STREAM_FROM_MIDDLE_RANGE_PERCENTAGE = 20;
 
 /*
  * Streamer will send stream directions to clients.
  *  sendHandler must dispatch message to all clients
  *  it will loop over fragments defined in config.
  */
-exports.Streamer = function (media, chunkHandler, songEndedHandler) {
+exports.Streamer = function (media, chunkHandler, songEndedHandler, streamFromMiddle) {
 
   // all clocks here are in milliseconds
   var that = this,
@@ -24,6 +25,8 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
     chunkURLs,
     timer,
     songStartedTime;
+
+  console.log('streamer: stream from middle: ' + streamFromMiddle);
 
   // scheduling technique from
   // http://chimera.labs.oreilly.com/books/1234000001552/ch02.html
@@ -59,12 +62,21 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler) {
       playlistItem.server,
       playlistItem.id,
       function (cs, err) {
+        function calcFirstChunkIndex(len) {
+          var l = (100 - STREAM_FROM_MIDDLE_RANGE_PERCENTAGE) / 2;
+          if (streamFromMiddle === true) {
+            return Math.floor(len * (l + Math.random() * STREAM_FROM_MIDDLE_RANGE_PERCENTAGE) / 100);
+          }
+          return 0;
+        }
+
         if (err) {
           done(null, err);
         } else {
           server = playlistItem.server;
           chunkURLs = cs;
-          currentChunkIndex = 0;
+          currentChunkIndex = calcFirstChunkIndex(cs.length);
+          console.log('first chunk index: ' + currentChunkIndex);
           chunkToSendPlayTime = clock.clock() + sendAhead + chunkDuration;
           done(songStartedTime = chunkToSendPlayTime);
           checkSchedule();
