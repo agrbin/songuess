@@ -26,8 +26,6 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler, streamFromMi
     timer,
     songStartedTime;
 
-  console.log('streamer: stream from middle: ' + streamFromMiddle);
-
   // scheduling technique from
   // http://chimera.labs.oreilly.com/books/1234000001552/ch02.html
   // 
@@ -76,7 +74,6 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler, streamFromMi
           server = playlistItem.server;
           chunkURLs = cs;
           currentChunkIndex = calcFirstChunkIndex(cs.length);
-          console.log('first chunk index: ' + currentChunkIndex);
           chunkToSendPlayTime = clock.clock() + sendAhead + chunkDuration;
           done(songStartedTime = chunkToSendPlayTime);
           checkSchedule();

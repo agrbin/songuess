@@ -387,7 +387,6 @@ exports.ChatRoom = function (desc, chat, proxy) {
   };
 
   (function () {
-    console.log('chat_room streamFromMiddle: ' + desc.streamFromMiddle);
     playlistIterator = new PlaylistIterator(desc.playlist);
     answerChecker = new AnswerChecker({});
     streamer = new Streamer(chat.media, chunkHandler, songEndedHandler, desc.streamFromMiddle);
