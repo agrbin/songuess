@@ -25,7 +25,9 @@ exports.HttpProxy = function () {
     chunksSentPM = 0;
 
   function log(what) {
-    //console.log( (new Date()).toString() + " proxy: " + what);
+    if (config.log) {
+      console.log( (new Date()).toString() + " proxy: " + what);
+    }
   }
 
   // this is called only when we are sure that resourceData has the id data.
@@ -49,7 +51,6 @@ exports.HttpProxy = function () {
       return res.end("Bad gateway (media server).");
     }
 
-    //log(" HIT from " + exports.remoteAddr(req) + " :       " + id);
     res.statusCode = 200;
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'max-age=' + config.maxAge); // 1m
@@ -75,7 +76,6 @@ exports.HttpProxy = function () {
     }
     // 2. we may see event mounting point for this id
     if (resourceOnReady.hasOwnProperty(id)) {
-      log("WAIT: " + id);
       return resourceOnReady[id].push(function () {
         sendData(id, req, res);
       });
@@ -115,7 +115,7 @@ exports.HttpProxy = function () {
   }
 
   function bandwidthStat() {
-    console.log("streaming " + chunksSentPM + " chunks per minute.");
+    log("streaming " + chunksSentPM + " chunks per minute.");
     chunksSentPM = 0;
     setTimeout(bandwidthStat, 60 * 1000);
   }
@@ -135,7 +135,6 @@ exports.HttpProxy = function () {
     // decide the URL of a new resource
     // create resourceReady subscribe point for this resource.
     id = randomId();
-    log(" NEW: " + id);
     resourceOnReady[id] = [];
 
     // start loading the resource
@@ -152,7 +151,6 @@ exports.HttpProxy = function () {
 
     // register purge event.
     setTimeout(function () {
-      log("PURG: " + id + " size: " + inMemory);
       --inMemory;
       delete resourceOnReady[id];
       delete resourceData[id];

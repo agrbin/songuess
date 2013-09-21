@@ -126,6 +126,9 @@ exports.client = {
 };
 
 exports.proxy = {
+  // can log
+  log : true,
+
   // you can bypass proxy with this.
   enable  : true,
 
