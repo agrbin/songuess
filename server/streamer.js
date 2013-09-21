@@ -3,8 +3,7 @@
 
 var
   clock = require('./clock.js'),
-  config = require('./config.js').streamer,
-  STREAM_FROM_MIDDLE_RANGE_PERCENTAGE = 20;
+  config = require('./config.js').streamer;
 
 /*
  * Streamer will send stream directions to clients.
@@ -61,9 +60,10 @@ exports.Streamer = function (media, chunkHandler, songEndedHandler, streamFromMi
       playlistItem.id,
       function (cs, err) {
         function calcFirstChunkIndex(len) {
-          var l = (100 - STREAM_FROM_MIDDLE_RANGE_PERCENTAGE) / 2;
+          var l = (100 - config.streamFromMiddle) / 2;
           if (streamFromMiddle === true) {
-            return Math.floor(len * (l + Math.random() * STREAM_FROM_MIDDLE_RANGE_PERCENTAGE) / 100);
+            return Math.floor(len *
+              (l + Math.random() * config.streamFromMiddle) / 100);
           }
           return 0;
         }

@@ -55,6 +55,12 @@ exports.streamer = {
   // overlapping between chunks to make seamless playback on
   // client. this constant is copied to ../client/player.js
   overlapTime   : 0.048,
+
+  // when streaming from middle option is on for a room this is
+  // a percentage of padding which is not treated as 'middle'.
+  // starting chunk is determined uniformly from the center
+  // of the song
+  streamFromMiddleRangePercentage : 20
 };
 
 exports.sync = {
