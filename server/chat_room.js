@@ -150,6 +150,21 @@ exports.ChatRoom = function (desc, chat, proxy) {
     }
   }
 
+  function onSBeep(data, client) {
+    onSonicMessageHelper("sbeep", data);
+  }
+
+  function onSSkew(data, client) {
+    onSonicMessageHelper("sskew", data);
+  }
+
+  function onSonicMessageHelper(type, data) {
+    if (data.to !== null && !clients.hasOwnProperty(data.to)) {
+      throw "to specified, but not in this room";
+    }
+    clients[data.to].send(type, data);
+  }
+
   function onSay(data, client) {
     // debug
     if (!clients.hasOwnProperty(data.from)) {
@@ -350,6 +365,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
     this.broadcast('new_client', client.publicInfo(), client);
     client.send('room_state', packRoomState());
     client.onMessage('say', onSay);
+    client.onMessage('sbeep', onSBeep);
+    client.onMessage('sskew', onSSkew);
     client.onMessage('new_room', onNewRoom);
     client.onMessage('next', onNext);
     client.onMessage('token', onToken);

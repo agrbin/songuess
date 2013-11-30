@@ -25,6 +25,8 @@ var Player = function(getTime, volumeElement) {
     , audioContext = new webkitAudioContext()
     , masterGain = null
     , playPauseGain = null
+    , sonicBeepGain = null
+    , oscillator = null
     , playEnabled = true
     , timeOffset = null
     , overlapTime = window.songuess.overlapTime
@@ -42,12 +44,17 @@ var Player = function(getTime, volumeElement) {
     else warmUpCalled = true;
     // set up master gain
     masterGain = audioContext.createGainNode();
+    sonicBeepGain = audioContext.createGainNode();
     playPauseGain = audioContext.createGainNode();
     // initial volume is 0.5
     masterGain.gain.value = 0.5;
     masterGain.connect(playPauseGain);
     playPauseGain.connect(audioContext.destination);
     playPauseGain.gain.setValueAtTime(1, 0);
+    sonicBeepGain.connect(audioContext.destination);
+    // duration of first test beep.
+    sonicBeepGain.gain.setValueAtTime(1, 0);
+    sonicBeepGain.gain.setValueAtTime(0, 0.2);
     // volumeElement can be null.
     if (volumeElement) {
       volumeElement.style.display = 'block';
@@ -57,11 +64,29 @@ var Player = function(getTime, volumeElement) {
     }
     // play the number of the beast freq as a test note.
     // oscillator is a long word, isn't it?
-    var oscillator = audioContext.createOscillator();
+    oscillator = audioContext.createOscillator();
     oscillator.frequency.value = 666;
-    oscillator.connect(masterGain);
+    oscillator.connect(sonicBeepGain);
     oscillator.noteOn(0);
-    oscillator.noteOff(0.2);
+  }
+
+  this.getAudioContext = function() {
+    return audioContext;
+  };
+
+  /**
+   * when and duration in ms.
+   */
+  this.sonicBeep = function(when, freq, duration) {
+    var avoidClick = 0.002, g = sonicBeepGain;
+    when = transponseTime(when);
+    // set the freq
+    oscillator.frequency.setValueAtTime(freq, when);
+    g.gain.linearRampToValueAtTime(0, when - avoidClick/2);
+    g.gain.linearRampToValueAtTime(1, when + avoidClick/2);
+    when += duration / 1000;
+    g.gain.linearRampToValueAtTime(1, when - avoidClick/2);
+    g.gain.linearRampToValueAtTime(0, when + avoidClick/2);
   }
 
   // this will work only for future scheduled chunks.

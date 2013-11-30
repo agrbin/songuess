@@ -1,4 +1,4 @@
-function Chat(wsock, user, media, onFatal) {
+function Chat(wsock, user, media, player, onFatal) {
 
   var
     that = this,
@@ -9,8 +9,8 @@ function Chat(wsock, user, media, onFatal) {
     ids = [],
     pids = [],
     playlist,
-    player = new Player(myClock.clock, null),
     announceTimer,
+    sonicSyncer = null,
     roomState = {
       state : "dead",
       songStart : null,
@@ -140,6 +140,42 @@ function Chat(wsock, user, media, onFatal) {
     }
   });
 
+  wsock.onMessage("sbeep", function (msg) {
+    player.sonicBeep(msg.when, msg.freq, msg.duration);
+    ui.addNotice("received sonic beep request.");
+  });
+
+  wsock.onMessage("sskew", function (msg) {
+    var offset = msg.offset;
+    myClock.skew(offset);
+    player.resync(offset > 1000);
+    if (offset > 0) {
+      ui.addNotice(
+        "Clock changed due to sonic sync: "
+        + Math.round(offset*100)/100 + " ms."
+      );
+    }
+  });
+
+  onCommand("ssync", function () {
+    sonicSyncer = new SonicSyncer(
+      myClock.clock,
+      player.getAudioContext(),
+      function getClients() {
+        var ids = {};
+        for (var id in clients) {
+          if (id != user.id) {
+            ids[id] = id;
+          }
+        }
+        return ids;
+      },
+      function sendBeep(msg) {wsock.sendType("sbeep", msg);},
+      function sendSkew(msg) {wsock.sendType("sskew", msg);},
+      function log(msg) {ui.addNotice(msg);}
+    );
+  });
+
   onCommand("playlist", function () {
     ui.displayPlaylist(playlist);
   });
@@ -159,6 +195,7 @@ function Chat(wsock, user, media, onFatal) {
   }
 
   onCommand("sync", function () {
+      ui.addNotice("sync is deprecated");
     wsock.sendType("sync_start", {});
     new Syncer(
       new SyncSocketWrap(wsock),

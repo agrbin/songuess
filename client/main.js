@@ -3,7 +3,7 @@
 // onda dodje sync i synca sat :) pazi expires!
 
 function initiateEverything(onReady, isOAuthReturn) {
-  var storage, auth, socket, user;
+  var storage, auth, socket, user, player;
 
   function fatalError(err) {
     document.open();
@@ -26,7 +26,7 @@ function initiateEverything(onReady, isOAuthReturn) {
     console.log("synced.");
     try {
       // this will start the app.
-      onReady(socket, user, fatalError);
+      onReady(socket, user, player, fatalError);
     } catch (err) {
       fatalError(err);
       throw err;
@@ -36,6 +36,7 @@ function initiateEverything(onReady, isOAuthReturn) {
   function onVerified(verified_user) {
     console.log("user verified.");    
     user = verified_user;
+    player = new Player(myClock.clock, null);
     new Syncer(socket, onSynced);
   }
 
@@ -60,10 +61,10 @@ function initiateEverything(onReady, isOAuthReturn) {
   initialize();
 }
 
-window.initiateEverything(function (sock, user, onErr) {
+window.initiateEverything(function (sock, user, player, onErr) {
   $(document).ready(function() {
     var ws = new SockWrapper(sock, onErr);
-    new Chat(ws, user, new Media(ws), onErr);
+    new Chat(ws, user, new Media(ws), player, onErr);
   });
 }, true);
 
