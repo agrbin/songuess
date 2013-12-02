@@ -1,4 +1,5 @@
 #!/bin/bash
+JITSU=node_modules/jitsu/bin/jitsu
 
 set -e
 
@@ -21,7 +22,7 @@ if [ -f $root/server/config.override.js ]; then
   mv $root/server/config.override.js $root/server/config.override.js.backup
 fi
 cp $root/deploy/jitsu.config.js $root/server/config.override.js
-( cd $root/server && jitsu deploy --confirm )
+( cd $root/server && $JITSU deploy --confirm )
 rm $root/server/config.override.js
 if [ -f $root/server/config.override.js.backup ]; then
   mv $root/server/config.override.js.backup $root/server/config.override.js

@@ -1,0 +1,7 @@
+{
+  "name": "songuess-deploy",
+  "dependencies": {
+    "yuicompressor": "~2.4.8",
+    "jitsu": "~0.13.4"
+  }
+}
