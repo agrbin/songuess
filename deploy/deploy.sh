@@ -1,5 +1,5 @@
 #!/bin/bash
-JITSU=node_modules/jitsu/bin/jitsu
+JITSU=../deploy/node_modules/jitsu/bin/jitsu
 
 set -e
 
