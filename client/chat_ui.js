@@ -92,7 +92,7 @@ function ChatUI(chat, user) {
   this.honored = function (desc) {
     entry("sys correct",
       pretty.client(chat.getClient(desc.from)) +
-      " honored his point to " +
+      " honored this point to " +
       pretty.client(chat.getClient(desc.to)) +
          "!");
     that.updateList();
