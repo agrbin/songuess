@@ -163,7 +163,7 @@ function ChatUI(chat, user) {
     if (state === "playing" || state === "after") {
       cl.push("relative");
     }
-    cl.push(msg.from === null ? "sys" : "say");
+    cl.push(msg.from === null || msg.me ? "sys" : "say");
     entry(cl.join(" "),
       (msg.from ?
         pretty.client(chat.getClient(msg.from)) +
