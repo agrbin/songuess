@@ -166,7 +166,8 @@ function ChatUI(chat, user) {
     cl.push(msg.from === null ? "sys" : "say");
     entry(cl.join(" "),
       (msg.from ?
-        pretty.client(chat.getClient(msg.from)) + ": "
+        pretty.client(chat.getClient(msg.from)) +
+          (msg.me ? " " : ": ")
         : "")
       + pretty.text(msg.what), msg.when);
   };

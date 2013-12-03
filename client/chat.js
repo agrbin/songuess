@@ -254,6 +254,18 @@ function Chat(wsock, user, media, player, onFatal) {
     wsock.sendType("honor", {to: ns.whois(arr.join(" ").trim())});
   });
 
+  onCommand("me", function () {
+    var it = 0, arr = [];
+    for (it = 0; it < arguments.length; arr.push(arguments[it++]));
+    wsock.sendType("say", {
+      from : user.id,
+      to : null,
+      when : myClock.clock(),
+      what : arr.join(" ").trim(),
+      me: true
+    });
+  });
+
   wsock.onMessage("chunk", function (chunk) {
     player.addChunk(chunk);
   });
