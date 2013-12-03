@@ -83,9 +83,6 @@ int seek_to_frame_start(FILE *fp, int n) {
         ungetc(next, fp);
       }
     }
-    if (n > 0) {
-      err("next frame sync expected.", n);
-    }
   }
 }
 
