@@ -14,15 +14,15 @@
  *  ASCII string representing the starting point in time (getTime() time)
  *  for received chunk. difference in starting times for two sequential chunks
  *  will be exactly the duration of one chunk. this duration is integral when
- *  represented in milliseconds. 
+ *  represented in milliseconds.
  *  the audioContext hardware clock and getTime() clock are synced only once,
  *  and because of that the scheduling is not affected by imprecise JavaScript
  *  clock.
  */
-var Player = function(getTime, volumeElement) {
+var Player = function(getTime, volumeElement, onFatal) {
 
   var that = this
-    , audioContext = new webkitAudioContext()
+    , audioContext = null
     , masterGain = null
     , playPauseGain = null
     , sonicBeepGain = null
@@ -35,6 +35,15 @@ var Player = function(getTime, volumeElement) {
     , maxScheduledPoint = 0
     , streamEnabled = true
     , downloadDurationStat = {n: 0, sum: 0, avg:null};
+
+  try {
+    window.AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioContext = new AudioContext();
+  }
+  catch(e) {
+    return onFatal('Web Audio API is not supported in this browser');
+  }
+
 
   // this is called only once to get the AudioContext started and to set up
   // master volume meter.

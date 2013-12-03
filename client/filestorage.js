@@ -12,10 +12,10 @@ function FileStorage(onFatal) {
     queue = [];
 
   function initialize() {
-    var requestFunction = window.webkitRequestFileSystem
-                      || window.requestFileSystem;
+    var requestFunction = window.requestFileSystem
+                      || window.webkitRequestFileSystem;
     if (!(File && FileReader && FileList && Blob && requestFunction)) {
-      return onFatal("FileStorage is not supported.");
+      return onFatal("FileStorage is not supported in this browser.");
     }
     requestFunction(
       window.TEMPORARY,

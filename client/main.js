@@ -19,6 +19,7 @@ function initiateEverything(onReady, isOAuthReturn) {
       return fatalError("config.js is missing");
     }
     storage = new window[songuess.cookieStorage](fatalError);
+    player = new Player(myClock.clock, null, fatalError);
     auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
   }
 
@@ -34,9 +35,8 @@ function initiateEverything(onReady, isOAuthReturn) {
   }
 
   function onVerified(verified_user) {
-    console.log("user verified.");    
+    console.log("user verified.");
     user = verified_user;
-    player = new Player(myClock.clock, null);
     new Syncer(socket, onSynced);
   }
 

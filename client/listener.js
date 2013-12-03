@@ -75,7 +75,11 @@ var Listener = function(audioContext) {
     }
   }
 
-  navigator.webkitGetUserMedia(
+  navigator.getMedia = ( navigator.getUserMedia ||
+                       navigator.webkitGetUserMedia ||
+                       navigator.mozGetUserMedia ||
+                       navigator.msGetUserMedia);
+  navigator.getMedia(
     {audio:true},
     gotStream,
     function(e) {
