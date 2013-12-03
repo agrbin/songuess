@@ -10,7 +10,7 @@ client/index.min.html
 server/index.min.html
 
 # media ignore files
-media/mp3/
+media/mp3
 media/chunks/
 media/utils/create_chunks
 media/library/library.json
