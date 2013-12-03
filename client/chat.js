@@ -15,6 +15,12 @@ function Chat(wsock, user, media, player, onFatal) {
       state : "dead",
       songStart : null,
       lastSong : null
+    },
+    commandAliases = {
+      j: 'join',
+      v: 'volume',
+      m: 'mute',
+      h: 'honor',
     };
 
   // checks whether the sending message is maybe
@@ -27,6 +33,9 @@ function Chat(wsock, user, media, player, onFatal) {
     params = text.substr(1).split(" ");
     cmd = params.shift();
     ui.addNotice(text, "cmd");
+    if (cmd in commandAliases) {
+      cmd = commandAliases[cmd];
+    }
     if (!commandCallbacks.hasOwnProperty(cmd)) {
       ui.addNotice("Command '" + cmd + "' unavailable.", "err");
       return true;
@@ -158,6 +167,9 @@ function Chat(wsock, user, media, player, onFatal) {
   });
 
   onCommand("ssync", function () {
+    if (sonicSyncer) {
+      sonicSyncer.abort();
+    }
     sonicSyncer = new SonicSyncer(
       myClock.clock,
       player.getAudioContext(),
@@ -254,6 +266,8 @@ function Chat(wsock, user, media, player, onFatal) {
     ui.clear();
     if (roomState.state !== "playing") {
       player.pause();
+    } else {
+      player.play();
     }
     ui.youEntered(data);
     playlist = data.desc.playlist;

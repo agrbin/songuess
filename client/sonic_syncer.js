@@ -31,6 +31,8 @@ function SonicSyncer(clock, audioContext, getClients, sendBeep, sendSkew, log) {
 
   var lastChunkFromNow = 0;
   var listener = new Listener(audioContext);
+  var analyzeTimer = null;
+
   listener.setFrequency(BEEP_FREQ);
   log("sonic syncer invoked");
 
@@ -132,7 +134,12 @@ function SonicSyncer(clock, audioContext, getClients, sendBeep, sendSkew, log) {
     buildRequest();
     listener.onBeep(handleBeep, INTERVAL / 2);
     sendRequests();
-    setTimeout(analyzeResults, lastChunkFromNow);
+    analyzeTimer = setTimeout(analyzeResults, lastChunkFromNow);
+  }
+
+  this.abort = function() {
+    clearTimeout(analyzeTimer);
+    listener.stop();
   }
 
   doIteration();
