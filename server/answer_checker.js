@@ -4,7 +4,7 @@
 module.exports = function (options) {
   var
     MISTAKES_BY_CHAR = 1/6, // on 6 chars you may mistype one.
-    nonAlpha = /[^a-zA-Zšđčćž ]/g,
+    nonAlphanum = /[^a-zA-Z0-9šđčćžáàâäãæéèêëíîïóôöœúùûüñç ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
     trimParentheses = /\([^)]*\)/g,
@@ -12,9 +12,32 @@ module.exports = function (options) {
     replacePairs = [
       ['ć', 'c'],
       ['č', 'c'],
+      ['ç', 'c'],
       ['š', 's'],
       ['đ', 'dj'],
-      ['ž', 'z']
+      ['ž', 'z'],
+      ['á', 'a'],
+      ['à', 'a'],
+      ['â', 'a'],
+      ['ä', 'a'],
+      ['ã', 'a'],
+      ['æ', 'ae'],
+      ['é', 'e'],
+      ['è', 'e'],
+      ['ê', 'e'],
+      ['ë', 'e'],
+      ['í', 'i'],
+      ['î', 'i'],
+      ['ï', 'i'],
+      ['ó', 'o'],
+      ['ô', 'o'],
+      ['ö', 'o'],
+      ['œ','oe'],
+      ['ú', 'u'],
+      ['ù', 'u'],
+      ['û', 'u'],
+      ['ü', 'u'],
+      ['ñ', 'n'],
     ];
 
   // O(n^2) hopefuly.
@@ -77,7 +100,7 @@ module.exports = function (options) {
     str = str.toLowerCase();
     str = str.replace(trimParentheses, '');
     str = str.replace(trimSquare, '');
-    str = str.replace(nonAlpha, '');
+    str = str.replace(nonAlphanum, '');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
     for (i = 0; i < replacePairs.length; ++i) {
