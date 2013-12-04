@@ -3,9 +3,9 @@
 function ChatUI(chat, user) {
 
   var
-    body, 
-    users_list, 
-    input, 
+    body,
+    users_list,
+    input,
     user,
     announceTimer,
     that = this;
@@ -37,6 +37,17 @@ function ChatUI(chat, user) {
       .scrollTop(body.scrollHeight);
   }
 
+  function notify (title, options) {
+    if ((document.hidden || document.webkitHidden || document.msHidden) &&
+        Notification && Notification.permission &&
+        Notification.permission === 'granted') {
+      var notif = new Notification(title, options);
+      notif.onshow = function(){
+        setTimeout(function(){notif.close();}, 5000);
+      }
+    }
+  }
+
   function songOffset() {
     if (chat.getRoomState().state === "playing") {
       return myClock.clock() - chat.getRoomState().songStart;
@@ -60,7 +71,7 @@ function ChatUI(chat, user) {
       entry("sys", "Playlist has " + playlist.length + " song"
                    + (playlist.length > 1 ? "s." : "."));
       if (chat.getRoomState().state === "playing") {
-        entry("sys", 
+        entry("sys",
           " Current song is @ "
           + pretty.timeInterval(songOffset()) + "s.");
       }
@@ -170,6 +181,12 @@ function ChatUI(chat, user) {
           (msg.me ? " " : ": ")
         : "")
       + pretty.text(msg.what), msg.when);
+
+    notify(
+      (msg.from ? chat.getClient(msg.from).name : "") +
+        (msg.me ? " " : ": ") + msg.what,
+      {'icon': msg.from ? chat.getClient(msg.from).picture : null}
+    );
   };
 
   this.displayWho = function (data) {

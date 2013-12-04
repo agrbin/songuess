@@ -21,6 +21,16 @@ function initiateEverything(onReady, isOAuthReturn) {
     storage = new window[songuess.cookieStorage](fatalError);
     player = new Player(myClock.clock, null, fatalError);
     auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
+    if ('Notification' in window) {
+      document.addEventListener('keyup', function(e){
+        Notification.requestPermission(function (permission) {
+          if(!('permission' in Notification)) {
+            // Chrome does not implement Notification.permission yet
+            Notification.permission = permission;
+          }
+        });
+      });
+    }
   }
 
   function onSynced() {
