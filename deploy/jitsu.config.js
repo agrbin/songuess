@@ -21,7 +21,7 @@ module.exports = function(exports) {
   exports.proxy.throttleStreamOff = 3;
   exports.proxy.throttleStreamAmp = 3;
   exports.proxy.urlSuffix = '.jpg';
-  exports.proxy.primaryHttpRoot = 'http://songuess.xfer.hr',
+  exports.proxy.primaryHttpRoot = 'http://songuess.anton-grbin.from.hr',
   exports.proxy.secondaryHttpRoot = 'http://songuess.jit.su';
 
 };
