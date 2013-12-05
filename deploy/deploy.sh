@@ -1,15 +1,20 @@
 #!/bin/bash
+set -e
+USER=agrbin
 JITSU=../deploy/node_modules/jitsu/bin/jitsu
 
-set -e
-
+logged_in_user=$($JITSU whoami)
 root=$(dirname $0)/..
 
-echo "pulling changes.. watch out for /server/config.js changes!!";
-# git pull
+# check that current jitsu user is as expected.
+if [ "$logged_in_user" != $USER ]; then
+  echo "you are not logged in in jitsu. do it now, and try again."
+  $JITSU logout
+  $JITSU login
+  exit;
+fi
 
 echo "minifying client..";
-
 ( cd $root/client && node ../deploy/minify.js )
 
 mv $root/client/index.min.html $root/server/
