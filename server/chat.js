@@ -135,7 +135,7 @@ exports.Chat = function (media, proxy) {
       entries.push([mediaConfig.defaultMedia, rootDirEntries[it].name]);
     }
     query = {
-      room : {name : '#default', desc : 'default room.'},
+      room : {name : '#default', desc : 'default room'},
       playlist : entries
     };
     try {

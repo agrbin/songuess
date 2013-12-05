@@ -22,9 +22,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
     answerChecker,
     streamer,
 
-    // "dead", "playing", "after", "suspense"
+    // "dead", "playing", "playon", "after", "suspense"
     // if state is playing, when did the song started?
     // if state is suspense, when will the next song start?
+    // if state is playing or playon, how many and who voted next?
     roomState = {
       state : "dead",
       songStart : null,
@@ -183,13 +184,22 @@ exports.ChatRoom = function (desc, chat, proxy) {
       return;
     }
     if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
+      var next_state = "after";
       grantScore(client);
+      if (data.what.indexOf('#playon') != -1) {
+        next_state = "playon";
+      }
       that.broadcast('correct_answer', {
         who: client.id(),
         answer: playlistIterator.currentItem(),
-        when : data.when
+        when : data.when,
+        state : next_state
       });
-      playNext();
+      if (next_state !== "playon") {
+        playNext();
+      } else {
+        roomState.state = next_state;
+      }
     }
   }
 
@@ -201,7 +211,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function onNext(data, client) {
-    if (roomState.state !== "playing") {
+    if (roomState.state !== "playing" && roomState.state !== "playon") {
       return;
     }
     if (roomState.whoNextVotes.hasOwnProperty(client.id())) {
@@ -213,7 +223,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
       that.broadcast('called_next', {
         who: client.id(),
         answer: playlistIterator.currentItem(),
-        when : data.when
+        when : data.when,
+        state : roomState.state
       });
       roomState.lastScore = null;
       playNext();
@@ -266,7 +277,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
       return info("Target acc is not in da klub.", client);
     }
     target = clients[data.to];
-    if (roomState.state !== "after") {
+    if (roomState.state !== "after" && roomState.state !== "playon") {
       return info("Can't honor in this moment.", client);
     }
     if (target === client) {
@@ -284,7 +295,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
   function songEndedHandler() {
     that.broadcast('song_ended', {
       answer : playlistIterator.currentItem(),
-      when : clock.clock()
+      when : clock.clock(),
+      state : roomState.state
     });
     roomState.lastScore = null;
     playNext();

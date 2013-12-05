@@ -219,7 +219,7 @@ function Chat(wsock, user, media, player, onFatal) {
   });
 
   onCommand("next", function () {
-    if (roomState.state === "playing") {
+    if (roomState.state === "playing" || roomState.state === "playon") {
       wsock.sendType("next", {when: myClock.clock()});
     }
   });
@@ -276,7 +276,7 @@ function Chat(wsock, user, media, player, onFatal) {
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
-    if (roomState.state !== "playing") {
+    if (roomState.state !== "playing" && roomState.state !== "playon") {
       player.pause();
     } else {
       player.play();
@@ -295,7 +295,7 @@ function Chat(wsock, user, media, player, onFatal) {
     var client = that.getClient(data.who);
     ++ client.score;
     roomState.lastSong = data.answer;
-    roomState.state = "after";
+    roomState.state = data.state;
     copySharedToPidPeers(client);
     ui.correctAnswer(data);
   });

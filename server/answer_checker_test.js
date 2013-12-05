@@ -31,6 +31,8 @@ var validPairs = [
   ['petite soeur', 'Petite Sœur'],
   ['ex aequo', 'Ex Æquo'],
   ['le chene liege', 'le chêne liège'],
+  ['this is my answer #playon', 'this is my answer'],
+  ['this is #playon my answer', 'this is my answer'],
   // ['2+2=5', '2 + 2 = 5'],
   // ['i cant get no satisfaction','(I Can\'t Get No) Satisfaction'],
   // ['nice dream', '(Nice dream)'],

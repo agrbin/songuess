@@ -93,8 +93,12 @@ function ChatUI(chat, user) {
   this.calledNext = function (desc) {
     if (desc.hasOwnProperty('answer')) {
       entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /next.");
-      entry("sys wrong",
-            " The song was " + pretty.song(desc.answer) + ".");
+      if (desc.state === "playon") {
+        entry("sys wrong", " Moving on.");
+      } else {
+        entry("sys wrong",
+              " The song was " + pretty.song(desc.answer) + ".");
+      }
     } else {
       entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /next.");
     }
@@ -148,7 +152,8 @@ function ChatUI(chat, user) {
     var client = chat.getClient(desc.who);
     entry("sys correct",
       " Well done " + pretty.client(client) +
-      "! The song was " + pretty.song(desc.answer) + ".");
+      "! The song was " + pretty.song(desc.answer) + "." +
+      (desc.state == "playon" ? " #playon - can't stop." : ""));
     this.updateList();
   };
 
@@ -160,8 +165,12 @@ function ChatUI(chat, user) {
   };
 
   this.songEnded = function (desc) {
-    entry("sys wrong", " No one got this one - " +
-      pretty.song(desc.answer));
+    if (desc.state === "playon") {
+      entry("sys wrong", " Song ended.");
+    } else {
+      entry("sys wrong", " No one got this one - " +
+        pretty.song(desc.answer));
+    }
   };
 
   this.announceSong = function (when) {
@@ -171,7 +180,7 @@ function ChatUI(chat, user) {
 
   this.addMessage = function (msg) {
     var cl = [], state = chat.getRoomState().state;
-    if (state === "playing" || state === "after") {
+    if (state === "playing" || state === "playon" || state === "after") {
       cl.push("relative");
     }
     cl.push(msg.from === null || msg.me ? "sys" : "say");

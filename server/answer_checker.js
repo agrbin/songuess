@@ -9,6 +9,7 @@ module.exports = function (options) {
     trimSpace = /^ | $/g,
     trimParentheses = /\([^)]*\)/g,
     trimSquare = /\[[^\]]*\]/g,
+    trimHashtag = /\#([^ ]+)/g,
     replacePairs = [
       ['ć', 'c'],
       ['č', 'c'],
@@ -98,6 +99,7 @@ module.exports = function (options) {
     }
     str = str.toString();
     str = str.toLowerCase();
+    str = str.replace(trimHashtag, '');
     str = str.replace(trimParentheses, '');
     str = str.replace(trimSquare, '');
     str = str.replace(nonAlphanum, '');
