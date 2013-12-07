@@ -22,7 +22,8 @@ function initiateEverything(onReady, isOAuthReturn) {
     player = new Player(myClock.clock, null, fatalError);
     auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
     if ('Notification' in window) {
-      document.addEventListener('keyup', function(e){
+      document.addEventListener('keyup', function requestNotifPermission(e){
+        document.removeEventListener('keyup', requestNotifPermission);
         Notification.requestPermission(function (permission) {
           if(!('permission' in Notification)) {
             // Chrome does not implement Notification.permission yet
