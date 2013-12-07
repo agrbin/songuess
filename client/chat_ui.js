@@ -251,7 +251,7 @@ function ChatUI(chat, user) {
     body = $(".chat .left")[0];
     input = $(".chat input")[0];
     prepareInputElement();
-    $("h1").hide();
+    $(".landing").hide();
     $(".layout.chat").show();
     $(input).focus();
     $(window)
