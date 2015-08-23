@@ -52,9 +52,9 @@ var Player = function(getTime, volumeElement, onFatal) {
     if (warmUpCalled) return;
     else warmUpCalled = true;
     // set up master gain
-    masterGain = audioContext.createGainNode();
-    sonicBeepGain = audioContext.createGainNode();
-    playPauseGain = audioContext.createGainNode();
+    masterGain = audioContext.createGain();
+    sonicBeepGain = audioContext.createGain();
+    playPauseGain = audioContext.createGain();
     // initial volume is 0.5
     masterGain.gain.value = 0.5;
     masterGain.connect(playPauseGain);
@@ -261,7 +261,7 @@ var Player = function(getTime, volumeElement, onFatal) {
   // 48khz sampling.
   function schedule(buffer, srvTime) {
     var source = audioContext.createBufferSource()
-      , gainNode = audioContext.createGainNode()
+      , gainNode = audioContext.createGain()
       , duration = buffer.duration
       , startTime = transponseTime(srvTime)
       , currentTime = audioContext.currentTime;
