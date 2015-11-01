@@ -19,7 +19,6 @@ if [ -f $root/server/config.override.js ]; then
 fi
 cp $root/deploy/xfer.config.js $root/server/config.override.js
 
-rm -rf /srv/songuess/*
 ( cp -r $root/server/* /srv/songuess )
 
 rm $root/server/config.override.js
