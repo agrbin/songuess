@@ -1,33 +1,27 @@
 #!/bin/bash
 set -e
-USER=agrbin
-JITSU=../deploy/node_modules/jitsu/bin/jitsu
 
-logged_in_user=$($JITSU whoami)
-root=$(dirname $0)/..
-
-# check that current jitsu user is as expected.
-if [ "$logged_in_user" != $USER ]; then
-  echo "you are not logged in in jitsu. do it now, and try again."
-  $JITSU logout
-  $JITSU login
-  exit;
+if [ $(hostname) != "vseedbox" ]; then
+  echo "Run this on vseedbox.";
+  exit 1;
 fi
+
+root=$(dirname $0)/..
 
 echo "minifying client..";
 ( cd $root/client && node ../deploy/minify.js )
 
 mv $root/client/index.min.html $root/server/
 
-# jitsu.config.js -> ../server/config.override.js
-# jitsu deploy
-# restore ../server/config.override.js
-echo "deploying to nodejitsu..";
+echo "deploying..";
 if [ -f $root/server/config.override.js ]; then
   mv $root/server/config.override.js $root/server/config.override.js.backup
 fi
-cp $root/deploy/jitsu.config.js $root/server/config.override.js
-( cd $root/server && $JITSU deploy --confirm )
+cp $root/deploy/xfer.config.js $root/server/config.override.js
+
+rm -rf /srv/songuess/*
+( cp -r $root/server/* /srv/songuess )
+
 rm $root/server/config.override.js
 if [ -f $root/server/config.override.js.backup ]; then
   mv $root/server/config.override.js.backup $root/server/config.override.js
