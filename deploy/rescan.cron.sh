@@ -1,12 +1,12 @@
 #!/bin/sh
 
 if [ ! -d "$SONGUESS_MEDIA_DIR" ]; then
-  echo "set $SONGUESS_MEDIA_DIR"
+  set $SONGUESS_MEDIA_DIR
   exit 1
 fi
 
 APP=utils/rescan_library.js
-NODE=$(which node)
+NODE=/usr/local/bin/node
 LOG=$SONGUESS_MEDIA_DIR/rescan_library.log
 
 if ps -ef | grep -v grep | grep $APP > /dev/null; then
