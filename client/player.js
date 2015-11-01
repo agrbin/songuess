@@ -76,7 +76,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     oscillator = audioContext.createOscillator();
     oscillator.frequency.value = 666;
     oscillator.connect(sonicBeepGain);
-    oscillator.noteOn(0);
+    oscillator.start(0);
   }
 
   this.getAudioContext = function() {
@@ -287,10 +287,11 @@ var Player = function(getTime, volumeElement, onFatal) {
       if (startTime - currentTime < 1) {
         console.log("chunk almost late: ", startTime - currentTime);
       }
-      source.noteOn(startTime);
+      source.start(startTime);
       maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
     } else if (startTime + duration > currentTime) {
-      console.log("chunk played with offset. late for: ", currentTime - startTime);
+      console.log("chunk played with offset. late for: ",
+          currentTime - startTime);
       source.start(currentTime, currentTime - startTime);
       maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
     } else {
