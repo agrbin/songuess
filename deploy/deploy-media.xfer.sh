@@ -15,3 +15,4 @@ cp $root/deploy/rescan.cron.sh $TARGET_DIR/rescan.cron.sh
 
 echo "deployed."
 echo "make sure everything is npm installed and make(d) in this checkout."
+echo "don't forget to service songuess-media restart."

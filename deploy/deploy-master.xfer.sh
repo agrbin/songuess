@@ -28,3 +28,4 @@ fi
 rm -f $root/server/index.min.html
 
 echo "that's it! hope everything was npm installed."
+echo "don't forget to service songuess restart."
