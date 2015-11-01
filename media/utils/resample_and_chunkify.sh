@@ -29,4 +29,4 @@ mkdir -p $inode 2> /dev/null
 ../utils/create_chunks "$out_file" $inode
 
 # leave it..
-# rm -f "$out_file"
+rm -f "$out_file"
