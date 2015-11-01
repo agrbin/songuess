@@ -28,4 +28,4 @@ if [ -f $root/server/config.override.js.backup ]; then
 fi
 rm -f $root/server/index.min.html
 
-echo "that's it!"
+echo "that's it! hope everything was npm installed."
