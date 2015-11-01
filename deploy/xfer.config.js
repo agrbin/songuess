@@ -12,7 +12,8 @@ module.exports = function(exports) {
   exports.socket.ignoreNetworkProblems = true;
 
   exports.media.trustServers = {
-    '91.121.68.92' : true // xfer.hr
+    // it seems that media server on vseedbox talks with master server using this IP address.
+    '::ffff:10.0.0.1' : true
   };
 
   exports.media.servers = {};
@@ -21,7 +22,6 @@ module.exports = function(exports) {
   exports.proxy.throttleStreamOff = 3;
   exports.proxy.throttleStreamAmp = 3;
   exports.proxy.urlSuffix = '.jpg';
-  exports.proxy.primaryHttpRoot = 'http://songuess.anton-grbin.from.hr',
+  exports.proxy.primaryHttpRoot = 'http://songuess-cf-cache.xfer.hr';
   exports.proxy.secondaryHttpRoot = 'http://songuess.xfer.hr';
-
 };
