@@ -6,11 +6,13 @@ var
   config = require('./config.js').media,
   request = require('request'),
   remoteAddr = require('./httpproxy.js').remoteAddr,
-  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)();
+  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)(),
+  FixedID3Tags = require('./fixed_id3_tags.js').FixedID3Tags;
 
 exports.MediaGateway = function () {
   var that = this,
-    servers = {};
+    servers = {},
+    fixed_id3_tags = new FixedID3Tags(this);
 
   function log(what) {
     if (config.log) {
@@ -87,9 +89,10 @@ exports.MediaGateway = function () {
     try {
       for (it = 0; it < server.acl.length; ++it) {
         entry = server.acl[it];
-        if (entry[0] !== 'allow') return false;
-        if (entry[1] !== 'email') return false;
-        if (entry[2] === user.email) return true;
+        if (entry[0] == 'allow' && entry[1] == 'email' &&
+            entry[2] == user.email) {
+          return true;
+        }
       }
     } catch (err) {
       return false;
@@ -278,6 +281,23 @@ exports.MediaGateway = function () {
     start();
   };
 
+  this.canUserFixTags = function (server, email) {
+    var it = 0, entry;
+    server = servers[server];
+    try {
+      for (it = 0; it < server.acl.length; ++it) {
+        entry = server.acl[it];
+        if (entry[0] == 'allow_fix' && entry[1] == 'email' &&
+            entry[2] == email) {
+          return true;
+        }
+      }
+    } catch (err) {
+      return false;
+    }
+    return false;
+  }
+
   this.onDefaultMedia = null;
 
   this.expandApi = function (server, input, onResult) {
@@ -360,6 +380,10 @@ exports.MediaGateway = function () {
       }
     });
     return true;
+  };
+
+  this.getFixedId3Tags = function () {
+    return fixed_id3_tags;
   };
 
   (function () {

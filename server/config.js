@@ -162,6 +162,11 @@ exports.proxy = {
 
 };
 
+exports.fixed_tags = {
+  // where to store information about fixtures.
+  storageFileName : '/dev/null'
+};
+
 // try and figure out how to use override.
 if (require('fs').existsSync('./config.override.js')) {
   require('./config.override.js')(exports);

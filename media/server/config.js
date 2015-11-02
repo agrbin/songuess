@@ -44,6 +44,7 @@ exports.media = {
 
   // who can create room with songs from this server?
   // currently only 'allow' and 'email' rules are implemented
+  // 'allow_fix' is email of an user who can submit fixes for ID3 tags.
   acl : [
     ['allow', 'email', 'your.email@gmail.com']
   ]

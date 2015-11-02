@@ -2,7 +2,7 @@
 "use strict";
 
 // u options na primjer idu uvjeti kad prihvacam tocan odgovor
-module.exports = function (playlist) {
+module.exports = function (playlist, fixed_id3_tags) {
   var
     currentIndex = -1,
     randomOrder,
@@ -29,11 +29,18 @@ module.exports = function (playlist) {
   }
 
   this.lastItem = function () {
-    return memoLastItem;
+    if (memoLastItem) {
+      return fixed_id3_tags.getFixedItem(memoLastItem);
+    }
+    return null;
   };
 
   this.currentItem = function () {
-    return playlist[randomOrder[currentIndex]];
+    if (currentIndex == -1) {
+      return null;
+    }
+    return fixed_id3_tags.getFixedItem(
+        playlist[randomOrder[currentIndex]]);
   };
 
   this.nextItem = function () {

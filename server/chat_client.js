@@ -41,6 +41,10 @@ exports.ChatClient = function (wsock, user, chat) {
     return currentRoom;
   };
 
+  this.email = function () {
+    return user.email;
+  };
+
   this.id = function () {
     return user.id;
   };
@@ -102,7 +106,6 @@ exports.ChatClient = function (wsock, user, chat) {
       }
     });
   };
-
 
 };
 

@@ -118,6 +118,25 @@ function ChatUI(chat, user) {
     entry("sys", " artist: " + pretty.text(song.artist, "bold"));
     entry("sys", " album : " + pretty.text(song.album, "bold"));
     entry("sys", " title : " + pretty.text(song.title, "bold"));
+    // Note who fixed the title.
+    if (song.fixed_by_id) {
+      // This will not work as song.fixed_by_id is pid (not id)
+      if (chat.hasClient(song.fixed_by_id)) {
+        entry("sys", " (entered by: " +
+            pretty.client(chat.getClient(song.fixed_by_id))
+            + ")");
+      } else {
+        entry("sys", " (entered by: " + song.fixed_by_email + ")");
+      }
+    }
+  };
+
+  this.displayFixedLast = function (data) {
+    entry("sys correct",
+      pretty.client(chat.getClient(data.who)) +
+        " changed the tags for the previous song:");
+    var song = data.fixed_item;
+    that.displayInfo(data.fixed_item);
   };
 
   this.displayPlaylist = function (playlist) {

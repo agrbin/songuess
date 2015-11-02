@@ -21,6 +21,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     playlistIterator,
     answerChecker,
     streamer,
+    fixed_id3_tags = chat.media.getFixedId3Tags(),
 
     // "dead", "playing", "playon", "after", "suspense"
     // if state is playing, when did the song started?
@@ -271,6 +272,20 @@ exports.ChatRoom = function (desc, chat, proxy) {
     });
   }
 
+  function onFixLast(data, client) {
+    if (!data.fixed_item ||
+        !data.fixed_item.server || !data.fixed_item.id) {
+      return info("Fixed message is broken.", client);
+    }
+    if (!fixed_id3_tags.fixItem(client, data.fixed_item)) {
+      return info(
+          "You don't have permissions for fixing song on this media server.");
+    } else {
+      that.broadcast('fixed_last',
+          {who: client.id(), fixed_item: data.fixed_item});
+    }
+  }
+
   function onHonor(data, client) {
     var target;
     if (!clients.hasOwnProperty(data.to)) {
@@ -386,6 +401,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('honor', onHonor);
     client.onMessage('sync_start', onStartSync);
     client.onMessage('change_group', onChangeGroup);
+    client.onMessage('fix_last', onFixLast);
   };
 
   // pop a client from a list of clients and
@@ -416,8 +432,11 @@ exports.ChatRoom = function (desc, chat, proxy) {
   };
 
   (function () {
-    playlistIterator = new PlaylistIterator(desc.playlist);
+    playlistIterator = new PlaylistIterator(
+      desc.playlist,
+      fixed_id3_tags);
     answerChecker = new AnswerChecker({});
-    streamer = new Streamer(chat.media, chunkHandler, songEndedHandler, desc.streamFromMiddle);
+    streamer = new Streamer(chat.media, chunkHandler,
+      songEndedHandler, desc.streamFromMiddle);
   }());
 };

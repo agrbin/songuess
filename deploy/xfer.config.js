@@ -24,4 +24,6 @@ module.exports = function(exports) {
   exports.proxy.urlSuffix = '.jpg';
   exports.proxy.primaryHttpRoot = 'http://songuess-cf-cache.xfer.hr';
   exports.proxy.secondaryHttpRoot = 'http://songuess.xfer.hr';
+
+  exports.fixed_tags.storageFileName = '/srv/songuess/fixed_tags.json';
 };

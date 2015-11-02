@@ -5,7 +5,12 @@ module.exports = function (exports) {
   exports.media.owner = 'anton.grbin@gmail.com';
   exports.media.token = 'WILL_SET_TO_TRUST_THIS_IP';
   exports.media.acl = [
-    ['allow', 'email', 'anton.grbin@gmail.com']
+    ['allow', 'email', 'anton.grbin@gmail.com'],
+    ['allow', 'email', 'tomislav.grbin@gmail.com'],
+    ['allow', 'email', 't@gudlek.com'],
+    ['allow_fix', 'email', 'anton.grbin@gmail.com'],
+    ['allow_fix', 'email', 'tomislav.grbin@gmail.com'],
+    ['allow_fix', 'email', 't@gudlek.com'],
   ];
   exports.media.access_point.endpoint = 'http://songuess.xfer.hr:52067';
 };
