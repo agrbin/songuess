@@ -279,7 +279,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
     }
     if (!fixed_id3_tags.fixItem(client, data.fixed_item)) {
       return info(
-          "You don't have permissions for fixing song on this media server.");
+          "You don't have permissions for fixing song on this media server.",
+          client);
     } else {
       that.broadcast('fixed_last',
           {who: client.id(), fixed_item: data.fixed_item});
