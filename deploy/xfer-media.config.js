@@ -7,9 +7,11 @@ module.exports = function (exports) {
   exports.media.acl = [
     ['allow', 'email', 'anton.grbin@gmail.com'],
     ['allow', 'email', 'tomislav.grbin@gmail.com'],
+    ['allow', 'email', 'doroteja.gudlek@gmail.com'],
     ['allow', 'email', 't@gudlek.com'],
     ['allow_fix', 'email', 'anton.grbin@gmail.com'],
     ['allow_fix', 'email', 'tomislav.grbin@gmail.com'],
+    ['allow_fix', 'email', 'doroteja.gudlek@gmail.com'],
     ['allow_fix', 'email', 't@gudlek.com'],
   ];
   exports.media.access_point.endpoint = 'http://songuess.xfer.hr:52067';
