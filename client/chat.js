@@ -1,3 +1,19 @@
+function validChTarget(target) {
+  if (target == "artist" || target == "album" || target == "title") {
+    return true;
+  }
+  if (target.substr(0, 5) == "title") {
+    var alt_index = target.substr(5);
+    if (Number(alt_index).toString() != alt_index) {
+      return false;
+    }
+    if (alt_index >= 2) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function Chat(wsock, user, media, player, onFatal) {
 
   var
@@ -154,11 +170,11 @@ function Chat(wsock, user, media, player, onFatal) {
     var args = Array.prototype.slice.call(arguments);
     var fix_what = args.shift();
     var new_name = args.join(" ").trim();
-    if (fix_what != "artist" && fix_what != "album"
-        && fix_what != "title") {
-      return ui.addNotice("/ch {artist,album,title} new value for a field", "err");
+    if (!validChTarget(fix_what)) {
+      return ui.addNotice(
+        "/ch {artist,album,title,title2,...} new value for a field", "err");
     }
-    var fixed_item = roomState.lastSong;
+    var fixed_item = JSON.parse(JSON.stringify(roomState.lastSong));
     if (fixed_item[fix_what] == new_name) {
       return ui.addNotice("You didn't change the " + fix_what, "err");
     }

@@ -118,6 +118,16 @@ function ChatUI(chat, user) {
     entry("sys", " artist: " + pretty.text(song.artist, "bold"));
     entry("sys", " album : " + pretty.text(song.album, "bold"));
     entry("sys", " title : " + pretty.text(song.title, "bold"));
+    // Display all alternate titles.
+    var alt_index = 2, key;
+    for (;;) {
+      key = "title" + (alt_index++);
+      if (song.hasOwnProperty(key)) {
+        entry("sys", " " + key + ": " + pretty.text(song[key], "bold"));
+      } else {
+        break;
+      }
+    }
     // Note who fixed the title.
     if (song.fixed_by_id) {
       // This will not work as song.fixed_by_id is pid (not id)
