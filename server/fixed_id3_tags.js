@@ -54,6 +54,48 @@ exports.FixedID3Tags = function (media) {
     return playlistItem;
   };
 
+  // Checks that item doesn't jump over an alternative title:
+  // OK:
+  // title
+  // title2
+  // title3
+  // title4
+  //
+  // NOT OK:
+  // title
+  // title10
+  this.validAltTitle = function (item) {
+    var key;
+    var alt_title_indices = [];
+    for (key in item) {
+      if (key === "title") {
+        key = "title1";
+      }
+      if (key.substr(0, 5) === "title") {
+        alt_title_indices.push(key.substr(5));
+      }
+    }
+    alt_title_indices.sort();
+    for (var i = 0; i < alt_title_indices.length; ++i) {
+      if (alt_title_indices[i] != (i + 1).toString()) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  // Keeps only non-empty string values.
+  this.sanitizeItem = function (item) {
+    var key;
+    var result = {};
+    for (key in item) {
+      if (typeof item[key] == 'string' && item[key].length > 0) {
+        result[key] = item[key];
+      }
+    }
+    return result;
+  };
+
   // fixedItem must contain server: and id: (client has that info).
   this.fixItem = function (client, fixedItem) {
     if (!media.canUserFixTags(fixedItem.server, client.email())) {

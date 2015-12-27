@@ -112,12 +112,8 @@ module.exports = function (options) {
     return str;
   }
 
-  this.checkAnswer = function (playlistItem, answer) {
-    if (playlistItem === undefined) {
-      return false;
-    }
-
-    var t1 = normalize(answer), t2 = normalize(playlistItem.title);
+  function checkTitle(correct_title, answer) {
+    var t1 = normalize(answer), t2 = normalize(correct_title);
     var allowed_mistakes = Math.floor(t1.length * MISTAKES_BY_CHAR);
 
     if (t1 === t2) return true;
@@ -125,5 +121,20 @@ module.exports = function (options) {
     if (editDistanceUnderEstimate(t1, t2) > allowed_mistakes) return false;
     if (editDistance(t1, t2) > allowed_mistakes) return false;
     return true;
+  }
+
+  this.checkAnswer = function (playlistItem, answer) {
+    if (playlistItem === undefined) {
+      return false;
+    }
+    var key;
+    for (key in playlistItem) {
+      if (key.substr(0, 5) === "title") {
+        if (checkTitle(playlistItem[key], answer)) {
+          return true;
+        }
+      }
+    }
+    return false;
   };
 };

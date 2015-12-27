@@ -277,6 +277,13 @@ exports.ChatRoom = function (desc, chat, proxy) {
         !data.fixed_item.server || !data.fixed_item.id) {
       return info("Fixed message is broken.", client);
     }
+    // Remove empty strings.
+    data.fixed_item = fixed_id3_tags.sanitizeItem(data.fixed_item);
+    // Check that alt titles are in order.
+    if (!fixed_id3_tags.validAltTitle(data.fixed_item)) {
+      return info("Add alternate titles in order: title, title2, title3, ...",
+          client);
+    }
     if (!fixed_id3_tags.fixItem(client, data.fixed_item)) {
       return info(
           "You don't have permissions for fixing song on this media server.",
