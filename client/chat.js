@@ -174,7 +174,7 @@ function Chat(wsock, user, media, player, onFatal) {
       return ui.addNotice(
         "/ch {artist,album,title,title2,...} new value for a field", "err");
     }
-    var fixed_item = roomState.lastSong;
+    var fixed_item = JSON.parse(JSON.stringify(roomState.lastSong));
     if (fixed_item[fix_what] == new_name) {
       return ui.addNotice("You didn't change the " + fix_what, "err");
     }

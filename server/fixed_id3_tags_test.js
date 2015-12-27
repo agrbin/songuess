@@ -11,6 +11,8 @@ assert.equal(false, sut.validAltTitle({title2: "1"}));
 assert.equal(false, sut.validAltTitle({title: "1", title3: "2"}));
 assert.equal(false, sut.validAltTitle({title: "1", title2: "2", title4: "3"}));
 
-assert.deepEqual({}, sut.sanitizeItem({1: 5}));
-assert.deepEqual({}, sut.sanitizeItem({1: ''}));
-assert.deepEqual({1: 'a'}, sut.sanitizeItem({1: 'a'}));
+assert.deepEqual({}, sut.sanitizeItem({title: 5}));
+assert.deepEqual({}, sut.sanitizeItem({title: ''}));
+assert.deepEqual({title: 'a'}, sut.sanitizeItem({title: 'a'}));
+assert.deepEqual({}, sut.sanitizeItem({title2: 5}));
+assert.deepEqual({baba: 5}, sut.sanitizeItem({baba: 5}));

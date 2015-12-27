@@ -84,12 +84,16 @@ exports.FixedID3Tags = function (media) {
     return true;
   };
 
-  // Keeps only non-empty string values.
+  // Keeps only non-empty string values for title* fields.
   this.sanitizeItem = function (item) {
     var key;
     var result = {};
     for (key in item) {
-      if (typeof item[key] == 'string' && item[key].length > 0) {
+      if (key.substr(0, 5) == 'title') {
+        if (typeof item[key] == 'string' && item[key].length > 0) {
+          result[key] = item[key];
+        }
+      } else {
         result[key] = item[key];
       }
     }
