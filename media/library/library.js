@@ -55,6 +55,6 @@ exports.loadLibrary = function (callback) {
 };
 
 exports.saveLibrary = function (newLibrary, callback) {
-  fs.writeFile(libPath, JSON.stringify(newLibrary), callback);
+  fs.writeFile(libPath, JSON.stringify(newLibrary, null, "  "), callback);
 };
 
