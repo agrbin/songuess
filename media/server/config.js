@@ -8,9 +8,9 @@ exports.chunkBaseURL = '/chunk/';
 // onto what master server we will publish media
 exports.masterServer = 'http://localhost:8080';
 
-// every helloInterval seconds we will send master current identification of
-// this server.
-exports.helloInterval = 60;
+// every reloadLibraryIntervalS seconds we will reload the library json file
+// and send the master server current identification of this media server.
+exports.reloadLibraryIntervalS = 60;
 
 // this datum will be used to identify ourselfs with master server
 exports.media = {

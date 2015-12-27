@@ -4,8 +4,6 @@ var config = require('./config.js'),
 // this class will hello the master server with identification
 // of this media server.
 module.exports = function (numberOfFiles) {
-  var helloTimeout = null;
-
   function log(what) {
     console.log("Hello: " + what);
   }
@@ -21,7 +19,7 @@ module.exports = function (numberOfFiles) {
     }
   }
 
-  function hello() {
+  (function () {
     var url = config.masterServer + "/hello/", body;
     config.media.song_count = numberOfFiles;
     config.media.helloInterval = config.helloInterval;
@@ -31,12 +29,5 @@ module.exports = function (numberOfFiles) {
       {url: url, timeout: 1500, body: body},
       onResponse
     );
-
-    clearTimeout(helloTimeout);
-    helloTimeout = setTimeout(hello, config.helloInterval * 1000);
-  }
-
-  (function () {
-    hello();
-  }());
-}
+  })();
+};

@@ -3,7 +3,7 @@
 
 var app = {
   http: require('http'),
-  PORT: require('./config.js').port,
+  config: require('./config.js'),
   url: require('url'),
   library: require('../library/library.js'),
   hello: require('./master_hello.js'),
@@ -25,12 +25,25 @@ var app = {
   },
   run: function () {
     var that = this;
+    var reloadMediaTimer = null;
 
-    this.library.loadLibrary(function (filesFound) {
-      console.log(filesFound + ' files found in library');
-      console.log('listening on: ' + that.PORT);
-      that.hello(filesFound);
+    function reloadMedia(firstSuccessCb) {
+      that.library.loadLibrary(function (filesFound) {
+        console.log(filesFound + ' files found in library');
+        that.hello(filesFound);
+        if (firstSuccessCb != null) {
+          firstSuccessCb();
+          firstSuccessCb = null;
+        }
+      });
+      if (reloadMediaTimer == null) {
+        reloadMediaTimer = setInterval(
+            reloadMedia.bind(this, null),
+            that.config.reloadLibraryIntervalS * 1e3);
+      }
+    }
 
+    function startServer() {
       that.http.createServer(function (req, res) {
         var
           parsedUrl = that.url.parse(req.url, true),
@@ -40,12 +53,6 @@ var app = {
 
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/plain');
-
-        /*
-        console.log('method: ' + method);
-        console.log('params: ' + JSON.stringify(params));
-        console.log('');
-        */
 
         function sendError(msg) {
           var o = { error: msg };
@@ -62,8 +69,14 @@ var app = {
         if (i === that.handlers.length) {
           sendError("unknown method");
         }
-      }).listen(that.PORT);
-    });
+      }).listen(that.config.port);
+      console.log('listening on: ' + that.config.port);
+    }
+
+    // Reload library.json and start server.
+    // Note that this function will reload the library file repeatedly, but it
+    // will invoke the callback only once.
+    reloadMedia(startServer);
   }
 };
 

@@ -30,6 +30,7 @@ function findFiles(node) {
 
 exports.loadLibrary = function (callback) {
   exports.filesById = {};
+  exports.tree = {};
 
   fs.exists(libPath, function (exists) {
     if (exists) {
