@@ -29,9 +29,6 @@ function findFiles(node) {
 }
 
 exports.loadLibrary = function (callback) {
-  exports.filesById = {};
-  exports.tree = {};
-
   fs.exists(libPath, function (exists) {
     if (exists) {
       fs.readFile(libPath, { encoding: 'utf8' }, function (err, data) {
@@ -54,6 +51,8 @@ exports.loadLibrary = function (callback) {
   });
 };
 
+exports.filesById = {};
+exports.tree = {};
 exports.saveLibrary = function (newLibrary, callback) {
   fs.writeFile(libPath, JSON.stringify(newLibrary, null, "  "), callback);
 };

@@ -236,9 +236,26 @@ exports.MediaGateway = function () {
       return done(null, "room name should start with #.");
     }
 
-    function filterBadSongs(playlist) {
+    // remove extension from a file.
+    function guessTitleFromName(filename) {
+      return filename.replace(/\.[^/.]+$/, "");
+    }
+
+    function filterBadItems(playlist) {
       return playlist.filter(function (o) {
-        return o.artist && o.album && o.title;
+        return o.name && o.id && o.server && o.duration;
+      });
+    }
+
+    // If song doesn't have ID3 tag name, fill it from a file name.
+    function sanitizeSongs(playlist) {
+      return playlist.map(function (item) {
+        item.artist = item.artist || '';
+        item.album = item.album || '';
+        if (!item.title) {
+          item.title = guessTitleFromName(item.name) || '';
+        }
+        return item;
       });
     }
 
@@ -246,7 +263,7 @@ exports.MediaGateway = function () {
       if (expanded.length === 0) {
         return done(null, "playlist should not be empty");
       }
-      done(filterBadSongs(expanded));
+      done(sanitizeSongs(filterBadItems(expanded)));
     }
 
     function partialDone(partialExpanded, server, err) {

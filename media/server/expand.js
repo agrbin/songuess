@@ -36,7 +36,8 @@ module.exports = {
             album: node.album,
             title: node.title,
             duration: node.duration,
-            id: node.inode
+            id: node.inode,
+            name: node.name
           });
         }
       }
