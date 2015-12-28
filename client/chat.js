@@ -397,7 +397,7 @@ function Chat(wsock, user, media, player, onFatal) {
   wsock.onMessage("row", ui.displayRow);
 
   wsock.onMessage("fixed_last", function (data) {
-    // if lastSong is still the song that is being fixed, fix the lstSong as
+    // if lastSong is still the song that is being fixed, fix the lastSong as
     // well.
     if (data.fixed_item.media == roomState.lastSong.media &&
         data.fixed_item.id == roomState.lastSong.id) {
