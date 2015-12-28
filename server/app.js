@@ -27,7 +27,7 @@ function onHttpRequest(req, res) {
 
 function onVerified(sock, user) {
   var syncer = new Syncer(sock, function (ping) {
-    var wsock = new SockWrapper(sock, ping);
+    var wsock = new SockWrapper(sock, ping, user);
     user.ping = ping;
     chat.connect(wsock, user);
     media.serve(wsock, user);

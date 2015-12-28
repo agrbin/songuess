@@ -5,7 +5,7 @@ var ws = require('ws'),
   config = require('./config.js').socket,
   clock = require('./clock.js');
 
-exports.SockWrapper = function (sock, syncRtt) {
+exports.SockWrapper = function (sock, syncRtt, user) {
 
   var that = this,
     messageCallbacks = {},
@@ -27,12 +27,15 @@ exports.SockWrapper = function (sock, syncRtt) {
   function networkProblem(what) {
     if (!config.ignoreNetworkProblems && sleepyCallback) {
       sleepyCallback(what);
+    } else {
+      console.log("network problem ignored: " + what + " for user: ", user);
     }
   }
 
   function clockDifference(delta) {
     if (delta > 1000 && delta > 3 * syncRtt) {
-      networkProblem("network unstable. your clock is off.");
+      networkProblem("network unstable. your clock is off. delta: ",
+          delta, " syncRtt :", syncRtt);
     }
   }
 
@@ -48,7 +51,8 @@ exports.SockWrapper = function (sock, syncRtt) {
   // can have a impact in game.
   function ping() {
     if (pingTimeout !== null) {
-      return networkProblem("connection lost. dind't answer on ping.");
+      return networkProblem(
+          "connection lost. dind't answer on previous ping.");
     }
     that.sendType('non-patient-firewall', null, stopwatch.reset);
     pingTimeout = setTimeout(ping, config.pingInterval * 1000);
@@ -56,7 +60,8 @@ exports.SockWrapper = function (sock, syncRtt) {
       var rtt = stopwatch.get();
       pingTimeout = null;
       if (Math.abs(rtt - syncRtt) > 3000) {
-        networkProblem("your ping changed a lot.");
+        networkProblem("your ping changed a lot. rtt: ",
+          rtt, " syncRtt: ", syncRtt);
       }
       clockDifference(clock.clock() - syncRtt / 2 - data.when);
     });
