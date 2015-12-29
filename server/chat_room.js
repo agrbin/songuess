@@ -289,6 +289,18 @@ exports.ChatRoom = function (desc, chat, proxy) {
           "You don't have permissions for fixing song on this media server.",
           client);
     } else {
+      // Fix the reference to the lastSong in the room state.
+      // This fix was added because of the following bug:
+      // song plays
+      // > /next
+      // Correct answer was A.
+      // > /ch title  B
+      // > /info (shows that last answer was B)
+      // Get ready!
+      // > /info (shows that last answer was A) <-- bug!
+      if (roomState.lastSong) {
+        roomState.lastSong = fixed_id3_tags.getFixedItem(roomState.lastSong);
+      }
       that.broadcast('fixed_last',
           {who: client.id(), fixed_item: data.fixed_item});
     }
