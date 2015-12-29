@@ -32,14 +32,18 @@ exports.loadLibrary = function (callback) {
   fs.exists(libPath, function (exists) {
     if (exists) {
       fs.readFile(libPath, { encoding: 'utf8' }, function (err, data) {
-        var
-          lib = JSON.parse(data),
-          numFiles = findFiles(lib);
+        try {
+          var
+            lib = JSON.parse(data),
+            numFiles = findFiles(lib);
 
-        exports.tree = lib;
+          exports.tree = lib;
 
-        if (callback) {
-          callback(numFiles);
+          if (callback) {
+            callback(numFiles);
+          }
+        } catch (err) {
+          console.log("Couldn't read library file: ", err);
         }
       });
     } else {
