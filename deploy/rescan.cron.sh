@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ ! -d "$SONGUESS_MEDIA_DIR" ]; then
-  set $SONGUESS_MEDIA_DIR
+  echo set SONGUESS_MEDIA_DIR prior to calling this script
   exit 1
 fi
 
