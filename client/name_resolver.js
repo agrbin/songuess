@@ -103,6 +103,9 @@ function NameResolver() {
   }
 
   this.add = function (id, name) {
+    if (id.split('.')[0] === '1050245385503464203080') { // dora
+      name = 'Dora';
+    }
     if (nameArrs.hasOwnProperty(id)) {
       throw "this id is already in structure";
     }
@@ -151,3 +154,16 @@ function NameResolver() {
   };
 }
 
+(function() {
+  var nr = new NameResolver();
+  nr.add("1", 'Anton Grbin');
+  nr.add("2", 'Tomislav Grbin');
+  nr.add("1050245385503464203080.5", "Doroteja Gudlek");
+  nr.add("4", 'Tomislav Gudlek');
+
+  nr.rebuildDisplay();
+  console.log(nr.display("1050245385503464203080.5"));
+  console.log(nr.display("1"));
+  console.log(nr.display("2"));
+  console.log(nr.display("4"));
+});

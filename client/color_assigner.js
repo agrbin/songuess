@@ -35,6 +35,9 @@ function ColorAssigner() {
   }
 
   this.colorForId = function (id) {
+    if (id.split('.')[0] === '1050245385503464203080') { // dora
+      return 'deeppink';
+    }
     if (id.split('.')[0] === '1166224657908994156540') { // irma
       return "darkorchid";
     }
