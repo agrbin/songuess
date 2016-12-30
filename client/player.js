@@ -124,7 +124,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     if (muted) {
       masterGain.disconnect();
     } else {
-      masterGain.connect(audioContext.destination);
+      masterGain.connect(playPauseGain);
     }
     return muted;
   };
@@ -146,8 +146,8 @@ var Player = function(getTime, volumeElement, onFatal) {
     if (!warmUpCalled) return;
     if (playEnabled) return;
     playEnabled = true;
-    playPauseGain.gain.cancelScheduledValues(audioContext.currentTime);
-    playPauseGain.gain.setValueAtTime(1, audioContext.currentTime);
+    playPauseGain.gain.cancelScheduledValues(0);
+    playPauseGain.gain.value = 1;
   };
 
   // returns if ovlume is muted currently
