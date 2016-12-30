@@ -110,7 +110,7 @@ module.exports = function (options) {
       str = str.replace(trimParentheses, '');
       str = str.replace(trimSquare, '');
     }
-    str = str.replace(nonAlphanum, '');
+    str = str.replace(nonAlphanum, ' ');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
     for (i = 0; i < replacePairs.length; ++i) {
