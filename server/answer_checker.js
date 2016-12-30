@@ -92,7 +92,13 @@ module.exports = function (options) {
   }
 
   // this function returns a string.
-  function normalize(str) {
+  //
+  // If remove_parenthesis_content is true:
+  //  'anton (test)' => 'anton'
+  //
+  // If remove_parenthesis_content is false:
+  // 'anton (test)' => 'anton test'
+  function normalize(str, remove_parenthesis_content) {
     var i;
     if (str === null || str === undefined) {
       return "null";
@@ -100,8 +106,10 @@ module.exports = function (options) {
     str = str.toString();
     str = str.toLowerCase();
     str = str.replace(trimHashtag, '');
-    str = str.replace(trimParentheses, '');
-    str = str.replace(trimSquare, '');
+    if (remove_parenthesis_content) {
+      str = str.replace(trimParentheses, '');
+      str = str.replace(trimSquare, '');
+    }
     str = str.replace(nonAlphanum, '');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
@@ -112,8 +120,9 @@ module.exports = function (options) {
     return str;
   }
 
-  function checkTitle(correct_title, answer) {
-    var t1 = normalize(answer), t2 = normalize(correct_title);
+  function checkTitleImpl(correct_title, answer, remove_parenthesis_content) {
+    var t1 = normalize(answer, remove_parenthesis_content);
+    var t2 = normalize(correct_title, remove_parenthesis_content);
     var allowed_mistakes = Math.floor(t1.length * MISTAKES_BY_CHAR);
 
     if (t1 === t2) return true;
@@ -123,12 +132,22 @@ module.exports = function (options) {
     return true;
   }
 
+  function checkTitle(correct_title, answer) {
+    // TODO(ganton): optimization idea, i can omit one call to this function if
+    // neither of the strings contains '()[]'.
+    return checkTitleImpl(correct_title, answer, true)
+      || checkTitleImpl(correct_title, answer, false);
+  }
+
+  // playlistItem is dictionary with 'title', 'title2', ... as a member.
+  // answer is a string.
   this.checkAnswer = function (playlistItem, answer) {
     if (playlistItem === undefined) {
       return false;
     }
     var key;
     for (key in playlistItem) {
+      // If key has 'title' as a prefix.
       if (key.substr(0, 5) === "title") {
         if (checkTitle(playlistItem[key], answer)) {
           return true;

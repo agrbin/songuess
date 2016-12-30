@@ -33,9 +33,10 @@ var validPairs = [
   ['le chene liege', 'le chêne liège'],
   ['this is my answer #playon', 'this is my answer'],
   ['this is #playon my answer', 'this is my answer'],
+  ['Don Prle (iza nevidjenog)', 'don prle iza nevidjenog'],
+  ['i cant get no satisfaction','(I Can\'t Get No) Satisfaction'],
+  ['nice dream', '(Nice dream)'],
   // ['2+2=5', '2 + 2 = 5'],
-  // ['i cant get no satisfaction','(I Can\'t Get No) Satisfaction'],
-  // ['nice dream', '(Nice dream)'],
 ];
 
 var invalidPairs = [
