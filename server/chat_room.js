@@ -319,7 +319,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
       return info("You are honored.. gee, well done!", client);
     }
     if (client.id() !== roomState.lastScore) {
-      return info("You didn't made the last score.", client);
+      return info("You didn't make the last score.", client);
     }
     client.local('score', client.local('score') - 1);
     target.local('score', target.local('score') + 1);
