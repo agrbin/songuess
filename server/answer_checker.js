@@ -3,7 +3,7 @@
 
 module.exports = function (options) {
   var
-    MISTAKES_BY_CHAR = 1/6, // on 6 chars you may mistype one.
+    MISTAKES_BY_CHAR = 1.0/6, // on 6 chars you may mistype one.
     nonAlphanum = /[^a-zA-Z0-9šđčćžáàâäãæéèêëíîïóôöœúùûüñç ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
@@ -135,8 +135,25 @@ module.exports = function (options) {
   function checkTitle(correct_title, answer) {
     // TODO(ganton): optimization idea, i can omit one call to this function if
     // neither of the strings contains '()[]'.
-    return checkTitleImpl(correct_title, answer, true)
-      || checkTitleImpl(correct_title, answer, false);
+    return checkTitleImpl(correct_title, answer, true) ||
+      checkTitleImpl(correct_title, answer, false);
+  }
+
+  function consumePrefixOrFalse(big, small) {
+    if (big.substr(0, small.length).toLowerCase() === small.toLowerCase()) {
+      return big.substr(small.length);
+    }
+    return false;
+  }
+
+  function maybeStripArtist(title, artist) {
+    if (!artist) {
+      return title;
+    }
+    return consumePrefixOrFalse(title, artist + " -") ||
+      consumePrefixOrFalse(title, artist + " _") ||
+      consumePrefixOrFalse(title, artist + " /") ||
+      title;
   }
 
   // playlistItem is dictionary with 'title', 'title2', ... as a member.
@@ -145,11 +162,12 @@ module.exports = function (options) {
     if (playlistItem === undefined) {
       return false;
     }
-    var key;
+    var key, artist = playlistItem["artist"];
+    // figure out if there is artis
     for (key in playlistItem) {
       // If key has 'title' as a prefix.
       if (key.substr(0, 5) === "title") {
-        if (checkTitle(playlistItem[key], answer)) {
+        if (checkTitle(maybeStripArtist(playlistItem[key], artist), answer)) {
           return true;
         }
       }

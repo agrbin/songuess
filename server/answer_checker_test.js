@@ -50,6 +50,11 @@ var invalidPairs = [
 var validPairsFullItems = [
   [{title: 'nevalja', title2: 'valja'}, 'valja'],
   [{title: 'nevalja', title2: 'stvarnonevalja', title3: 'valja'}, 'valja'],
+  [{title: 'BIJELO DUGME - pingvin', artist: "bijelo dugme"}, 'pingvin'],
+  [{title: 'BIJELO DUGME - pingvin', artist: "Bijelo Dugme"}, 'pingvin'],
+  [{title: 'BIJELO DUGME - pingvin', artist: "BIJELO DUGME"}, 'pingvin'],
+  [{title: 'BIJELO DUGME / pingvin', artist: "BIJELO DUGME"}, 'pingvin'],
+  [{title: 'BIJELO DUGME _ pingvin', artist: "BIJELO DUGME"}, 'pingvin'],
 ];
 
 var invalidPairsFullItems = [
