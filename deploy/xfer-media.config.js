@@ -15,6 +15,8 @@ module.exports = function (exports) {
     ['allow_fix', 'email', 'doroteja.gudlek@gmail.com'],
     ['allow_fix', 'email', 'tomislav.gudlek@gmail.com'],
     ['allow_fix', 'email', 'tgudlek@gmail.com'],
+    ['allow', 'email', 'brahle@gmail.com'],
+    ['allow_fix', 'email', 'brahle@gmail.com'],
   ];
   exports.media.access_point.endpoint = 'http://songuess.xfer.hr:52067';
 };
