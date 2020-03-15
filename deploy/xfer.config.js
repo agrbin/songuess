@@ -1,6 +1,6 @@
 module.exports = function(exports) {
 
-  exports.client.masterServer = "ws://songuess.xfer.hr:52066/";
+  exports.client.masterServer = "wss://songuess.xfer.hr/ws/";
   exports.client.cookieStorage = "DummyStorage";
 
   exports.server.indexHtml = "index.min.html";
@@ -10,10 +10,12 @@ module.exports = function(exports) {
 
   exports.streamer.sendAhead = 12;
   exports.socket.ignoreNetworkProblems = true;
+  exports.socket.pingInterval = 15;
 
   exports.media.trustServers = {
     // it seems that media server on vseedbox talks with master server using this IP address.
-    '::ffff:10.0.0.1' : true
+    '::ffff:10.0.0.1' : true,
+    '10.0.0.48' : true
   };
 
   exports.media.servers = {};
@@ -22,8 +24,8 @@ module.exports = function(exports) {
   exports.proxy.throttleStreamOff = 3;
   exports.proxy.throttleStreamAmp = 3;
   exports.proxy.urlSuffix = '.jpg';
-  exports.proxy.primaryHttpRoot = 'http://songuess-cf-cache.xfer.hr';
-  exports.proxy.secondaryHttpRoot = 'http://songuess.xfer.hr';
+  exports.proxy.primaryHttpRoot = 'https://songuess-cf-cache.xfer.hr';
+  exports.proxy.secondaryHttpRoot = 'https://songuess.xfer.hr';
 
   exports.fixed_tags.storageFileName = '/srv/songuess/fixed_tags.json';
 };
