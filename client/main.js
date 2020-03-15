@@ -19,7 +19,6 @@ function initiateEverything(onReady, isOAuthReturn) {
       return fatalError("config.js is missing");
     }
     storage = new window[songuess.cookieStorage](fatalError);
-    player = new Player(myClock.clock, null, fatalError);
     auth = new Auth(storage, onAuthReady, isOAuthReturn, fatalError);
     if ('Notification' in window) {
       document.addEventListener('keyup', function requestNotifPermission(e){
@@ -36,13 +35,18 @@ function initiateEverything(onReady, isOAuthReturn) {
 
   function onSynced() {
     console.log("synced.");
-    try {
-      // this will start the app.
-      onReady(socket, user, player, fatalError);
-    } catch (err) {
-      fatalError(err);
-      throw err;
-    }
+    $(".warm_up_message").text('Network ready! Press any key to continue...');
+    document.addEventListener('keydown', function warmUpAudio(e){
+      document.removeEventListener('keydown', warmUpAudio);
+      e.preventDefault();
+      player = new Player(myClock.clock, null, fatalError);
+      try {
+        onReady(socket, user, player, fatalError);
+      } catch (err) {
+        fatalError(err);
+        throw err;
+      }
+    });
   }
 
   function onVerified(verified_user) {
