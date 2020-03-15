@@ -146,10 +146,15 @@ module.exports = function (options) {
     return false;
   }
 
+  // Always returns a string.
   function maybeStripArtist(title, artist) {
     if (!artist) {
       return title;
     }
+    artist = String(artist)
+    // The song '22' by Taylor Swift for some reason had the Number type as a
+    // title..
+    title = String(title)
     return consumePrefixOrFalse(title, artist + " -") ||
       consumePrefixOrFalse(title, artist + " _") ||
       consumePrefixOrFalse(title, artist + " /") ||
