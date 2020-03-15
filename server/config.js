@@ -102,7 +102,8 @@ exports.auth = {
   profileURL  :  'https://www.googleapis.com/oauth2/v1/userinfo',
   scope       :  [
     'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/userinfo.email'
+    'https://www.googleapis.com/auth/userinfo.email',
+    'openid'
   ]
 };
 
