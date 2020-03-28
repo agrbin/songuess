@@ -36,8 +36,12 @@ function initiateEverything(onReady, isOAuthReturn) {
   function onSynced() {
     console.log("synced.");
     $(".warm_up_message").text('Network ready! Press any key to continue...');
-    document.addEventListener('keydown', function warmUpAudio(e){
+
+    function warmUpAudio(e) {
       document.removeEventListener('keydown', warmUpAudio);
+      document.removeEventListener('touchstart', warmUpAudio);
+      document.removeEventListener('mousedown', warmUpAudio);
+
       e.preventDefault();
       player = new Player(myClock.clock, null, fatalError);
       try {
@@ -46,7 +50,11 @@ function initiateEverything(onReady, isOAuthReturn) {
         fatalError(err);
         throw err;
       }
-    });
+    };
+
+    document.addEventListener('keydown', warmUpAudio);
+    document.addEventListener('touchstart', warmUpAudio);
+    document.addEventListener('mousedown', warmUpAudio);
   }
 
   function onVerified(verified_user) {
