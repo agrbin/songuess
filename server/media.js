@@ -236,6 +236,10 @@ exports.MediaGateway = function () {
       return done(null, "room name should start with #.");
     }
 
+    if (query.room.isHostRoom) {
+      return done([]);
+    }
+
     // remove extension from a file.
     function guessTitleFromName(filename) {
       return filename.replace(/\.[^/.]+$/, "");

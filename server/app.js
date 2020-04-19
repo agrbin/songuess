@@ -36,16 +36,38 @@ function onVerified(sock, user) {
 
 server.on('connection', function (sock) {
   sock.onmessage = function (message) {
-    verifyToken(message, function (user, err) {
-      // it looks like reason should not be too long.
-      if (err) {
-        sock.close(1000, err.toString().substr(0, 100));
+    const parsedMessage = JSON.parse(message.data);
+    if (parsedMessage.cmd == 'attachToRoom') {
+      if (!chat.roomNameExists(parsedMessage.roomName)) {
+        sock.send(JSON.stringify({
+          cmd: 'attachToRoom',
+          message: 'room doesn\'t exist'
+        })); 
+      } else if (!chat.getRoomByName(parsedMessage.roomName).desc.isHostRoom) {
+        sock.send(JSON.stringify({
+          cmd: 'attachToRoom',
+          message: 'room is not a Host Room'
+        })); 
       } else {
-        sock.send(JSON.stringify(user), function () {
-          onVerified(sock, user);
-        });
+        console.log('room exists and is a host room');
+        chat.getRoomByName(parsedMessage.roomName).attachHostSocket(sock);
+        sock.send(JSON.stringify({
+          cmd: 'attachToRoom',
+          status: 'ok'
+        })); 
       }
-    });
+    } else {
+      verifyToken(message, function (user, err) {
+        // it looks like reason should not be too long.
+        if (err) {
+          sock.close(1000, err.toString().substr(0, 100));
+        } else {
+          sock.send(JSON.stringify(user), function () {
+            onVerified(sock, user);
+          });
+        }
+      });
+    }
   };
 });
 

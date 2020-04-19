@@ -12,7 +12,8 @@ function MediaUI(media) {
       media.handleNewRoom({
         name : $("#name").val(),
         desc : $("#desc").val(),
-        streamFromMiddle : $("#stream_from_middle").prop('checked')
+        streamFromMiddle : $("#stream_from_middle").prop('checked'),
+        isHostRoom: $("#create_host_room").prop('checked')
       });
       return false;
     });

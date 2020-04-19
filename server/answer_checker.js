@@ -41,7 +41,7 @@ module.exports = function (options) {
       ['ñ', 'n'],
     ];
 
-  // O(n^2) hopefuly.
+  // O(n^2) hopefully.
   function editDistance(a, b) {
     var i, j, matrix = [];
     if(a.length == 0) return b.length;

@@ -9,7 +9,8 @@ var
   Streamer = require('./streamer.js').Streamer,
   AnswerChecker = require('./answer_checker.js'),
   PlaylistIterator = require('./shuffle_playlist_iterator.js'),
-  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)();
+  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)(),
+  HostSocket = require('./host_socket.js').HostSocket;
 
 exports.ChatRoom = function (desc, chat, proxy) {
 
@@ -22,9 +23,11 @@ exports.ChatRoom = function (desc, chat, proxy) {
     answerChecker,
     streamer,
     fixed_id3_tags = chat.media.getFixedId3Tags(),
+    currentItem = null,
+    hostSocket = null,
 
     // "dead", "playing", "playon", "after", "suspense"
-    // if state is playing, when did the song started?
+    // if state is playing, when did the song start?
     // if state is suspense, when will the next song start?
     // if state is playing or playon, how many and who voted next?
     roomState = {
@@ -60,7 +63,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
           length : desc.playlist.length,
           content : packPlaylist()
         },
-        streamFromMiddle: desc.streamFromMiddle
+        streamFromMiddle: desc.streamFromMiddle,
+        isHostRoom: desc.isHostRoom
       },
       users : {},
       state : roomState
@@ -73,12 +77,42 @@ exports.ChatRoom = function (desc, chat, proxy) {
     return sol;
   }
 
+  function playNextForHostRoom() {
+    if (hostSocket == null) {
+      return;
+    }
+
+    roomState.state = "after";
+    roomState.songStart = null;
+    
+    hostSocket.playNext(function(err, nextSongItem) {
+      var startTime = clock.clock() + 8000;
+
+      currentItem = nextSongItem;
+
+      setTimeout(function() {
+        roomState.state = "suspense";
+        roomState.songStart = startTime;
+        that.broadcast('next_song_announce', roomState);
+      }, Math.max(0, startTime - clock.clock() - 6000));
+
+      setTimeout(function() {
+        roomState.state = "playing";
+        roomState.nextVotes = 0;
+        roomState.whoNextVotes = {};
+      }, Math.max(0, startTime - clock.clock()));
+    });
+  }
+
   function playNext() {
-    if (!desc.playlist.length) {
+    if (desc.isHostRoom) {
+      playNextForHostRoom();
+      return;
+    } else if (!desc.playlist.length) {
       return;
     }
     roomState.state = "after";
-    roomState.lastSong = playlistIterator.currentItem();
+    roomState.lastSong = currentItem;
     roomState.songStart = null;
 
     streamer.play(playlistIterator.nextItem(), function (startTime, err) {
@@ -87,6 +121,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
         info("Tried to play next with error (retry in 5s): " + err);
         setTimeout(playNext, 5000);
       } else {
+        currentItem = playlistIterator.currentItem();
+
         setTimeout(function() {
           roomState.state = "suspense";
           roomState.songStart = startTime;
@@ -184,7 +220,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (roomState.state !== "playing") {
       return;
     }
-    if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
+    if (answerChecker.checkAnswer(currentItem, data.what)) {
       var next_state = "after";
       grantScore(client);
       if (data.what.indexOf('#playon') != -1) {
@@ -192,7 +228,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
       }
       that.broadcast('correct_answer', {
         who: client.id(),
-        answer: playlistIterator.currentItem(),
+        answer: currentItem,
         when : data.when,
         state : next_state
       });
@@ -223,7 +259,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (roomState.nextVotes >= 1 + Math.floor(numberOfClients / 2)) {
       that.broadcast('called_next', {
         who: client.id(),
-        answer: playlistIterator.currentItem(),
+        answer: currentItem,
         when : data.when,
         state : roomState.state
       });
@@ -329,7 +365,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   function songEndedHandler() {
     that.broadcast('song_ended', {
-      answer : playlistIterator.currentItem(),
+      answer : currentItem,
       when : clock.clock(),
       state : roomState.state
     });
@@ -434,7 +470,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
       roomState.state = "dead";
       roomState.songStart = null;
       roomState.lastSong = null;
-      streamer.stop();
+      if (streamer !== null) {
+        streamer.stop();
+      }
     }
     this.broadcast('old_client', [client.id(), reason]);
   };
@@ -451,12 +489,26 @@ exports.ChatRoom = function (desc, chat, proxy) {
     return sol;
   };
 
+  this.attachHostSocket = function(socket) {
+    hostSocket = new HostSocket(socket, that, playNext, songEndedHandler);
+  };
+
+  this.detachHostSocket = function() {
+    hostSocket = null;
+  };
+
   (function () {
-    playlistIterator = new PlaylistIterator(
-      desc.playlist,
-      fixed_id3_tags);
     answerChecker = new AnswerChecker({});
-    streamer = new Streamer(chat.media, chunkHandler,
-      songEndedHandler, desc.streamFromMiddle);
+
+    if (desc.isHostRoom) {
+      playlistIterator = null;
+      streamer = null;
+    } else {
+      playlistIterator = new PlaylistIterator(
+        desc.playlist,
+        fixed_id3_tags);
+      streamer = new Streamer(chat.media, chunkHandler,
+        songEndedHandler, desc.streamFromMiddle);
+    }
   }());
 };
