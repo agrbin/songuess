@@ -20,3 +20,5 @@ media/server/config.override.js
 # definition in server/config.js.
 client/config.js
 
+# npm install artefact
+package-lock.json
