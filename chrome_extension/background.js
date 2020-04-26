@@ -8,54 +8,28 @@ function initSocket() {
   webSocket = new WebSocket(WS_URL);
 
   webSocket.onmessage = function (event) {
-    let message = JSON.parse(event.data); 
+    const message = JSON.parse(event.data); 
     console.log('got ws message: ', message);
 
-    if (message.cmd == 'attachToRoom') {
-      if (message.status == 'ok') {
+    const messageType = messages.getType(message);
+    if (messageType == messages.type.attachToRoom) {
+      if (messages.getStatus(message) == messages.status.ok) {
         startStreaming();
       } else {
-        chrome.runtime.sendMessage({
-          cmd: 'errorAttaching',
-          message: message.message
-        });
+        chrome.runtime.sendMessage(message);
       }
-    } else if (message.cmd == 'play') {
-      sendToAttachedTab({cmd: 'play'}, function (response) {
-        if (response.status != 'ok') {
-          sendToWebSocket({cmd: 'play', status: response.status});
-        }
-      });
-    } else if (message.cmd == 'pause') {
-      sendToAttachedTab({cmd: 'pause'}, function (response) {
-        if (response.status != 'ok') {
-          sendToWebSocket({cmd: 'pause', status: response.status});
-        }
-      });
-    } else if (message.cmd == 'next') {
-      sendToAttachedTab({cmd: 'next'}, function (response) {
-        if (response.status != 'ok') {
-          sendToWebSocket({cmd: 'next', status: response.status});
-        }
-      });
-    } else if (message.cmd == 'getTitle') {
-      sendToAttachedTab({cmd: 'getTitle'}, function (response) {
-        console.log('got getTitle response: ', response);
-        if (response.status != 'ok') {
-          sendToWebSocket({cmd: 'getTitle', status: response.status});
-        } else {
-          sendToWebSocket({cmd: 'getTitle', title: response.title, status: 'ok'});
-        }
-      });
-    }
+    } else if (messageType == messages.type.moveToNextSong ||
+               messageType == messages.type.startPlaying) {
+      sendToAttachedTab(message);
+    } 
   };
 
   webSocket.onerror = function (event) {
     console.log('ws error connecting: ', event);
-    chrome.runtime.sendMessage({
-      cmd: 'errorAttaching',
-      message: 'Can\'t connect to web socket'
-    });
+    chrome.runtime.sendMessage(messages.newError(
+      messages.type.attachToRoom,
+      messages.status.socketError
+    ));
   };
 
   webSocket.onclose = function (event) {
@@ -64,11 +38,11 @@ function initSocket() {
   }
 }
 
-function sendToAttachedTab(o, handleResponse) {
+function sendToAttachedTab(o) {
   if (attachedInfo === null) {
     console.log('tab not attached, failed to send: ', o);
   } else {
-    chrome.tabs.sendMessage(attachedInfo.tabId, o, handleResponse);
+    chrome.tabs.sendMessage(attachedInfo.tabId, o);
   }
 }
 
@@ -94,8 +68,9 @@ function startStreaming() {
         // stream = 
         // recorder =
       };
-      chrome.runtime.sendMessage({cmd: 'startedStreaming'});
-      sendToWebSocket({cmd: 'roomAttached'});
+      const message = messages.newMessage(messages.type.startedStreaming);
+      chrome.runtime.sendMessage(message);
+      sendToWebSocket(message);
     });
 
 //    audioStream = stream;
@@ -121,26 +96,29 @@ function stopStreaming() {
 }
 
 function attachToRoom(roomName) {
-  sendToWebSocket({
-    cmd: 'attachToRoom',
-    roomName: roomName
-  });
+  sendToWebSocket(messages.newMessage(
+    messages.type.attachToRoom,
+    {roomName: roomName}
+  ));
 }
 
 // Message handling.
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  console.log('got message: ', request);
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  console.log('got message: ', message);
 
-  if (request.cmd == 'attachToRoom') {
+  const messageType = messages.getType(message);
+
+  if (messageType == messages.type.attachToRoom) {
+    const roomName = messages.getData(message).roomName;
     if (webSocket === null) {
       initSocket();
       webSocket.onopen = function() {
-        attachToRoom(request.roomName);
+        attachToRoom(roomName);
       };
     } else {
-      attachToRoom(request.roomName);
+      attachToRoom(roomName);
     }
-  } else if (request.cmd == 'detach') {
+  } else if (messageType == messages.type.detachRoom) {
     if (attachedInfo === null) {
       console.log('unexpected state, got detach while not streaming');
     } else {
@@ -148,10 +126,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       webSocket.close();
       webSocket = null;
     }
-  } else if (request.cmd == 'isAttached') {
+  } else if (messageType == messages.type.isAttached) {
     sendResponse(attachedInfo !== null);
-  } else if (request.cmd == 'clickDone') {
-    sendToWebSocket({cmd: request.triggeringAction, status: 'ok'});    
+  } else if (messageType == messages.type.moveToNextSong ||
+             messageType == messages.type.startPlaying) {
+    sendToWebSocket(message);
   }
 });
 

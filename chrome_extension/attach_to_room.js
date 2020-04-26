@@ -14,14 +14,15 @@ function showMessage(message) {
 }
 
 $(function() {
-  chrome.runtime.sendMessage({cmd: 'isAttached'}, function(response) {
-    if (response == false) {
-      $('#attach_ui').show();
-      $('#detach_ui').hide();
-    } else {
-      $('#detach_ui').show();
-      $('#attach_ui').hide();
-    }
+  chrome.runtime.sendMessage(messages.newMessage(messages.type.isAttached),
+    function(response) {
+      if (response == false) {
+        $('#attach_ui').show();
+        $('#detach_ui').hide();
+      } else {
+        $('#detach_ui').show();
+        $('#attach_ui').hide();
+      }
   });
 
   $('#attach_button').click(function() {
@@ -30,16 +31,20 @@ $(function() {
     const rawName = $('#room_name').val();
     const name = rawName.startsWith('#')? rawName: ('#' + rawName);
 
-    chrome.runtime.sendMessage({
-      cmd: 'attachToRoom',
-      roomName: name
-    });
+    // TODO ask if the content script is ready.
+    // the content script could check if the expected buttons are available.
+    // hm, but what if multiple content scripts (iframes) send a reply?
+
+    chrome.runtime.sendMessage(messages.newMessage(
+      messages.type.attachToRoom,
+      {roomName: name}
+    ));
   });
 
   $('#detach_button').click(function() {
     $('#attach_ui').show();
     $('#detach_ui').hide();
-    chrome.runtime.sendMessage({cmd: 'detach'});
+    chrome.runtime.sendMessage(messages.newMessage(messages.type.detachRoom));
   });
 });
 
@@ -49,14 +54,20 @@ $(document).on('keypress', 'input', function(e) {
   }
 });
 
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-  console.log('got message: ', request);
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+  console.log('got message: ', message);
 
-  if (request.cmd == 'startedStreaming') {
+  const messageType = messages.getType(message);
+
+  if (messageType == messages.type.startedStreaming) {
     showMessage('');
     $('#detach_ui').show();
     $('#attach_ui').hide();
-  } else if (request.cmd == 'errorAttaching') {
-    showMessage(request.message);
+  } else if (messageType == messages.type.attachToRoom) {
+    // OK status can be ignored here, we're waiting for 'startedStreaming'
+    // message in that case.
+    if (messages.getStatus(message) != messages.status.ok) {
+      showMessage(message.data);
+    }
   }
 });

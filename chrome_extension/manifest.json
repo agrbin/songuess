@@ -16,7 +16,7 @@
     {
       "matches": ["https://play.google.com/music/*"],
       "all_frames": true,
-      "js": ["content_script.js"]
+      "js": ["messages.js", "content_script.js"]
     }
   ],
 
@@ -25,7 +25,7 @@
   },
 
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["messages.js", "background.js"],
     "persistent": true
   }
 }

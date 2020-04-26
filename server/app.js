@@ -36,24 +36,27 @@ function onVerified(sock, user) {
 
 server.on('connection', function (sock) {
   sock.onmessage = function (message) {
-    const parsedMessage = JSON.parse(message.data);
-    if (parsedMessage.cmd == 'attachToRoom') {
-      if (!chat.roomNameExists(parsedMessage.roomName)) {
+    var parsedMessage = JSON.parse(message.data);
+    if (parsedMessage.type == 'attachToRoom') {
+      var roomName = parsedMessage.data.roomName; 
+      if (!chat.roomNameExists(roomName)) {
         sock.send(JSON.stringify({
-          cmd: 'attachToRoom',
-          message: 'room doesn\'t exist'
+          type: 'attachToRoom',
+          status: 'SERVER_ERROR',
+          data: 'room doesn\'t exist'
         })); 
-      } else if (!chat.getRoomByName(parsedMessage.roomName).desc.isHostRoom) {
+      } else if (!chat.getRoomByName(roomName).desc.isHostRoom) {
         sock.send(JSON.stringify({
-          cmd: 'attachToRoom',
-          message: 'room is not a Host Room'
+          type: 'attachToRoom',
+          status: 'SERVER_ERROR',
+          data: 'room is not a Host Room'
         })); 
       } else {
         console.log('room exists and is a host room');
-        chat.getRoomByName(parsedMessage.roomName).attachHostSocket(sock);
+        chat.getRoomByName(roomName).attachHostSocket(sock);
         sock.send(JSON.stringify({
-          cmd: 'attachToRoom',
-          status: 'ok'
+          type: 'attachToRoom',
+          status: 'OK'
         })); 
       }
     } else {

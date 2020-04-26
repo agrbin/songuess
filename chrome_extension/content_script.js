@@ -1,68 +1,101 @@
 const Selectors = {
+  startPlaylistButton: '#playButton',
   playPauseButton: '#player-bar-play-pause',
   nextButton: '#player-bar-forward',
   currentTitle: '#currently-playing-title'
 };
 
-// Successful click actions will send the response after this time.
-const CLICK_CONFIRMATION_DELAY_MS = 2000;
+// Click actions always wait this amount after executing.
+const AFTER_CLICK_DELAY_MS = 1000;
 
 console.log('hi from content script: ', document.URL);
 
+// The current title is there iff the play bar is ready.
+// When the bar is ready, one can use the playPauseButton.
+// Otherwise, we have to click startPlaylistButton to start playing.
+function playBarReady() {
+  console.log('play bar ready:', (document.querySelector(Selectors.currentTitle) !== null));
+  return document.querySelector(Selectors.currentTitle) !== null;
+}
+
 function currentlyPlaying() {
   const el = document.querySelector(Selectors.playPauseButton);
-  console.log('currentlyPlaying, title is: ', el.title);
-  console.log('returning value:', (el.title == 'Pause'));
+  console.log('currently playing:', (el.title == 'Pause'));
   return el.title == 'Pause';
 }
 
-function clickSelector(selector, triggeringAction) {
+function getCurrentTitle() {
+  const el = document.querySelector(Selectors.currentTitle);
+  return el? el.textContent: null;
+}
+
+function clickSelector(selector, messageType) {
   console.log('trying to click selector: ', selector);
   const el = document.querySelector(selector);
   if (el) {
     el.click();
-    setTimeout(function () {
-      chrome.runtime.sendMessage({
-        cmd: 'clickDone',
-        triggeringAction: triggeringAction
-      });
-    }, CLICK_CONFIRMATION_DELAY_MS);
-    return {status: 'ok'};
+    return true;
   } else {
-    return {status: 'selector_not_found'};
+    sendError(messageType, messages.status.selectorNotFound);
+    return false;
   }
 }
 
-function getElementValue(selector) {
-  const el = document.querySelector(selector);
-  return el? el.textContent: null;
+function sendTitle(messageType) {
+  const title = getCurrentTitle();
+  if (title !== null) {
+    chrome.runtime.sendMessage(messages.newMessage(messageType, {
+      title: title
+    }));
+  } else {
+    sendError(messageType, messages.status.titleNotFound);
+  }
 }
 
-chrome.runtime.onMessage.addListener(function(request, sender, response) {
-  console.log('got message: ' + request.cmd);
+function sendError(messageType, error) {
+  chrome.runtime.sendMessage(messages.newError(messageType, error));
+}
 
-  if (request.cmd == 'play') {
-    if (currentlyPlaying()) {
-      response({status: 'already_playing'});
+chrome.runtime.onMessage.addListener(function(message) {
+  console.log('got message: ', message);
+
+  const messageType = messages.getType(message);
+
+  if (messageType == messages.type.moveToNextSong) {
+    if (playBarReady()) {
+      const clickNextAndSendTitle = function() {
+        clickSelector(Selectors.nextButton, messageType);
+        setTimeout(function() {
+          sendTitle(messageType);
+        }, AFTER_CLICK_DELAY_MS);
+      };
+
+      if (currentlyPlaying()) {
+        clickSelector(Selectors.playPauseButton, messageType);
+        setTimeout(clickNextAndSendTitle, AFTER_CLICK_DELAY_MS);
+      } else {
+        clickNextAndSendTitle();
+      }
     } else {
-      response(clickSelector(Selectors.playPauseButton, request.cmd));
+      clickSelector(Selectors.startPlaylistButton, messageType);
+      setTimeout(function() {
+        clickSelector(Selectors.playPauseButton, messageType);
+        setTimeout(function() {
+          clickSelector(Selectors.nextButton, messageType);
+          setTimeout(function() {
+            sendTitle(messageType);
+          }, AFTER_CLICK_DELAY_MS);
+        }, AFTER_CLICK_DELAY_MS);
+      }, AFTER_CLICK_DELAY_MS);
     }
-  } else if (request.cmd == 'pause') {
-    if (!currentlyPlaying()) {
-      response({status: 'already_paused'});
-    } else {
-      response(clickSelector(Selectors.playPauseButton, request.cmd));
-    }
-  } else if (request.cmd == 'next') {
-    response(clickSelector(Selectors.nextButton, request.cmd));
-  } else if (request.cmd == 'getTitle') {
-    const val = getElementValue(Selectors.currentTitle);
-    if (val) {
-      console.log('title: ', val);
-      response({status: 'ok', title: val});
-    } else {
-      console.log('couldn\'t get title');
-      response({status: 'title not found'});
+  } else if (messageType == messages.type.startPlaying) {
+    // This assumes moveToNextSong was called beforehand.
+    // It makes sense, because you can't know the title that's about to play
+    // unless you previously called moveToNextSong.
+    if (clickSelector(Selectors.playPauseButton, messageType)) {
+      setTimeout(function() {
+        chrome.runtime.sendMessage(messages.newMessage(messageType));
+      }, AFTER_CLICK_DELAY_MS);
     }
   }
 });

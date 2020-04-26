@@ -3,75 +3,53 @@
 
 exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHandler) {
 
-  var lastFetchedTitle = null;
-  var queuedRequests = [];
-  var queueDoneHandler = null;
+  var doneHandler = null;
+  var fetchedTitle = null;
 
-  function sendCommand(cmd) {
-    socket.send(JSON.stringify({cmd: cmd}));
-  }
-
-  function moveQueue() {
-    console.log('moving queue');
-    if (queuedRequests.length === 0) {
-      queueDoneHandler();
-      queueDoneHandler = null;
-      console.log('queue done');
-    } else {
-      const nextCmd = queuedRequests[0];
-      queuedRequests = queuedRequests.slice(1);  // pop
-      sendCommand(nextCmd);
-    }
-  }
-
-  function queueRequests(cmdArr, done) {
-    console.log('queueing requests: ', cmdArr);
-    queuedRequests = cmdArr;
-    queueDoneHandler = done;
-    moveQueue();
-  }
-
-  function failQueue(failingCmd) {
-    console.log('queue failed at cmd: ', failingCmd);
-    queuedRequests = [];
-    queueDoneHandler('queue failed at command: ' + failingCmd);
-    queueDoneHandler = null;
+  function sendCommand(type) {
+    socket.send(JSON.stringify({type: type}));
   }
 
   this.playNext = function (done) {
-    if (queuedRequests.length > 0) {
-      done('play next called but there are still queued requests');
+    if (doneHandler !== null) {
+      done('still executing previous playNext');
       return;
     }
 
-    queueRequests(['pause', 'next', 'getTitle', 'play'], function() {
-      if (lastFetchedTitle == null) {
-        done('couldn\'t get song title');
+    doneHandler = function(title) {
+      if (title) {
+        done(null, {title: title});
       } else {
-        done(null, {
-          title: lastFetchedTitle
-        });
-        lastFetchedTitle = null;
+        done('couldn\'t get the title');
       }
-    });
+
+      doneHandler = null;
+    };
+
+    sendCommand('moveToNextSong');    
   };
 
   (function () {
     socket.onmessage = function (event) {
       console.log('message ', event.data);
-      var parsedMessage = JSON.parse(event.data);
-      if (parsedMessage.cmd == 'roomAttached') {
+
+      var message = JSON.parse(event.data);
+      var messageType = message.type;
+
+      if (messageType == 'startedStreaming') {
         roomReadyHandler();
-      } else { 
-        var okStatuses = ['ok', 'already_playing', 'already_paused'];
-        // these others are only called through the queue
-        if (!okStatuses.includes(parsedMessage.status)) {
-          failQueue(parsedMessage.cmd);
+      } else if (messageType == 'moveToNextSong') {
+        if (message.status == 'OK' && message.data.title) {
+          fetchedTitle = message.data.title;
+          sendCommand('startPlaying');
         } else {
-          if (parsedMessage.cmd == 'getTitle') {
-            lastFetchedTitle = parsedMessage.title;
-          }
-          moveQueue();
+          doneHandler();
+        }
+      } else if (messageType == 'startPlaying') {
+        if (message.status == 'OK') {
+          doneHandler(fetchedTitle);
+        } else {
+          doneHandler(null);
         }
       }
     };
