@@ -31,25 +31,31 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
 
   (function () {
     socket.onmessage = function (event) {
-      console.log('message ', event.data);
+      // Got audio data.
+      if (event.data instanceof Buffer) {
+        console.log('got audio with size:', event.data.length);
+        chatRoom.broadcast('host_chunk', {audioData: event.data});
+      } else {
+        console.log('message ', event.data);
 
-      var message = JSON.parse(event.data);
-      var messageType = message.type;
+        var message = JSON.parse(event.data);
+        var messageType = message.type;
 
-      if (messageType == 'startedStreaming') {
-        roomReadyHandler();
-      } else if (messageType == 'moveToNextSong') {
-        if (message.status == 'OK' && message.data.title) {
-          fetchedTitle = message.data.title;
-          sendCommand('startPlaying');
-        } else {
-          doneHandler();
-        }
-      } else if (messageType == 'startPlaying') {
-        if (message.status == 'OK') {
-          doneHandler(fetchedTitle);
-        } else {
-          doneHandler(null);
+        if (messageType == 'startedStreaming') {
+          roomReadyHandler();
+        } else if (messageType == 'moveToNextSong') {
+          if (message.status == 'OK' && message.data.title) {
+            fetchedTitle = message.data.title;
+            sendCommand('startPlaying');
+          } else {
+            doneHandler();
+          }
+        } else if (messageType == 'startPlaying') {
+          if (message.status == 'OK') {
+            doneHandler(fetchedTitle);
+          } else {
+            doneHandler(null);
+          }
         }
       }
     };

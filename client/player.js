@@ -213,9 +213,9 @@ var Player = function(getTime, volumeElement, onFatal) {
     }, timeout);
 
     // register onload.
-    request.addEventListener('load', function(evt) {
+    request.addEventListener('load', function(event) {
       done = true;
-      if (evt.target.status != 200) return;
+      if (event.target.status != 200) return;
       // calculate avg download time
       downloadDurationStat.n ++;
       downloadDurationStat.sum += myClock.clock() - downloadStarted;
@@ -223,7 +223,7 @@ var Player = function(getTime, volumeElement, onFatal) {
         downloadDurationStat.sum / downloadDurationStat.n;
 
       audioContext.decodeAudioData(
-        evt.target.response,
+        event.target.response,
         function(decoded) {
           schedule(decoded, chunkInfo.start);
         }
@@ -233,6 +233,10 @@ var Player = function(getTime, volumeElement, onFatal) {
     downloadStarted = myClock.clock();
     request.send();
   };
+
+  this.addHostChunk = function(chunk) {
+    console.log('got host chunk:', chunk);
+  }
 
   // transponseTime transponses server time to the audioContext's time.
   // it will return -1 if audioContext is not ready yet.

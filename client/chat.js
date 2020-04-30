@@ -304,6 +304,10 @@ function Chat(wsock, user, media, player, onFatal) {
     player.addChunk(chunk);
   });
 
+  wsock.onMessage("host_chunk", function (chunk) {
+    player.addHostChunk(chunk);
+  });
+
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
     roomState = data.state;

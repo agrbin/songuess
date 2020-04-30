@@ -52,35 +52,38 @@ function sendToWebSocket(o) {
 }
 
 function startStreaming() {
-//  chrome.tabCapture.capture({
-//    audio: true,
-//    video: false
-//  }, function(stream) {
-//    console.log("got stream: ", stream);
-//
+  chrome.tabs.query({
+    active: true,
+    currentWindow: true
+  }, function(tabs) {
+    chrome.tabCapture.capture({
+      audio: true,
+      video: false
+    }, function(stream) {
+      console.log("got stream: ", stream);
 
-    chrome.tabs.query({
-      active: true,
-      currentWindow: true
-    }, function(tabs) {
+      var recorder = new MediaRecorder(stream);
+      recorder.start(CHUNK_SIZE_MS);    
+      recorder.ondataavailable = function (e) {
+        console.log('ondataavailable: ', e.data);
+        e.data.arrayBuffer().then(function (buffer) {
+          if (webSocket !== null) {
+            webSocket.send(buffer)
+          }
+        });
+      };
+
       attachedInfo = {
         tabId: tabs[0].id,
-        // stream = 
-        // recorder =
+        stream: stream,
+        recorder: recorder
       };
+
       const message = messages.newMessage(messages.type.startedStreaming);
       chrome.runtime.sendMessage(message);
       sendToWebSocket(message);
     });
-
-//    audioStream = stream;
-//    mediaRecorder = new MediaRecorder(stream);
-//    mediaRecorder.start(CHUNK_SIZE_MS);    
-//    mediaRecorder.ondataavailable = function (e) {
-//      console.log('ondataavailable: ', e.data);
-//      e.data.arrayBuffer().then(buffer => webSocket.send(buffer));
-//    };
-//  });
+  });
 }
 
 function stopStreaming() {
