@@ -35,7 +35,9 @@ var Player = function(getTime, volumeElement, onFatal) {
     , maxScheduledPoint = 0
     , streamEnabled = true
     , downloadDurationStat = {n: 0, sum: 0, avg:null}
-    , hostAudioArray = [];
+    , hostAudioArray = []
+    , firstHostChunkStartTime = null
+    , currentHostChunkGain = null;
 
   try {
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -143,6 +145,8 @@ var Player = function(getTime, volumeElement, onFatal) {
   };
 
   this.play = function () {
+    console.log('play called');
+
     if (!warmUpCalled) return;
     if (playEnabled) return;
     playEnabled = true;
@@ -150,7 +154,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     playPauseGain.gain.value = 1;
   };
 
-  // returns if ovlume is muted currently
+  // returns if volume is muted currently
   this.setVolume = function (value) {
     if (!warmUpCalled) return;
     if (value === undefined) {
@@ -244,8 +248,8 @@ var Player = function(getTime, volumeElement, onFatal) {
     hostAudioArray = hostAudioArray.concat(chunk.audioData.data);
     audioContext.decodeAudioData(
       new Uint8Array(hostAudioArray).buffer,
-      function(decoded) {
-        console.log('decoded OK:', decoded);        
+      function(audioBuffer) {
+        scheduleHostChunk(audioBuffer);
       },
       function (e) {
         console.log('error decoding buffer:', e);
@@ -256,6 +260,11 @@ var Player = function(getTime, volumeElement, onFatal) {
   this.clearHostChunks = function() {
     console.log('clearing host chunks');
     hostAudioArray = [];
+    if (currentHostChunkGain) {
+      currentHostChunkGain.gain.setValueAtTime(0, audioContext.currentTime);
+    }
+    currentHostChunkGain = null;
+    firstHostChunkStartTime = null;
   };
 
   // transponseTime transponses server time to the audioContext's time.
@@ -266,12 +275,12 @@ var Player = function(getTime, volumeElement, onFatal) {
   // synchronization with server.
   // audioContext.currentTime is sleeping on zero for some time so we must
   // check this explicitly. 
-  function transponseTime(srvTime) {
+  function transponseTime(serverTime) {
     if (timeOffset === null && audioContext.currentTime > 0) {
       timeOffset = (getTime() / 1000) - audioContext.currentTime;
     }
     if (timeOffset !== null) {
-      return (srvTime / 1000) - timeOffset;
+      return (serverTime / 1000) - timeOffset;
     } else {
       return null;
     }
@@ -283,11 +292,11 @@ var Player = function(getTime, volumeElement, onFatal) {
   // as a result we have cross-fade effect.
   // server is configured for the overlaping time of 48ms, eg. 2 mp3 frames on
   // 48khz sampling.
-  function schedule(buffer, srvTime) {
+  function schedule(buffer, serverTime) {
     var source = audioContext.createBufferSource()
       , gainNode = audioContext.createGain()
       , duration = buffer.duration
-      , startTime = transponseTime(srvTime)
+      , startTime = transponseTime(serverTime)
       , currentTime = audioContext.currentTime;
 
     // if audioContext is not ready yet.
@@ -320,6 +329,45 @@ var Player = function(getTime, volumeElement, onFatal) {
       maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
     } else {
       console.log("chunk ignored. late for: ", currentTime - startTime);
+    }
+  }
+
+  function scheduleHostChunk(audioBuffer) {
+    if (!streamEnabled || !playEnabled) {
+      console.log('scheduleHostChunk called while not playing');
+      return;
+    }
+
+    console.log('scheduling buffer: ', audioBuffer);
+
+    const INITIAL_PLAY_DELAY = 1;  // in seconds
+    const acTime = audioContext.currentTime;
+    const firstChunk = (currentHostChunkGain === null);
+
+    if (!firstChunk) {
+      console.log('muting previous chunk');
+      // Mute the currently playing chunk, the new one will replace it
+      // immediately.
+      currentHostChunkGain.gain.setValueAtTime(0, acTime);
+    }
+
+    var bufferSource = audioContext.createBufferSource();
+    currentHostChunkGain = audioContext.createGain();
+    bufferSource.buffer = audioBuffer;
+    bufferSource.connect(currentHostChunkGain);
+    currentHostChunkGain.connect(masterGain);
+
+    if (firstChunk) {
+      // Start playing the first chunk, with a delay.
+      firstHostChunkStartTime = acTime + INITIAL_PLAY_DELAY;
+
+      bufferSource.start(firstHostChunkStartTime);
+      console.log('scheduling first chunk at:', firstHostChunkStartTime);
+    } else {
+      // Offset by how much was already played.
+      bufferSource.start(0, acTime - firstHostChunkStartTime);
+      console.log('scheduling chunk at: ', acTime,
+                  ' and offset: ', acTime - firstHostChunkStartTime);
     }
   }
 
