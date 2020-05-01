@@ -170,7 +170,6 @@ function ChatUI(chat, user) {
       return;
     }
     if (desc.row % 5 === 0) {
-      chat.getPlayer().rowSound(desc.row);
       entry("sys correct",
         pretty.client(chat.getClient(desc.who)) + " is " +
         pretty.rowMessage(desc.row));
