@@ -234,6 +234,11 @@ var Player = function(getTime, volumeElement, onFatal) {
     request.send();
   };
 
+  // The audio comes from a MediaRecorder object living inside the Chrome
+  // extension.
+  // The first chunk it sends contains a header.
+  // The followup chunks should be concatenated with the previous ones,
+  // otherwise the decodeAudioData call would fail.
   this.addHostChunk = function(chunk) {
     console.log('got host chunk:', chunk.audioData);
     hostAudioArray = hostAudioArray.concat(chunk.audioData.data);
