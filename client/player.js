@@ -34,7 +34,8 @@ var Player = function(getTime, volumeElement, onFatal) {
     , muted = false
     , maxScheduledPoint = 0
     , streamEnabled = true
-    , downloadDurationStat = {n: 0, sum: 0, avg:null};
+    , downloadDurationStat = {n: 0, sum: 0, avg:null}
+    , hostAudioArray = [];
 
   try {
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -72,7 +73,6 @@ var Player = function(getTime, volumeElement, onFatal) {
       });
     }
     // play the number of the beast freq as a test note.
-    // oscillator is a long word, isn't it?
     oscillator = audioContext.createOscillator();
     oscillator.frequency.value = 666;
     oscillator.connect(sonicBeepGain);
@@ -235,8 +235,18 @@ var Player = function(getTime, volumeElement, onFatal) {
   };
 
   this.addHostChunk = function(chunk) {
-    console.log('got host chunk:', chunk);
-  }
+    console.log('got host chunk:', chunk.audioData);
+    hostAudioArray = hostAudioArray.concat(chunk.audioData.data);
+    audioContext.decodeAudioData(
+      new Uint8Array(hostAudioArray).buffer,
+      function(decoded) {
+        console.log('decoded OK:', decoded);        
+      },
+      function (e) {
+        console.log('error decoding buffer:', e);
+      }
+    );
+  };
 
   // transponseTime transponses server time to the audioContext's time.
   // it will return -1 if audioContext is not ready yet.
@@ -282,7 +292,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     // to avoid click! fade in and out
     gainNode.gain.linearRampToValueAtTime(0, startTime);
     gainNode.gain.linearRampToValueAtTime(1, startTime + overlapTime);
-    gainNode.gain.linearRampToValueAtTime(1, startTime + duration -overlapTime);
+    gainNode.gain.linearRampToValueAtTime(1, startTime + duration - overlapTime);
     gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
 
     // play the chunk if it is in the future

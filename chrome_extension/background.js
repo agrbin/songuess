@@ -65,8 +65,9 @@ function startStreaming() {
       var recorder = new MediaRecorder(stream);
       recorder.start(CHUNK_SIZE_MS);    
       recorder.ondataavailable = function (e) {
-        console.log('ondataavailable: ', e.data);
+        console.log('ondataavailable:', e.data);
         e.data.arrayBuffer().then(function (buffer) {
+          console.log('buffer:', buffer);
           if (webSocket !== null) {
             webSocket.send(buffer)
           }
