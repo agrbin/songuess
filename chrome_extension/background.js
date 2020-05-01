@@ -18,8 +18,11 @@ function initSocket() {
       } else {
         chrome.runtime.sendMessage(message);
       }
-    } else if (messageType == messages.type.moveToNextSong ||
-               messageType == messages.type.startPlaying) {
+    } else if (messageType == messages.type.moveToNextSong) {
+      stopRecorder();
+      sendToAttachedTab(message);
+    } else if (messageType == messages.type.startPlaying) {
+      startRecorder();
       sendToAttachedTab(message);
     } 
   };
@@ -63,7 +66,6 @@ function startStreaming() {
       console.log("got stream: ", stream);
 
       var recorder = new MediaRecorder(stream);
-      recorder.start(CHUNK_SIZE_MS);    
       recorder.ondataavailable = function (e) {
         console.log('ondataavailable:', e.data);
         e.data.arrayBuffer().then(function (buffer) {
@@ -87,11 +89,23 @@ function startStreaming() {
   });
 }
 
+function stopRecorder() {
+  console.log('stopping recorder');
+  if (attachedInfo.recorder && attachedInfo.recorder.state != 'inactive') {
+    attachedInfo.recorder.stop();
+  }
+}
+
+function startRecorder() {
+  console.log('starting recorder');
+  if (attachedInfo !== null) {
+    attachedInfo.recorder.start(CHUNK_SIZE_MS);    
+  }
+}
+
 function stopStreaming() {
   if (attachedInfo !== null) {
-    if (attachedInfo.recorder && attachedInfo.recorder.state != 'inactive') {
-      attachedInfo.recorder.stop();
-    }
+    stopRecorder();
     if (attachedInfo.stream) {
       attachedInfo.stream.getTracks().forEach(track => track.stop());
     }
@@ -127,8 +141,10 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
       console.log('unexpected state, got detach while not streaming');
     } else {
       stopStreaming();
-      webSocket.close();
-      webSocket = null;
+      if (webSocket !== null) {
+        webSocket.close();
+        webSocket = null;
+      }
     }
   } else if (messageType == messages.type.isAttached) {
     sendResponse(attachedInfo !== null);

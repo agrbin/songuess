@@ -248,6 +248,11 @@ var Player = function(getTime, volumeElement, onFatal) {
     );
   };
 
+  this.clearHostChunks = function() {
+    console.log('clearing host chunks');
+    hostAudioArray = [];
+  };
+
   // transponseTime transponses server time to the audioContext's time.
   // it will return -1 if audioContext is not ready yet.
   //

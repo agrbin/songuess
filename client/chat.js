@@ -308,6 +308,11 @@ function Chat(wsock, user, media, player, onFatal) {
     player.addHostChunk(chunk);
   });
 
+  wsock.onMessage("clear_host_chunks", function (chunk) {
+    console.log('got clear host chunks message');
+    player.clearHostChunks();
+  });
+
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
     roomState = data.state;

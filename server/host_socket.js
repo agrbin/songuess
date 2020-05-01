@@ -7,6 +7,7 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
   var fetchedTitle = null;
 
   function sendCommand(type) {
+    console.log('sending command:', type);
     socket.send(JSON.stringify({type: type}));
   }
 
@@ -46,6 +47,14 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
         } else if (messageType == 'moveToNextSong') {
           if (message.status == 'OK' && message.data.title) {
             fetchedTitle = message.data.title;
+
+            // recorder.stop() has been called on the client at this point
+            // now's the time to clear the host chunks in the client app
+            chatRoom.broadcast('clear_host_chunks');
+
+            // this should not be called before clients cleared the chunks
+            // TODO this is not currently guaranteed, extension could get
+            // the message before the songuess clients
             sendCommand('startPlaying');
           } else {
             doneHandler();
