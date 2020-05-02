@@ -6,7 +6,7 @@ const Selectors = {
 };
 
 // Click actions always wait this amount after executing.
-const AFTER_CLICK_DELAY_MS = 1000;
+const AFTER_CLICK_DELAY_MS = 2000;
 
 console.log('hi from content script: ', document.URL);
 
