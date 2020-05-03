@@ -5,6 +5,8 @@ module.exports = function (exports) {
   exports.media.owner = 'anton.grbin@gmail.com';
   exports.media.token = 'WILL_SET_TO_TRUST_THIS_IP';
   exports.media.acl = [
+    ['allow', 'email', 'mosrecki@gmail.com'],
+    ['allow_fix', 'email', 'mosrecki@gmail.com'],
     ['allow', 'email', 'anton.grbin@gmail.com'],
     ['allow', 'email', 'tomislav.grbin@gmail.com'],
     ['allow', 'email', 'doroteja.gudlek@gmail.com'],
