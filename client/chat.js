@@ -380,6 +380,7 @@ function Chat(wsock, user, media, player, onFatal) {
     var interval, when = state.songStart;
     roomState = state;
     player.pause();
+    player.setNextSongStart(state.songStart);
     clearTimeout(announceTimer);
     announceTimer = setTimeout(function () {
       ui.announceSong(when);

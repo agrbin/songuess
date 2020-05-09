@@ -37,7 +37,8 @@ var Player = function(getTime, volumeElement, onFatal) {
     , downloadDurationStat = {n: 0, sum: 0, avg:null}
     , hostAudioArray = []
     , firstHostChunkStartTime = null
-    , currentHostChunkGain = null;
+    , currentHostChunkGain = null
+    , nextSongStart = null;
 
   try {
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -138,10 +139,16 @@ var Player = function(getTime, volumeElement, onFatal) {
 
   // disables and enables playback.
   this.pause = function () {
+    console.log('pause called');
+
     if (!warmUpCalled) return;
     if (!playEnabled) return;
     playEnabled = false;
     playPauseGain.gain.setTargetAtTime(0, audioContext.currentTime + 1, 1);
+  };
+
+  this.setNextSongStart = function (songStart) {
+    nextSongStart = songStart;  
   };
 
   this.play = function () {
@@ -246,6 +253,14 @@ var Player = function(getTime, volumeElement, onFatal) {
   this.addHostChunk = function(chunk) {
     console.log('got host chunk:', chunk.audioData);
     hostAudioArray = hostAudioArray.concat(chunk.audioData.data);
+
+    // Just an optimization, no need to decode if we don't know when to
+    // schedule.
+    if (!firstHostChunkAlreadyScheduled() && nextSongStart === null) {
+      console.log('skipping decode, first chunk schedule time unknown');
+      return;
+    }
+
     audioContext.decodeAudioData(
       new Uint8Array(hostAudioArray).buffer,
       function(audioBuffer) {
@@ -257,14 +272,12 @@ var Player = function(getTime, volumeElement, onFatal) {
     );
   };
 
+  // After this is called, the next chunk received should be the first chunk
+  // of the next song.
   this.clearHostChunks = function() {
     console.log('clearing host chunks');
     hostAudioArray = [];
-    if (currentHostChunkGain) {
-      currentHostChunkGain.gain.setValueAtTime(0, audioContext.currentTime);
-    }
     currentHostChunkGain = null;
-    firstHostChunkStartTime = null;
   };
 
   // transponseTime transponses server time to the audioContext's time.
@@ -332,23 +345,30 @@ var Player = function(getTime, volumeElement, onFatal) {
     }
   }
 
+  function firstHostChunkAlreadyScheduled() {
+    return (currentHostChunkGain !== null);
+  }
+
   function scheduleHostChunk(audioBuffer) {
-    if (!streamEnabled || !playEnabled) {
-      console.log('scheduleHostChunk called while not playing');
+    console.log('scheduling buffer: ', audioBuffer, nextSongStart);
+
+    // The function checks a variable that's modified inside this function,
+    // so it's important to keep checking the initial value.
+    const firstChunkScheduled = firstHostChunkAlreadyScheduled();
+
+    // We don't know when to schedule the first chunk, nothing to do.
+    if (!firstChunkScheduled && nextSongStart === null) {
+      console.log('SHOULD NEVER HAPPEN');
       return;
     }
 
-    console.log('scheduling buffer: ', audioBuffer);
-
-    const INITIAL_PLAY_DELAY = 1;  // in seconds
     const acTime = audioContext.currentTime;
-    const firstChunk = (currentHostChunkGain === null);
 
-    if (!firstChunk) {
+    if (firstChunkScheduled) {
       console.log('muting previous chunk');
       // Mute the currently playing chunk, the new one will replace it
       // immediately.
-      currentHostChunkGain.gain.setValueAtTime(0, acTime);
+      currentHostChunkGain.gain.value = 0;
     }
 
     var bufferSource = audioContext.createBufferSource();
@@ -357,17 +377,28 @@ var Player = function(getTime, volumeElement, onFatal) {
     bufferSource.connect(currentHostChunkGain);
     currentHostChunkGain.connect(masterGain);
 
-    if (firstChunk) {
-      // Start playing the first chunk, with a delay.
-      firstHostChunkStartTime = acTime + INITIAL_PLAY_DELAY;
+    if (!firstChunkScheduled) {
+      // Schedule the first chunk, at the server given 'nextSongStart' but
+      // translated to our current audioContext time.
+      firstHostChunkStartTime = transponseTime(nextSongStart);
 
       bufferSource.start(firstHostChunkStartTime);
       console.log('scheduling first chunk at:', firstHostChunkStartTime);
-    } else {
+
+      // This variable is only relevant until the first chunk is scheduled.
+      nextSongStart = null;
+    // It's possible we'd try to use a negative offset, this means the 2nd
+    // chunk arrived but the 1st didn't start playing yet.
+    // We'd try scheduling the 2nd one in the future, i.e. using a negative
+    // offset.
+    // It is OK just to not do anything in this case.
+    } else if (acTime > firstHostChunkStartTime) {
       // Offset by how much was already played.
       bufferSource.start(0, acTime - firstHostChunkStartTime);
       console.log('scheduling chunk at: ', acTime,
                   ' and offset: ', acTime - firstHostChunkStartTime);
+    } else {
+      console.log('attempted to schedule a chunk with negative offset');
     }
   }
 
