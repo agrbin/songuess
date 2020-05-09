@@ -365,6 +365,15 @@ var Player = function(getTime, volumeElement, onFatal) {
     const acTime = audioContext.currentTime;
 
     if (firstChunkScheduled) {
+      if (acTime < firstHostChunkStartTime) {
+        // It's possible we'd try to use a negative offset, this means the 2nd
+        // chunk arrived but the 1st didn't start playing yet.
+        // We'd try scheduling the 2nd one in the future, i.e. using a negative
+        // offset.
+        // It is OK just to not do anything in this case.
+        console.log('attempted to schedule a chunk with negative offset');
+        return;
+      }
       console.log('muting previous chunk');
       // Mute the currently playing chunk, the new one will replace it
       // immediately.
@@ -387,18 +396,11 @@ var Player = function(getTime, volumeElement, onFatal) {
 
       // This variable is only relevant until the first chunk is scheduled.
       nextSongStart = null;
-    // It's possible we'd try to use a negative offset, this means the 2nd
-    // chunk arrived but the 1st didn't start playing yet.
-    // We'd try scheduling the 2nd one in the future, i.e. using a negative
-    // offset.
-    // It is OK just to not do anything in this case.
-    } else if (acTime > firstHostChunkStartTime) {
+    } else {
       // Offset by how much was already played.
       bufferSource.start(0, acTime - firstHostChunkStartTime);
       console.log('scheduling chunk at: ', acTime,
                   ' and offset: ', acTime - firstHostChunkStartTime);
-    } else {
-      console.log('attempted to schedule a chunk with negative offset');
     }
   }
 
