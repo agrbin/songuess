@@ -41,14 +41,20 @@ function clickSelector(selector, messageType) {
   }
 }
 
-function sendTitle(messageType) {
+function sendTitle() {
+  // Message type we're sending from here is always moveToNextSong.
+  // That's the message that triggered searching for a title, and
+  // when the search is done we send the same type of message back.
   const title = getCurrentTitle();
   if (title !== null) {
-    chrome.runtime.sendMessage(messages.newMessage(messageType, {
-      title: title
-    }));
+    chrome.runtime.sendMessage(messages.newMessage(
+      messages.type.moveToNextSong,
+      {
+        title: title
+      })
+    );
   } else {
-    sendError(messageType, messages.status.titleNotFound);
+    sendError(messages.type.moveToNextSong, messages.status.titleNotFound);
   }
 }
 
@@ -66,7 +72,7 @@ chrome.runtime.onMessage.addListener(function(message) {
       const clickNextAndSendTitle = function() {
         clickSelector(Selectors.nextButton, messageType);
         setTimeout(function() {
-          sendTitle(messageType);
+          sendTitle();
         }, AFTER_CLICK_DELAY_MS);
       };
 
@@ -83,7 +89,7 @@ chrome.runtime.onMessage.addListener(function(message) {
         setTimeout(function() {
           clickSelector(Selectors.nextButton, messageType);
           setTimeout(function() {
-            sendTitle(messageType);
+            sendTitle();
           }, AFTER_CLICK_DELAY_MS);
         }, AFTER_CLICK_DELAY_MS);
       }, AFTER_CLICK_DELAY_MS);

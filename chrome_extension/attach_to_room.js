@@ -1,7 +1,5 @@
 console.log('hi from popup');
 
-// TODO add stop streaming button.
-
 function showSpinner() {
   $('#spinner').show();
   $('#statusMessage').hide();

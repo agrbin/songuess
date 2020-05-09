@@ -53,7 +53,7 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
             chatRoom.broadcast('clear_host_chunks');
 
             // this should not be called before clients cleared the chunks
-            // TODO this is not currently guaranteed, extension could get
+            // TODO this is not currently guaranteed, the extension could get
             // the message before the songuess clients
             sendCommand('startPlaying');
           } else {
