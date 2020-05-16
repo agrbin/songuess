@@ -38,7 +38,8 @@ var Player = function(getTime, volumeElement, onFatal) {
     , hostAudioArray = []
     , firstHostChunkStartTime = null
     , currentHostChunkGain = null
-    , nextSongStart = null;
+    , nextSongStart = null
+    , scheduledChunkEndTime = null;
 
   try {
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -144,6 +145,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     if (!warmUpCalled) return;
     if (!playEnabled) return;
     playEnabled = false;
+    // Go to zero over ~3 seconds, starting 1 second from now.
     playPauseGain.gain.setTargetAtTime(0, audioContext.currentTime + 1, 1);
   };
 
@@ -277,6 +279,12 @@ var Player = function(getTime, volumeElement, onFatal) {
   this.clearHostChunks = function() {
     console.log('clearing host chunks');
     hostAudioArray = [];
+    if (currentHostChunkGain !== null && scheduledChunkEndTime !== null) {
+      // The value will be 1e-5 at the given time, with exponential approach.
+      // Note that 0 is not allowed as a param for this function, so we pass a small
+      // number instead.
+      currentHostChunkGain.gain.exponentialRampToValueAtTime(1e-5, scheduledChunkEndTime);
+    }
     currentHostChunkGain = null;
   };
 
@@ -402,6 +410,10 @@ var Player = function(getTime, volumeElement, onFatal) {
       console.log('scheduling chunk at: ', acTime,
                   ' and offset: ', acTime - firstHostChunkStartTime);
     }
+
+    scheduledChunkEndTime = firstHostChunkStartTime + audioBuffer.duration;
+    var end = new Date(new Date().getTime() + (scheduledChunkEndTime - acTime)*1000);
+    console.log('scheduled end time:', end.toLocaleTimeString(), end.getMilliseconds());
   }
 
   (function() {

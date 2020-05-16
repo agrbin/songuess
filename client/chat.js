@@ -309,7 +309,6 @@ function Chat(wsock, user, media, player, onFatal) {
   });
 
   wsock.onMessage("clear_host_chunks", function (chunk) {
-    console.log('got clear host chunks message');
     player.clearHostChunks();
   });
 
@@ -341,6 +340,7 @@ function Chat(wsock, user, media, player, onFatal) {
     roomState.state = data.state;
     copySharedToPidPeers(client);
     ui.correctAnswer(data);
+    console.log('correct answer');
   });
 
   wsock.onMessage("honored", function (data) {
