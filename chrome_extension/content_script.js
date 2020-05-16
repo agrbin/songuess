@@ -99,9 +99,7 @@ chrome.runtime.onMessage.addListener(function(message) {
     // It makes sense, because you can't know the title that's about to play
     // unless you previously called moveToNextSong.
     if (clickSelector(Selectors.playPauseButton, messageType)) {
-      setTimeout(function() {
-        chrome.runtime.sendMessage(messages.newMessage(messageType));
-      }, AFTER_CLICK_DELAY_MS);
+      chrome.runtime.sendMessage(messages.newMessage(messageType));
     }
   }
 });
