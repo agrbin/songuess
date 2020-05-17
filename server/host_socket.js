@@ -65,6 +65,8 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
           } else {
             doneHandler(null);
           }
+        } else if (messageType == 'songHasEnded') {
+          songEndedHandler(); 
         }
       }
     };

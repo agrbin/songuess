@@ -495,6 +495,9 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   this.detachHostSocket = function() {
     hostSocket = null;
+    // This will also make sure the music fades out gradually on the clients.
+    this.broadcast('clear_host_chunks');
+    info("The connection to host was broken.");
   };
 
   (function () {

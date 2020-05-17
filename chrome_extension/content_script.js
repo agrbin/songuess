@@ -2,11 +2,15 @@ const Selectors = {
   startPlaylistButton: '#playButton',
   playPauseButton: '#player-bar-play-pause',
   nextButton: '#player-bar-forward',
-  currentTitle: '#currently-playing-title'
+  currentTitle: '#currently-playing-title',
+  sliderBar: '#sliderBar'
 };
 
-// Click actions always wait this amount after executing.
+// Some click actions wait this long after executing.
 const AFTER_CLICK_DELAY_MS = 2000;
+const SONG_PROGRESS_POLL_RATE = 400;
+
+let songProgressInterval = null;
 
 console.log('hi from content script: ', document.URL);
 
@@ -27,6 +31,32 @@ function currentlyPlaying() {
 function getCurrentTitle() {
   const el = document.querySelector(Selectors.currentTitle);
   return el? el.textContent: null;
+}
+
+// Returns a value in milliseconds.
+function getSongTimeRemainingMs() {
+  const el = document.querySelector(Selectors.sliderBar);
+  const currentValue = parseInt(el.ariaValueNow);
+  const maxValue = parseInt(el.ariaValueMax);
+  return maxValue - currentValue;
+}
+
+function stopPlaying() {
+  if (songProgressInterval !== null) {
+    clearInterval(songProgressInterval);
+  }
+  if (currentlyPlaying()) {
+    clickSelector(Selectors.playPauseButton);
+  }
+}
+
+function checkSongProgress() {
+  // We add a bit to make sure one poll falls into the (end - poll_rate, end) interval.
+  if (getSongTimeRemainingMs() < SONG_PROGRESS_POLL_RATE + 100) {
+    console.log('song done');
+    stopPlaying();
+    chrome.runtime.sendMessage(messages.newMessage(messages.type.songHasEnded));
+  }
 }
 
 function clickSelector(selector, messageType) {
@@ -68,6 +98,11 @@ chrome.runtime.onMessage.addListener(function(message) {
   const messageType = messages.getType(message);
 
   if (messageType == messages.type.moveToNextSong) {
+    if (songProgressInterval !== null) {
+      clearInterval(songProgressInterval);
+      songProgressInterval = null;
+    }
+
     if (playBarReady()) {
       const clickNextAndSendTitle = function() {
         clickSelector(Selectors.nextButton, messageType);
@@ -101,5 +136,9 @@ chrome.runtime.onMessage.addListener(function(message) {
     if (clickSelector(Selectors.playPauseButton, messageType)) {
       chrome.runtime.sendMessage(messages.newMessage(messageType));
     }
+    songProgressInterval = setInterval(checkSongProgress, SONG_PROGRESS_POLL_RATE);
+  } else if (messageType == messages.type.detachRoom) {
+    console.log('got detach room message');
+    stopPlaying();
   }
 });

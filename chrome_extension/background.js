@@ -1,5 +1,5 @@
-//const WS_URL = 'ws://localhost:8080';
-const WS_URL = 'wss://songuess.xfer.hr/ws/';
+const WS_URL = 'ws://localhost:8080';
+//const WS_URL = 'wss://songuess.xfer.hr/ws/';
 const CHUNK_SIZE_MS = 5000;
 
 let webSocket = null;
@@ -25,7 +25,7 @@ function initSocket() {
     } else if (messageType == messages.type.startPlaying) {
       startRecorder();
       sendToAttachedTab(message);
-    } 
+    }
   };
 
   webSocket.onerror = function (event) {
@@ -141,6 +141,8 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     if (attachedInfo === null) {
       console.log('unexpected state, got detach while not streaming');
     } else {
+      // Forward detachRoom to the content script, to stop playing.
+      sendToAttachedTab(message);
       stopStreaming();
       if (webSocket !== null) {
         webSocket.close();
@@ -149,8 +151,10 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
     }
   } else if (messageType == messages.type.isAttached) {
     sendResponse(attachedInfo !== null);
+  // These messages are just propagated to the web socket.
   } else if (messageType == messages.type.moveToNextSong ||
-             messageType == messages.type.startPlaying) {
+             messageType == messages.type.startPlaying ||
+             messageType == messages.type.songHasEnded) {
     sendToWebSocket(message);
   }
 });

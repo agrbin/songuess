@@ -35,7 +35,8 @@ const messages = {
     attachToRoom: 'attachToRoom',
     detachRoom: 'detachRoom',
     isAttached: 'isAttached',
-    startedStreaming: 'startedStreaming'
+    startedStreaming: 'startedStreaming',
+    songHasEnded: 'songHasEnded'
   },
   
   status: {
