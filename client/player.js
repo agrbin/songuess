@@ -67,7 +67,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     playPauseGain.gain.setValueAtTime(1, 0);
     sonicBeepGain.connect(audioContext.destination);
     // duration of first test beep.
-    sonicBeepGain.gain.setValueAtTime(1, 0);
+    sonicBeepGain.gain.setValueAtTime(0.3, 0);
     sonicBeepGain.gain.setValueAtTime(0, 0.2);
     // volumeElement can be null.
     if (volumeElement) {
