@@ -360,8 +360,8 @@ var Player = function(getTime, volumeElement, onFatal) {
   function scheduleHostChunk(audioBuffer) {
     console.log('scheduling buffer: ', audioBuffer, nextSongStart);
 
-    // The function checks a variable that's modified inside this function,
-    // so it's important to keep checking the initial value.
+    // The function we call checks a variable that's modified inside this
+    // current function, so it's important to store the initial value.
     const firstChunkScheduled = firstHostChunkAlreadyScheduled();
 
     // We don't know when to schedule the first chunk, nothing to do.
