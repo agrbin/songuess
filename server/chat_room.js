@@ -415,6 +415,13 @@ exports.ChatRoom = function (desc, chat, proxy) {
     }
   };
 
+  this.broadcastRaw = function (data) {
+    var id;
+    for (id in clients) {
+      clients[id].sendRaw(data);
+    }
+  };
+
   // this is triggered from ChatClient::local
   // function will copy local data to all other clients
   // with same pid and to room's localPersonData

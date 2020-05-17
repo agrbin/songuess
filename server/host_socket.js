@@ -35,7 +35,7 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
       // Got audio data.
       if (event.data instanceof Buffer) {
         console.log('got audio with size:', event.data.length);
-        chatRoom.broadcast('host_chunk', {audioData: event.data});
+        chatRoom.broadcastRaw(event.data);
       } else {
         console.log('message ', event.data);
 

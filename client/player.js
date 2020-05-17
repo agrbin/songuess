@@ -252,9 +252,9 @@ var Player = function(getTime, volumeElement, onFatal) {
   // The first chunk it sends contains a header.
   // The followup chunks should be concatenated with the previous ones,
   // otherwise the decodeAudioData call would fail.
+  // The received 'chunk' is a Blob object.
   this.addHostChunk = function(chunk) {
-    console.log('got host chunk:', chunk.audioData);
-    hostAudioArray = hostAudioArray.concat(chunk.audioData.data);
+    console.log('got host chunk:', chunk);
 
     // Just an optimization, no need to decode if we don't know when to
     // schedule.
@@ -263,15 +263,21 @@ var Player = function(getTime, volumeElement, onFatal) {
       return;
     }
 
-    audioContext.decodeAudioData(
-      new Uint8Array(hostAudioArray).buffer,
-      function(audioBuffer) {
-        scheduleHostChunk(audioBuffer);
-      },
-      function (e) {
-        console.log('error decoding buffer:', e);
-      }
-    );
+    chunk.arrayBuffer().then(function(buffer) {
+      // Concatenating type arrays (like Uint8Array) or ArrayBuffers is ugly,
+      // so hostAudioArray is a normal Array object.
+      hostAudioArray = hostAudioArray.concat(Array.from(new Uint8Array(buffer)));
+
+      audioContext.decodeAudioData(
+        new Uint8Array(hostAudioArray).buffer,
+        function(audioBuffer) {
+          scheduleHostChunk(audioBuffer);
+        },
+        function (e) {
+          console.log('error decoding buffer:', e);
+        }
+      );
+    });
   };
 
   // After this is called, the next chunk received should be the first chunk

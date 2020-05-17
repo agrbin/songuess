@@ -304,8 +304,8 @@ function Chat(wsock, user, media, player, onFatal) {
     player.addChunk(chunk);
   });
 
-  wsock.onMessage("host_chunk", function (chunk) {
-    player.addHostChunk(chunk);
+  wsock.onRawData(function (data) {
+    player.addHostChunk(data);
   });
 
   wsock.onMessage("clear_host_chunks", function (chunk) {
