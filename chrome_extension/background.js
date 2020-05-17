@@ -32,7 +32,8 @@ function initSocket() {
     console.log('ws error connecting: ', event);
     chrome.runtime.sendMessage(messages.newError(
       messages.type.attachToRoom,
-      messages.status.socketError
+      messages.status.socketError,
+      'failed to connect, maybe wrong server URL?'
     ));
   };
 

@@ -29,10 +29,6 @@ $(function() {
     const rawName = $('#room_name').val();
     const name = rawName.startsWith('#')? rawName: ('#' + rawName);
 
-    // TODO ask if the content script is ready.
-    // the content script could check if the expected buttons are available.
-    // hm, but what if multiple content scripts (iframes) send a reply?
-
     chrome.runtime.sendMessage(messages.newMessage(
       messages.type.attachToRoom,
       {roomName: name}
