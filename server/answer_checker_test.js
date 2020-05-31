@@ -37,6 +37,7 @@ var validPairs = [
   ['i cant get no satisfaction','(I Can\'t Get No) Satisfaction'],
   ['nice dream', '(Nice dream)'],
   ['2+2=5', '2 + 2 = 5'],
+  ['jebeno', 'jeebno'],
 ];
 
 var invalidPairs = [

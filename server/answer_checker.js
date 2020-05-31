@@ -67,6 +67,9 @@ module.exports = function (options) {
                                   Math.min(matrix[i][j-1] + 1, // insertion
                                            matrix[i-1][j] + 1)); // deletion
         }
+        if (i > 1 && j > 1 && a.charAt(j-2) == b.charAt(i-1) && a.charAt(j-1) == b.charAt(i-2)) {
+          matrix[i][j] = Math.min(matrix[i][j], matrix[i-2][j-2] + 1); // swap
+        }
       }
     }
 
