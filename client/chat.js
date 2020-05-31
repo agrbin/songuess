@@ -148,7 +148,7 @@ function Chat(wsock, user, media, player, onFatal) {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
     ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
-    ui.addNotice("- /playlist, /stream, /info, /next");
+    ui.addNotice("- /playlist, /stream, /info, /idk");
     ui.addNotice("- /reset (will reset your score), /honor");
   });
 
@@ -252,9 +252,9 @@ function Chat(wsock, user, media, player, onFatal) {
     );
   });
 
-  onCommand("next", function () {
+  onCommand("idk", function () {
     if (roomState.state === "playing" || roomState.state === "playon") {
-      wsock.sendType("next", {when: myClock.clock()});
+      wsock.sendType("idk", {when: myClock.clock()});
     }
   });
 
@@ -391,13 +391,15 @@ function Chat(wsock, user, media, player, onFatal) {
     }, myClock.timeTo(when - 3010));
   });
 
-  wsock.onMessage("called_next", function (data) {
-    if (data.hasOwnProperty('answer')) {
+  wsock.onMessage("called_i_dont_know", function (data) {
+    if (data.hasOwnProperty('hint')) {
+      ui.showHint(data.hint);
+    } else if (data.hasOwnProperty('answer')) {
       roomState.lastSong = data.answer;
       setTimeout(pretty.relativeTime, 3000);
       setTimeout(player.pause, 3000);
     }
-    ui.calledNext(data);
+    ui.calledIDontKnow(data);
   });
 
   wsock.onMessage("song_ended", ui.songEnded);

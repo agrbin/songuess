@@ -36,7 +36,8 @@ exports.ChatRoom = function (desc, chat, proxy) {
       lastSong : null,
       lastScore : null,
       nextVotes : null,
-      whoNextVotes : null
+      whoNextVotes : null,
+      hintShowed : null
     };
 
   function packPlaylist() {
@@ -100,6 +101,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
         roomState.state = "playing";
         roomState.nextVotes = 0;
         roomState.whoNextVotes = {};
+        roomState.hintShowed = false;
       }, Math.max(0, startTime - clock.clock()));
     });
   }
@@ -133,6 +135,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
           roomState.state = "playing";
           roomState.nextVotes = 0;
           roomState.whoNextVotes = {};
+          roomState.hintShowed = false;
         }, Math.max(0, startTime - clock.clock()));
       }
     });
@@ -247,7 +250,16 @@ exports.ChatRoom = function (desc, chat, proxy) {
     chat.move(client, chat.whereIs(client), chat.getRoomByName(data));
   }
 
-  function onNext(data, client) {
+  function calcWordHint(word) {
+    return word.replace(/[^aeiou]/gi, '_');
+  }
+
+  function calcHint(currentItem) {
+    let words = currentItem.title.split(' ');
+    return words.map(w => calcWordHint(w)).join(' ');
+  }
+
+  function onIDontKnow(data, client) {
     if (roomState.state !== "playing" && roomState.state !== "playon") {
       return;
     }
@@ -257,16 +269,27 @@ exports.ChatRoom = function (desc, chat, proxy) {
     roomState.whoNextVotes[client.id()] = 1;
     ++roomState.nextVotes;
     if (roomState.nextVotes >= 1 + Math.floor(numberOfClients / 2)) {
-      that.broadcast('called_next', {
-        who: client.id(),
-        answer: currentItem,
-        when : data.when,
-        state : roomState.state
-      });
-      roomState.lastScore = null;
-      playNext();
+      if (roomState.hintShowed === false) {
+        that.broadcast('called_i_dont_know', {
+          who: client.id(),
+          hint: calcHint(currentItem),
+          when : data.when,
+          state : roomState.state
+        });
+        roomState.hintShowed = true;
+        roomState.whoNextVotes = {};
+      } else {
+        that.broadcast('called_i_dont_know', {
+          who: client.id(),
+          answer: currentItem,
+          when : data.when,
+          state : roomState.state
+        });
+        roomState.lastScore = null;
+        playNext();
+      }
     } else {
-      that.broadcast('called_next', {
+      that.broadcast('called_i_dont_know', {
         who: client.id(),
         when : data.when
       });
@@ -458,7 +481,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('sbeep', onSBeep);
     client.onMessage('sskew', onSSkew);
     client.onMessage('new_room', onNewRoom);
-    client.onMessage('next', onNext);
+    client.onMessage('idk', onIDontKnow);
     client.onMessage('token', onToken);
     client.onMessage('reset_score', onResetScore);
     client.onMessage('honor', onHonor);

@@ -90,18 +90,20 @@ function ChatUI(chat, user) {
       + " left: " + reason);
   };
 
-  this.calledNext = function (desc) {
+  this.calledIDontKnow = function (desc) {
+    entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /idk.");
     if (desc.hasOwnProperty('answer')) {
-      entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /next.");
       if (desc.state === "playon") {
         entry("sys wrong", " Moving on.");
       } else {
         entry("sys wrong",
               " The song was " + pretty.song(desc.answer) + ".");
       }
-    } else {
-      entry("sys", pretty.client(chat.getClient(desc.who)) + " calls /next.");
     }
+  };
+
+  this.showHint = function (hint) {
+    entry("sys", "Hint: '" + pretty.text(hint, "bold") + "'");
   };
 
   this.honored = function (desc) {

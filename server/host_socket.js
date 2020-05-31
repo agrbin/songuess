@@ -57,13 +57,17 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
             // the message before the songuess clients
             sendCommand('startPlaying');
           } else {
-            doneHandler();
+            if (doneHandler !== null) {
+              doneHandler();
+            }
           }
         } else if (messageType == 'startPlaying') {
-          if (message.status == 'OK') {
-            doneHandler(fetchedTitle);
-          } else {
-            doneHandler(null);
+          if (doneHandler !== null) {
+            if (message.status == 'OK') {
+              doneHandler(fetchedTitle);
+            } else {
+              doneHandler(null);
+            }
           }
         } else if (messageType == 'songHasEnded') {
           songEndedHandler(); 
