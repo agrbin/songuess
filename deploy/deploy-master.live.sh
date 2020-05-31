@@ -19,7 +19,10 @@ if [ -f $root/server/config.override.js ]; then
 fi
 cp $root/deploy/live.config.js $root/server/config.override.js
 
-( cp -r $root/server/* /srv/songuess )
+cp -r $root/server/* /srv/songuess
+# Allow other members of songuess group to deploy.
+chgrp songuess /srv/songuess/* -R
+chmod g+w /srv/songuess/* -R
 
 rm $root/server/config.override.js
 if [ -f $root/server/config.override.js.backup ]; then
