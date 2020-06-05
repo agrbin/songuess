@@ -24,9 +24,9 @@ function Chat(wsock, user, media, player, onFatal) {
     clients = {},
     ids = [],
     pids = [],
-    playlist,
     announceTimer,
     sonicSyncer = null,
+    roomDescription = null,
     roomState = {
       state : "dead",
       songStart : null,
@@ -88,9 +88,6 @@ function Chat(wsock, user, media, player, onFatal) {
     }
   }
 
-  function updatePlaylist() {
-  }
-
   function onCommand(cmd, callback) {
     commandCallbacks[cmd] = callback;
   }
@@ -148,7 +145,7 @@ function Chat(wsock, user, media, player, onFatal) {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
     ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
-    ui.addNotice("- /playlist, /stream, /info, /idk");
+    ui.addNotice("- /desc, /stream, /info, /idk");
     ui.addNotice("- /reset (will reset your score), /honor");
   });
 
@@ -222,8 +219,8 @@ function Chat(wsock, user, media, player, onFatal) {
     );
   });
 
-  onCommand("playlist", function () {
-    ui.displayPlaylist(playlist);
+  onCommand("desc", function () {
+    ui.displayRoomDescription(roomDescription);
   });
 
   // used as a wrapper to Syncer class.
@@ -241,7 +238,7 @@ function Chat(wsock, user, media, player, onFatal) {
   }
 
   onCommand("sync", function () {
-      ui.addNotice("sync is deprecated");
+    ui.addNotice("sync is deprecated");
     wsock.sendType("sync_start", {});
     new Syncer(
       new SyncSocketWrap(wsock),
@@ -314,6 +311,7 @@ function Chat(wsock, user, media, player, onFatal) {
 
   wsock.onMessage("room_state", function (data) {
     location.hash = data.desc.name;
+    roomDescription = data.desc.desc;
     roomState = data.state;
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
@@ -324,9 +322,7 @@ function Chat(wsock, user, media, player, onFatal) {
       player.play();
     }
     ui.youEntered(data);
-    playlist = data.desc.playlist;
     clients = data.users;
-    updatePlaylist();
     updateClientIds();
     ui.updateList();
   });

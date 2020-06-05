@@ -61,20 +61,10 @@ function ChatUI(chat, user) {
   };
 
   this.youEntered = function (data) {
-    var playlist = data.desc.playlist;
     entry("sys", "You entered " + data.desc.name
                  + " (" + data.desc.desc + ").");
     if (data.desc.name === "#root") {
       entry("sys", "Type /help for help.");
-    }
-    if (playlist.length) {
-      entry("sys", "Playlist has " + playlist.length + " song"
-                   + (playlist.length > 1 ? "s." : "."));
-      if (chat.getRoomState().state === "playing") {
-        entry("sys",
-          " Current song is @ "
-          + pretty.timeInterval(songOffset()) + "s.");
-      }
     }
   };
 
@@ -151,22 +141,6 @@ function ChatUI(chat, user) {
     that.displayInfo(data.fixed_item);
   };
 
-  this.displayPlaylist = function (playlist) {
-    var it, arr;
-    if (playlist.length) {
-      entry("sys", " Playlist contains:");
-    } else {
-      return entry("sys", " This room has no songs.");
-    }
-    for (it = 0; it < playlist.content.length; ++it) {
-      arr = playlist.content[it];
-      entry("sys", arr[1] + " song" + (arr[1] > 1 ? "s" : "")
-            + " from " + pretty.text(arr[0][1], "bold")
-            + " by " + pretty.text(arr[0][0], "bold") + ".");
-    }
-    entry("sys", "enjoy!");
-  };
-
   this.displayRow = function (desc) {
     if (chat.getNumberOfPersons() <= 1) {
       return;
@@ -176,6 +150,10 @@ function ChatUI(chat, user) {
         pretty.client(chat.getClient(desc.who)) + " is " +
         pretty.rowMessage(desc.row));
     }
+  };
+
+  this.displayRoomDescription = function (desc) {
+    entry("sys", (desc === null)? "No room description.": desc);
   };
 
   this.correctAnswer = function (desc) {

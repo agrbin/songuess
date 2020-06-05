@@ -11,17 +11,14 @@ var
 
 var onHttpRequest,
   httpServer = require('http').createServer(onHttpRequest),
-  media = new (require('./media.js').MediaGateway)(),
   proxy = new (require('./httpproxy.js').HttpProxy)(),
-  chat = new (require('./chat.js').Chat)(media, proxy),
+  chat = new (require('./chat.js').Chat)(proxy),
   server = new ws.Server({server: httpServer}),
   staticServer = new (require('./static_server').Server)();
 
 function onHttpRequest(req, res) {
   if (!proxy.handleRequest(req, res)) {
-    if (!media.handleRequest(req, res)) {
-      staticServer.handleRequest(req, res);
-    }
+    staticServer.handleRequest(req, res);
   }
 }
 
@@ -30,7 +27,6 @@ function onVerified(sock, user) {
     var wsock = new SockWrapper(sock, ping, user);
     user.ping = ping;
     chat.connect(wsock, user);
-    media.serve(wsock, user);
   });
 }
 
@@ -45,14 +41,7 @@ server.on('connection', function (sock) {
           status: 'SERVER_ERROR',
           data: 'room doesn\'t exist'
         })); 
-      } else if (!chat.getRoomByName(roomName).desc.isHostRoom) {
-        sock.send(JSON.stringify({
-          type: 'attachToRoom',
-          status: 'SERVER_ERROR',
-          data: 'room is not a Host Room'
-        })); 
       } else {
-        console.log('room exists and is a host room');
         chat.getRoomByName(roomName).attachHostSocket(sock);
         sock.send(JSON.stringify({
           type: 'attachToRoom',

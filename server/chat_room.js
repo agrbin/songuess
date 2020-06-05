@@ -6,9 +6,7 @@ var
   proxyConfig = require('./config.js').proxy,
   Syncer = require('./syncer.js').Syncer,
   randomRange = require('./statistics.js').randomRange,
-  Streamer = require('./streamer.js').Streamer,
   AnswerChecker = require('./answer_checker.js'),
-  PlaylistIterator = require('./shuffle_playlist_iterator.js'),
   mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)(),
   HostSocket = require('./host_socket.js').HostSocket;
 
@@ -19,10 +17,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     clients = {},
     localPersonData = {},
     numberOfClients = 0,
-    playlistIterator,
     answerChecker,
-    streamer,
-    fixed_id3_tags = chat.media.getFixedId3Tags(),
     currentItem = null,
     hostSocket = null,
 
@@ -40,32 +35,12 @@ exports.ChatRoom = function (desc, chat, proxy) {
       hintShowed : null
     };
 
-  function packPlaylist() {
-    var playlist = desc.playlist, sol = [], it = 0, bio = {}, key;
-    for (it = 0; it < playlist.length; ++it) {
-      key = JSON.stringify([playlist[it].artist, playlist[it].album]);
-      if (!bio.hasOwnProperty(key)) {
-        bio[key] = 0;
-      }
-      ++bio[key];
-    }
-    for (key in bio) {
-      sol.push( [JSON.parse(key), bio[key]] );
-    }
-    return sol;
-  }
-
   function packRoomState() {
     var id, sol = {
       desc : {
         name : desc.name,
         desc : desc.desc,
-        playlist : {
-          length : desc.playlist.length,
-          content : packPlaylist()
-        },
-        streamFromMiddle: desc.streamFromMiddle,
-        isHostRoom: desc.isHostRoom
+        streamFromMiddle: desc.streamFromMiddle
       },
       users : {},
       state : roomState
@@ -78,7 +53,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     return sol;
   }
 
-  function playNextForHostRoom() {
+  function playNext() {
     if (hostSocket == null) {
       return;
     }
@@ -103,41 +78,6 @@ exports.ChatRoom = function (desc, chat, proxy) {
         roomState.whoNextVotes = {};
         roomState.hintShowed = false;
       }, Math.max(0, startTime - clock.clock()));
-    });
-  }
-
-  function playNext() {
-    if (desc.isHostRoom) {
-      playNextForHostRoom();
-      return;
-    } else if (!desc.playlist.length) {
-      return;
-    }
-    roomState.state = "after";
-    roomState.lastSong = currentItem;
-    roomState.songStart = null;
-
-    streamer.play(playlistIterator.nextItem(), function (startTime, err) {
-      if (err) {
-        console.log("tried to play next: " + err);
-        info("Tried to play next with error (retry in 5s): " + err);
-        setTimeout(playNext, 5000);
-      } else {
-        currentItem = playlistIterator.currentItem();
-
-        setTimeout(function() {
-          roomState.state = "suspense";
-          roomState.songStart = startTime;
-          that.broadcast('next_song_announce', roomState);
-        }, Math.max(0, startTime - clock.clock() - 6000));
-
-        setTimeout(function() {
-          roomState.state = "playing";
-          roomState.nextVotes = 0;
-          roomState.whoNextVotes = {};
-          roomState.hintShowed = false;
-        }, Math.max(0, startTime - clock.clock()));
-      }
     });
   }
 
@@ -259,6 +199,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     return words.map(w => calcWordHint(w)).join(' ');
   }
 
+  // TODO there's a bug here, the first /idk after the hint immediately goes to the next song.
   function onIDontKnow(data, client) {
     if (roomState.state !== "playing" && roomState.state !== "playon") {
       return;
@@ -310,59 +251,6 @@ exports.ChatRoom = function (desc, chat, proxy) {
       who: client.id(),
       when: data.when
     });
-  }
-
-  function chunkHandler(chunkInfo) {
-    proxy.proxify(chunkInfo.url, function (url, url2) {
-      var id;
-      chunkInfo.url = url;
-      chunkInfo.backupUrl = url2;
-      for (id in clients) {
-        if (clients.hasOwnProperty(id)) {
-          setTimeout(
-            clients[id].send.bind(this, "chunk", chunkInfo),
-            1000 * randomRange(
-              proxyConfig.throttleStreamOff,
-              proxyConfig.throttleStreamAmp
-            )
-          );
-        }
-      }
-    });
-  }
-
-  function onFixLast(data, client) {
-    if (!data.fixed_item ||
-        !data.fixed_item.server || !data.fixed_item.id) {
-      return info("Fixed message is broken.", client);
-    }
-    // Remove empty strings.
-    data.fixed_item = fixed_id3_tags.sanitizeItem(data.fixed_item);
-    // Check that alt titles are in order.
-    if (!fixed_id3_tags.validAltTitle(data.fixed_item)) {
-      return info("Add alternate titles in order: title, title2, title3, ...",
-          client);
-    }
-    if (!fixed_id3_tags.fixItem(client, data.fixed_item)) {
-      return info(
-          "You don't have permissions for fixing song on this media server.",
-          client);
-    } else {
-      // Fix the reference to the lastSong in the room state.
-      // This fix was added because of the following bug:
-      // song plays
-      // > /next
-      // Correct answer was A.
-      // > /ch title  B
-      // > /info (shows that last answer was B)
-      // Get ready!
-      // > /info (shows that last answer was A) <-- bug!
-      if (roomState.lastSong) {
-        roomState.lastSong = fixed_id3_tags.getFixedItem(roomState.lastSong);
-      }
-      that.broadcast('fixed_last',
-          {who: client.id(), fixed_item: data.fixed_item});
-    }
   }
 
   function onHonor(data, client) {
@@ -487,7 +375,6 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('honor', onHonor);
     client.onMessage('sync_start', onStartSync);
     client.onMessage('change_group', onChangeGroup);
-    client.onMessage('fix_last', onFixLast);
   };
 
   // pop a client from a list of clients and
@@ -500,9 +387,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
       roomState.state = "dead";
       roomState.songStart = null;
       roomState.lastSong = null;
-      if (streamer !== null) {
-        streamer.stop();
-      }
+      // TODO what should the host room do?
+      // if (streamer !== null) {
+      //   streamer.stop();
+      // }
     }
     this.broadcast('old_client', [client.id(), reason]);
   };
@@ -532,16 +420,5 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   (function () {
     answerChecker = new AnswerChecker({});
-
-    if (desc.isHostRoom) {
-      playlistIterator = null;
-      streamer = null;
-    } else {
-      playlistIterator = new PlaylistIterator(
-        desc.playlist,
-        fixed_id3_tags);
-      streamer = new Streamer(chat.media, chunkHandler,
-        songEndedHandler, desc.streamFromMiddle);
-    }
   }());
 };
