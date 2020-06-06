@@ -39,7 +39,13 @@ server.on('connection', function (sock) {
         sock.send(JSON.stringify({
           type: 'attachToRoom',
           status: 'SERVER_ERROR',
-          data: 'room doesn\'t exist'
+          data: 'The room doesn\'t exist.'
+        })); 
+      } else if (chat.isRoomEmpty(roomName)) {
+        sock.send(JSON.stringify({
+          type: 'attachToRoom',
+          status: 'SERVER_ERROR',
+          data: 'Won\'t stream to an empty room.'
         })); 
       } else {
         chat.getRoomByName(roomName).attachHostSocket(sock);

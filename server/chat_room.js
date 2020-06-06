@@ -354,15 +354,12 @@ exports.ChatRoom = function (desc, chat, proxy) {
   // notify all clients about the adding.
   this.enter = function (client) {
     numberOfClients++;
-    if (numberOfClients === 1) {
-      playNext();
-    }
     clients[client.id()] = client;
     client.setRoom(that);
     initLocalData(client);
     client.local('num', client.local('num') + 1);
     if (client.local('num') > 3) {
-      return client.error("too many accounts in room");
+      return client.error("An account present too many times in a room.");
     }
 
     this.broadcast('new_client', client.publicInfo(), client);
@@ -385,7 +382,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     numberOfClients--;
     client.local('num', client.local('num') - 1);
     delete clients[client.id()];
-    if (!numberOfClients) {
+    if (numberOfClients == 0) {
       roomState.state = "dead";
       roomState.songStart = null;
       roomState.lastSong = null;
@@ -417,6 +414,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
     // This will also make sure the music fades out gradually on the clients.
     this.broadcast('clear_host_chunks');
     info("The connection to host was broken.");
+  };
+
+  this.isEmpty = function() {
+    return numberOfClients == 0;
   };
 
   (function () {

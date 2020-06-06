@@ -46,7 +46,14 @@ exports.Chat = function (proxy) {
     return false;
   };
 
-  // add room to a list of rooms.
+  this.isRoomEmpty = function (name) {
+    if (!that.roomNameExists(name)) {
+      return true;
+    }
+    return rooms[name].isEmpty();
+  }
+
+  // Add room to a list of rooms.
   this.createRoom = function (roomDescriptor) {
     var name = roomDescriptor.name, room;
     if (that.roomNameExists(name)) {
@@ -55,18 +62,6 @@ exports.Chat = function (proxy) {
     room = new ChatRoom(roomDescriptor, that, proxy);
     rooms[name] = room;
     console.log("new room created " + name);
-  };
-
-  // pop room from a list of rooms (when user requests so.)
-  this.removeRoom = function (room) {
-    assertType(room, ChatRoom);
-    if (!room.isEmpty()) {
-      throw "removing non empty room";
-    }
-    if (that.roomNameExists(room.name)) {
-      throw "room doesn't exists";
-    }
-    delete rooms[room.name];
   };
 
   // when client requests moving to another room.
