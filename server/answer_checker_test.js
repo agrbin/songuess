@@ -2,6 +2,7 @@ var ac = require('./answer_checker');
 ac = new ac();
 
 // TODO: all commented tests should pass!
+// Format is [Correct Title, attempted answer]
 var validPairs = [
   ['djakovo', 'đakovo'],
   ['nesto (nema) [nema ni ovog]', 'nesto'],
@@ -34,15 +35,30 @@ var validPairs = [
   ['this is my answer #playon', 'this is my answer'],
   ['this is #playon my answer', 'this is my answer'],
   ['Don Prle (iza nevidjenog)', 'don prle iza nevidjenog'],
-  ['i cant get no satisfaction','(I Can\'t Get No) Satisfaction'],
+  ['(I Can\'t Get No) Satisfaction', 'i cant get no satisfaction'],
   ['nice dream', '(Nice dream)'],
   ['2+2=5', '2 + 2 = 5'],
   ['jebeno', 'jeebno'],
+  ['(I Can\'t Get No) Satisfaction (Mono version)', 'satisfaction'],
+  ['(I Can\'t Get No) Satisfaction (Mono version)', 'i cant get no satisfaction'],
+  ['Everybody (Backstreet\'s back)', 'everybody'],
+  ['Everybody (Backstreet\'s back)', 'backstreet\'s back'],
+  ['Corcovado (quiet nights of quiet stars)', 'corcovado'],
+  ['Corcovado (quiet nights of quiet stars)', 'quiet nights of quiet stars'],
+  ['Dark Horse feat Juicy J', 'dark horse'],
+  ['Kažu', 'kazu'],  // This weird z letter appeared while playing.
+  ['The real slim shady', 'real slim shady'],
 ];
 
 var invalidPairs = [
   ['7', '5'],
   ['2+2=5', ''],
+  ['some song (Live)', 'live'],
+  ['Stan (feat. Dido)', 'feat dido'],
+  ['some song (version 2003)', 'version 2003'],
+  // I decided this example to be fine not to accept.
+  // Feels to risky to accept supersets of the correct answer.
+  ['Umoran sam', 'umoran sam prijatelju'],
   // ['[]', '(...)'],
   // ['(Nice dream)', '()'],
   // ['Neighborhood #1 (Tunnels)', 'Neighborhood #4 (7 Kettles)'],

@@ -4,11 +4,9 @@
 module.exports = function (options) {
   var
     MISTAKES_BY_CHAR = 1.0/6, // on 6 chars you may mistype one.
-    nonAlphanum = /[^a-zA-Z0-9šđčćžáàâäãæéèêëíîïóôöœúùûüñç ]/g,
+    nonAlphanum = /[^a-zA-Z0-9šđčćžžáàâäãæéèêëíîïóôöœúùûüñç ]/g,
     mulSpace = /  +/g,
     trimSpace = /^ | $/g,
-    trimParentheses = /\([^)]*\)/g,
-    trimSquare = /\[[^\]]*\]/g,
     trimHashtag = /\#([^ ]+)/g,
     replacePairs = [
       ['ć', 'c'],
@@ -17,6 +15,7 @@ module.exports = function (options) {
       ['š', 's'],
       ['đ', 'dj'],
       ['ž', 'z'],
+      ['ž', 'z'],
       ['á', 'a'],
       ['à', 'a'],
       ['â', 'a'],
@@ -94,14 +93,9 @@ module.exports = function (options) {
     return Math.round(sol / 2);
   }
 
-  // this function returns a string.
-  //
-  // If remove_parenthesis_content is true:
-  //  'anton (test)' => 'anton'
-  //
-  // If remove_parenthesis_content is false:
-  // 'anton (test)' => 'anton test'
-  function normalize(str, remove_parenthesis_content) {
+  // Returns a string containing only alpha-num characters, no spaces, no
+  // parenthesis, etc...
+  function normalize(str) {
     var i;
     if (str === null || str === undefined) {
       return "null";
@@ -109,10 +103,6 @@ module.exports = function (options) {
     str = str.toString();
     str = str.toLowerCase();
     str = str.replace(trimHashtag, '');
-    if (remove_parenthesis_content) {
-      str = str.replace(trimParentheses, '');
-      str = str.replace(trimSquare, '');
-    }
     str = str.replace(nonAlphanum, ' ');
     str = str.replace(mulSpace, ' ');
     str = str.replace(trimSpace, '');
@@ -123,23 +113,78 @@ module.exports = function (options) {
     return str;
   }
 
-  function checkTitleImpl(correct_title, answer, remove_parenthesis_content) {
-    var t1 = normalize(answer, remove_parenthesis_content);
-    var t2 = normalize(correct_title, remove_parenthesis_content);
-    var allowed_mistakes = Math.floor(t1.length * MISTAKES_BY_CHAR);
+  // This function will generate possible answer options, for example by
+  // removing different parenthesis pairs or by stripping "the" from the title.
+  //
+  // The returned strings have all been through the normalize() function above.
+  function generateCorrectAnswers(correct_title) {
+    const normalized = normalize(correct_title);
+    let answers = [normalized];
 
-    if (t1 === t2) return true;
-    if (editDistanceUnderEstimate2(t1, t2) > allowed_mistakes) return false;
-    if (editDistanceUnderEstimate(t1, t2) > allowed_mistakes) return false;
-    if (editDistance(t1, t2) > allowed_mistakes) return false;
+    // Strip the and add to versions.
+    if (normalized.startsWith('the ')) {
+      answers.push(normalized.substring(4));
+    }
+
+    // Example where this is needed is the title 'dark horse feat juicy j'.
+    // 'feat ..' parts are usually inside parenthesis, but not in this case.
+    const feat_pos = normalized.indexOf(' feat ');
+    if (feat_pos > 0) {
+      answers.push(normalized.substring(0, feat_pos));
+    }
+
+    // Finds ( or [, and then includes everything until the matching ) or ].
+    // Doesn't work for nested brackets, but we didn't see cases like that
+    // so far.
+    let parenthesesRegex = /[\(\[][^\)\]]*[\)\]]/g;
+    let match;
+    while ((match = parenthesesRegex.exec(correct_title)) != null) {
+      let withoutGroup = correct_title.substring(0, match.index)
+                       + correct_title.substring(parenthesesRegex.lastIndex);
+      answers = answers.concat(generateCorrectAnswers(withoutGroup));
+
+      // In cases like "everybody (backstreet's back)", we want to accept
+      // "backtreet's back" as well.
+      // But we don't want to accept things like (feat X) or (live).
+      let groupOnly = correct_title.substring(
+        match.index + 1,
+        parenthesesRegex.lastIndex - 1
+      ).toLowerCase();
+      if (!groupOnly.includes('feat') &&
+          !groupOnly.includes('live') &&
+          !groupOnly.includes('version')) {
+        answers = answers.concat(generateCorrectAnswers(groupOnly));
+      }
+    }
+
+    return answers;
+  }
+
+  function compareNormalizedStrings(s1, s2) {
+    if (s1 === s2) return true;
+
+    // If the title has a lot of optional stuff in parenthesis, the typed
+    // accepted answer might be short.
+    // In this case, using the longer title would allow for a lot of mistakes
+    // in the shorter one.
+    // So we use the 'min' instead of 'max' here instead.
+    const allowed_mistakes = Math.floor(
+      Math.min(s1.length, s2.length) * MISTAKES_BY_CHAR
+    );
+
+    if (editDistanceUnderEstimate2(s1, s2) > allowed_mistakes) return false;
+    if (editDistance(s1, s2) > allowed_mistakes) return false;
     return true;
   }
 
   function checkTitle(correct_title, answer) {
-    // TODO(ganton): optimization idea, i can omit one call to this function if
-    // neither of the strings contains '()[]'.
-    return checkTitleImpl(correct_title, answer, true) ||
-      checkTitleImpl(correct_title, answer, false);
+    const normalized_answer = normalize(answer);
+    for (const correct_answer of generateCorrectAnswers(correct_title)) {
+      if (compareNormalizedStrings(normalized_answer, correct_answer)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function consumePrefixOrFalse(big, small) {
@@ -171,7 +216,7 @@ module.exports = function (options) {
       return false;
     }
     var key, artist = playlistItem["artist"];
-    // figure out if there is artis
+    // figure out if there is an artist
     for (key in playlistItem) {
       // If key has 'title' as a prefix.
       if (key.substr(0, 5) === "title") {
