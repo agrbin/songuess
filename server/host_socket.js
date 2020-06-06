@@ -1,6 +1,8 @@
 /*jslint indent: 2, plusplus: true*/
 "use strict";
 
+// The socket connected to a Chrome extension.
+// Each chat room would have its own instance.
 exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHandler) {
 
   var doneHandler = null;
@@ -28,6 +30,10 @@ exports.HostSocket = function (socket, chatRoom, roomReadyHandler, songEndedHand
     };
 
     sendCommand('moveToNextSong');    
+  };
+
+  this.closeSocket = function() {
+    socket.close();
   };
 
   (function () {

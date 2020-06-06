@@ -153,7 +153,7 @@ function ChatUI(chat, user) {
   };
 
   this.displayRoomDescription = function (desc) {
-    entry("sys", (desc === null)? "No room description.": desc);
+    entry("sys", desc? desc: "No room description.");
   };
 
   this.correctAnswer = function (desc) {

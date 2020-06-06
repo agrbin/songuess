@@ -50,8 +50,8 @@ server.on('connection', function (sock) {
       }
     } else {
       verifyToken(message, function (user, err) {
-        // it looks like reason should not be too long.
         if (err) {
+          // It looks like the reason should not be too long.
           sock.close(1000, err.toString().substr(0, 100));
         } else {
           sock.send(JSON.stringify(user), function () {

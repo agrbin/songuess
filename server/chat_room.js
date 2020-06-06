@@ -389,10 +389,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
       roomState.state = "dead";
       roomState.songStart = null;
       roomState.lastSong = null;
-      // TODO what should the host room do?
-      // if (streamer !== null) {
-      //   streamer.stop();
-      // }
+      if (hostSocket !== null) {
+        hostSocket.closeSocket();
+        this.detachHostSocket();
+      }
     }
     this.broadcast('old_client', [client.id(), reason]);
   };
@@ -402,8 +402,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
         client = clients[id];
-        sol[ client.desc('display') ]
-          = client.local('score');
+        sol[ client.desc('display') ] = client.local('score');
       }
     }
     return sol;
