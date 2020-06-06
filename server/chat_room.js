@@ -199,7 +199,6 @@ exports.ChatRoom = function (desc, chat, proxy) {
     return words.map(w => calcWordHint(w)).join(' ');
   }
 
-  // TODO there's a bug here, the first /idk after the hint immediately goes to the next song.
   function onIDontKnow(data, client) {
     if (roomState.state !== "playing" && roomState.state !== "playon") {
       return;
@@ -218,7 +217,10 @@ exports.ChatRoom = function (desc, chat, proxy) {
           state : roomState.state
         });
         roomState.hintShowed = true;
+        // Reset the voting. We want another majority in order to skip the song
+        // after the hint was displayed.
         roomState.whoNextVotes = {};
+        roomState.nextVotes = 0;
       } else {
         that.broadcast('called_i_dont_know', {
           who: client.id(),
