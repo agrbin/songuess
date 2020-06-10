@@ -152,6 +152,10 @@ module.exports = function (options) {
       ).toLowerCase();
       if (!groupOnly.includes('feat') &&
           !groupOnly.includes('live') &&
+          !groupOnly.includes('mix') &&
+          !groupOnly.includes('soundtrack') &&
+          !groupOnly.includes('instrumental') &&
+          !groupOnly.includes('remaster') &&
           !groupOnly.includes('version')) {
         answers = answers.concat(generateCorrectAnswers(groupOnly));
       }

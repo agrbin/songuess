@@ -185,7 +185,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   function onNewRoom(data, client) {
     if (!chat.roomNameExists(data)) {
-      return client.error("no such room " + data + ".", 1);
+      return client.error("No such room: " + data, 1);
     }
     chat.move(client, chat.whereIs(client), chat.getRoomByName(data));
   }

@@ -430,9 +430,9 @@ function Chat(wsock, user, media, player, onFatal) {
 
   wsock.onClose(function (e) {
     if (e.reason) {
-      onFatal("server closed connection: " + e.reason);
+      onFatal("Server closed the connection: " + e.reason);
     } else {
-      onFatal("server closed connection with no reason.");
+      onFatal("Server closed the connection.");
     }
   });
 

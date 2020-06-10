@@ -56,6 +56,10 @@ var invalidPairs = [
   ['some song (Live)', 'live'],
   ['Stan (feat. Dido)', 'feat dido'],
   ['some song (version 2003)', 'version 2003'],
+  ['some song (Mix 2011)', 'mix 2011'],
+  ['some song (remastered)', 'remastered'],
+  ['some song (from Hair soundtrack)', 'from hair soundtrack'],
+  ['some song (instrumental)', 'instrumental'],
   // I decided this example to be fine not to accept.
   // Feels to risky to accept supersets of the correct answer.
   ['Umoran sam', 'umoran sam prijatelju'],
