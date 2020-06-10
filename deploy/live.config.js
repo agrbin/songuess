@@ -8,7 +8,6 @@ module.exports = function(exports) {
   exports.server.staticMaxAge = 3600;
   exports.server.port = 52066
 
-  exports.streamer.sendAhead = 12;
   exports.socket.ignoreNetworkProblems = true;
   exports.socket.pingInterval = 15;
 
