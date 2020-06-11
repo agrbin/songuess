@@ -294,7 +294,10 @@ var Player = function(getTime, volumeElement, onFatal) {
         // playing for a while.
         // bufferSource.start complains in this case, so we start at 0 and use
         // an appropriate offset instead.
-        bufferSource.start(0, -firstHostChunkStartTime);
+        // TODO explain why this acTime offset is needed, I also don't get it
+        // currently :)
+        bufferSource.start(0, acTime - firstHostChunkStartTime);
+        console.log('acTime:', acTime);
       } else {
         bufferSource.start(firstHostChunkStartTime);
       }
