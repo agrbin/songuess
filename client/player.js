@@ -33,7 +33,6 @@ var Player = function(getTime, volumeElement, onFatal) {
     , warmUpCalled = false
     , muted = false
     , maxScheduledPoint = 0
-    , streamEnabled = true
     , downloadDurationStat = {n: 0, sum: 0, avg:null}
     , hostAudioArray = []
     , firstHostChunkStartTime = null
@@ -123,11 +122,6 @@ var Player = function(getTime, volumeElement, onFatal) {
       masterGain.connect(playPauseGain);
     }
     return muted;
-  };
-
-  this.toggleStream = function () {
-    streamEnabled = !streamEnabled;
-    return streamEnabled;
   };
 
   // disables and enables playback.

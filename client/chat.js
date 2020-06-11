@@ -125,11 +125,6 @@ function Chat(wsock, user, media, player, onFatal) {
     wsock.sendType("change_group", {when:myClock.clock(), group:target});
   });
 
-  onCommand("stream", function (what) {
-    ui.addNotice(player.toggleStream() ?
-                 "Streaming turned on." : "Streaming turned off.");
-  });
-
   onCommand("mute", function () {
     ui.addNotice(player.toggleMute() ?
                  "Sound turned off." : "Sound turned on.");
@@ -145,7 +140,7 @@ function Chat(wsock, user, media, player, onFatal) {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
     ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
-    ui.addNotice("- /desc, /stream, /info, /idk");
+    ui.addNotice("- /desc, /info, /idk");
     ui.addNotice("- /reset (will reset your score), /honor");
   });
 
