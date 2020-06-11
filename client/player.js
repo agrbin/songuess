@@ -216,7 +216,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     hostAudioArray = [];
     if (currentHostChunkGain !== null && scheduledChunkEndTime !== null) {
       // The value will be 1e-5 at the given time, with exponential approach.
-      // Note that 0 is not allowed as a param for this function, so we pass a small
+      // "0" is not allowed as a param for this function, so we pass a small
       // number instead.
       currentHostChunkGain.gain.exponentialRampToValueAtTime(1e-5, scheduledChunkEndTime);
     }
@@ -296,8 +296,9 @@ var Player = function(getTime, volumeElement, onFatal) {
         // an appropriate offset instead.
         // TODO explain why this acTime offset is needed, I also don't get it
         // currently :)
+        console.log('negative first chunk, acTime and startTime are',
+          acTime, firstHostChunkStartTime);
         bufferSource.start(0, acTime - firstHostChunkStartTime);
-        console.log('acTime:', acTime);
       } else {
         bufferSource.start(firstHostChunkStartTime);
       }
