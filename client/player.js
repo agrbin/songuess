@@ -176,77 +176,6 @@ var Player = function(getTime, volumeElement, onFatal) {
     return that.setVolume();
   };
 
-  // socket.onmessage will be binded to this method.
-  // when message is received, start downloading mp3 chunk and decode it.
-  this.addChunk = function(chunkInfo, secondary) {
-    if (!streamEnabled) {
-      return;
-    }
-    var request = new XMLHttpRequest(), done = false, downloadStarted;
-    if (!warmUpCalled) {
-      return;
-    }
-
-    // we have timeout only on primary URL
-    request.open(
-        'GET',
-        secondary ? chunkInfo.backupUrl : chunkInfo.url
-    );
-    request.responseType = 'arraybuffer';
-
-    if (!secondary) {
-      if (downloadDurationStat.n > 2) {
-        timeout = downloadDurationStat.avg * 1.5;
-      } else {
-        timeout = window.songuess.primaryChunkDownloadTimeout;
-      }
-    } else {
-      timeout = chunkInfo.start - myClock.clock() + 500;
-    }
-
-    if (timeout < 0) {
-      console.log("chunk ignored. wont even start download.");
-      return;
-    }
-
-    // after timeout query the backupUrl only if:
-    //  this is primary query
-    //  primary query is not finished
-    //  we have backup url
-    setTimeout(function () {
-      if (!secondary && !done && chunkInfo.backupUrl) {
-        console.log("using backup URL for chunk. timeout was: " + timeout);
-        request.abort();
-        return that.addChunk(chunkInfo, true);
-      }
-      if (secondary && !done) {
-        console.log("chunk ignored. didn't finish download in time.");
-        request.abort();
-      }
-    }, timeout);
-
-    // register onload.
-    request.addEventListener('load', function(event) {
-      done = true;
-      if (event.target.status != 200) return;
-      // calculate avg download time
-      downloadDurationStat.n ++;
-      downloadDurationStat.sum += myClock.clock() - downloadStarted;
-      downloadDurationStat.avg =
-        downloadDurationStat.sum / downloadDurationStat.n;
-
-      audioContext.decodeAudioData(
-        event.target.response,
-        function(decoded) {
-          schedule(decoded, chunkInfo.start);
-        }
-      );
-    }, false);
-
-    downloadStarted = myClock.clock();
-    request.send();
-  };
-
   // The audio comes from a MediaRecorder object living inside the Chrome
   // extension.
   // The first chunk it sends contains a header.
@@ -313,52 +242,6 @@ var Player = function(getTime, volumeElement, onFatal) {
     }
   }
 
-  // to avoid 'click' sound between the chunks we did some overlaping of chunks
-  // on the server side. in the first overlapTime of the chunk we are doing
-  // fade in, and the fade out is done on the end.
-  // as a result we have cross-fade effect.
-  // server is configured for the overlaping time of 48ms, eg. 2 mp3 frames on
-  // 48khz sampling.
-  function schedule(buffer, serverTime) {
-    var source = audioContext.createBufferSource()
-      , gainNode = audioContext.createGain()
-      , duration = buffer.duration
-      , startTime = transponseTime(serverTime)
-      , currentTime = audioContext.currentTime;
-
-    // if audioContext is not ready yet.
-    if (startTime === null) {
-      return;
-    }
-
-    // connect the components
-    source.buffer = buffer;
-    source.connect(gainNode);
-    gainNode.connect(masterGain);
-    // to avoid click! fade in and out
-    gainNode.gain.linearRampToValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(1, startTime + overlapTime);
-    gainNode.gain.linearRampToValueAtTime(1, startTime + duration - overlapTime);
-    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
-
-    // play the chunk if it is in the future
-    // log the issues.
-    if (startTime > currentTime) {
-      if (startTime - currentTime < 1) {
-        console.log("chunk almost late: ", startTime - currentTime);
-      }
-      source.start(startTime);
-      maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
-    } else if (startTime + duration > currentTime) {
-      console.log("chunk played with offset. late for: ",
-          currentTime - startTime);
-      source.start(currentTime, currentTime - startTime);
-      maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
-    } else {
-      console.log("chunk ignored. late for: ", currentTime - startTime);
-    }
-  }
-
   function firstHostChunkAlreadyScheduled() {
     return (currentHostChunkGain !== null);
   }
@@ -405,8 +288,16 @@ var Player = function(getTime, volumeElement, onFatal) {
       // translated to our current audioContext time.
       firstHostChunkStartTime = transponseTime(nextSongStart);
 
-      bufferSource.start(firstHostChunkStartTime);
       console.log('scheduling first chunk at:', firstHostChunkStartTime);
+      if (firstHostChunkStartTime < 0) {
+        // This case is possible when a client joins after the song has been
+        // playing for a while.
+        // bufferSource.start complains in this case, so we start at 0 and use
+        // an appropriate offset instead.
+        bufferSource.start(0, -firstHostChunkStartTime);
+      } else {
+        bufferSource.start(firstHostChunkStartTime);
+      }
 
       // This variable is only relevant until the first chunk is scheduled.
       nextSongStart = null;

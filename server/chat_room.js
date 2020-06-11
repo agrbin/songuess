@@ -363,6 +363,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     }
 
     this.broadcast('new_client', client.publicInfo(), client);
+
     client.send('room_state', packRoomState());
     client.onMessage('say', onSay);
     client.onMessage('sbeep', onSBeep);
@@ -374,6 +375,17 @@ exports.ChatRoom = function (desc, chat, proxy) {
     client.onMessage('honor', onHonor);
     client.onMessage('sync_start', onStartSync);
     client.onMessage('change_group', onChangeGroup);
+
+    if (hostSocket === null) {
+      console.log('enter: hostSocket is null');
+    } else {
+      if (hostSocket.currentAudioData().length > 0) {
+        console.log('enter: sending currentAudioData to new client');
+        client.sendRaw(hostSocket.currentAudioData());
+      } else {
+        console.log('enter: currentAudioData is empty');
+      }
+    }
   };
 
   // pop a client from a list of clients and

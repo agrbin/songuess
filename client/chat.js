@@ -297,10 +297,6 @@ function Chat(wsock, user, media, player, onFatal) {
     });
   });
 
-  wsock.onMessage("chunk", function (chunk) {
-    player.addChunk(chunk);
-  });
-
   wsock.onRawData(function (data) {
     player.addHostChunk(data);
   });
@@ -310,17 +306,24 @@ function Chat(wsock, user, media, player, onFatal) {
   });
 
   wsock.onMessage("room_state", function (data) {
+    console.log('room_state:', data);
+
     location.hash = data.desc.name;
     roomDescription = data.desc.desc;
     roomState = data.state;
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
+
+    if (roomState.songStart !== null) {
+      player.setNextSongStart(roomState.songStart);
+    }
     if (roomState.state !== "playing" && roomState.state !== "playon") {
       player.pause();
     } else {
       player.play();
     }
+
     ui.youEntered(data);
     clients = data.users;
     updateClientIds();
