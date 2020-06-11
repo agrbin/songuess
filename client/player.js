@@ -66,9 +66,6 @@ var Player = function(getTime, volumeElement, onFatal) {
     playPauseGain.connect(audioContext.destination);
     playPauseGain.gain.setValueAtTime(1, 0);
     sonicBeepGain.connect(audioContext.destination);
-    // duration of first test beep.
-    sonicBeepGain.gain.setValueAtTime(0.3, 0);
-    sonicBeepGain.gain.setValueAtTime(0, 0.2);
     // volumeElement can be null.
     if (volumeElement) {
       volumeElement.style.display = 'block';
@@ -76,11 +73,6 @@ var Player = function(getTime, volumeElement, onFatal) {
         masterGain.gain.value = this.value;
       });
     }
-    // play the number of the beast freq as a test note.
-    oscillator = audioContext.createOscillator();
-    oscillator.frequency.value = 666;
-    oscillator.connect(sonicBeepGain);
-    oscillator.start(0);
   }
 
   this.getAudioContext = function() {
