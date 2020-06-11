@@ -191,7 +191,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function calcWordHint(word) {
-    return word.replace(/[^aeiou().,:]/gi, '_');
+    return word.replace(/[^aeiou().,:]/gi, '.');
   }
 
   function calcHint(currentItem) {
