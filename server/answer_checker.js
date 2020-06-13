@@ -113,6 +113,19 @@ module.exports = function (options) {
     return str;
   }
 
+  function parenthesisPartAcceptable(part) {
+    const forbidden = [
+      'feat', 'live', 'mix', 'soundtrack', 'instrumental',
+      'remaster', 'edit', 'version'
+    ];
+    for (let str of forbidden) {
+      if (part.includes(str)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   // This function will generate possible answer options, for example by
   // removing different parenthesis pairs or by stripping "the" from the title.
   //
@@ -150,13 +163,7 @@ module.exports = function (options) {
         match.index + 1,
         parenthesesRegex.lastIndex - 1
       ).toLowerCase();
-      if (!groupOnly.includes('feat') &&
-          !groupOnly.includes('live') &&
-          !groupOnly.includes('mix') &&
-          !groupOnly.includes('soundtrack') &&
-          !groupOnly.includes('instrumental') &&
-          !groupOnly.includes('remaster') &&
-          !groupOnly.includes('version')) {
+      if (parenthesisPartAcceptable(groupOnly)) {
         answers = answers.concat(generateCorrectAnswers(groupOnly));
       }
     }
