@@ -48,6 +48,8 @@ var validPairs = [
   ['Dark Horse feat Juicy J', 'dark horse'],
   ['Kažu', 'kazu'],  // This weird z letter appeared while playing.
   ['The real slim shady', 'real slim shady'],
+  ['L-O-V-E', 'l-o-v-e'],
+  ['L-O-V-E', 'l o v e'],
 ];
 
 var invalidPairs = [
@@ -60,6 +62,8 @@ var invalidPairs = [
   ['some song (remastered)', 'remastered'],
   ['some song (from Hair soundtrack)', 'from hair soundtrack'],
   ['some song (instrumental)', 'instrumental'],
+  // Arguable, but the title is really spelled out intentionally.
+  ['L-O-V-E', 'love'],
   // I decided this example to be fine not to accept.
   // Feels to risky to accept supersets of the correct answer.
   ['Umoran sam', 'umoran sam prijatelju'],
