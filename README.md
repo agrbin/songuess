@@ -1,3 +1,8 @@
+deprecated
+==========
+
+This was an old version of the game which was depending on a media server. The new version of the game "songuess live" is availabe at https://github.com/tgrbin/songuess.
+
 songuess
 ========
 
