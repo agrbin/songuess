@@ -11,17 +11,14 @@ var
 
 var onHttpRequest,
   httpServer = require('http').createServer(onHttpRequest),
-  media = new (require('./media.js').MediaGateway)(),
   proxy = new (require('./httpproxy.js').HttpProxy)(),
-  chat = new (require('./chat.js').Chat)(media, proxy),
+  chat = new (require('./chat.js').Chat)(proxy),
   server = new ws.Server({server: httpServer}),
   staticServer = new (require('./static_server').Server)();
 
 function onHttpRequest(req, res) {
   if (!proxy.handleRequest(req, res)) {
-    if (!media.handleRequest(req, res)) {
-      staticServer.handleRequest(req, res);
-    }
+    staticServer.handleRequest(req, res);
   }
 }
 
@@ -30,22 +27,45 @@ function onVerified(sock, user) {
     var wsock = new SockWrapper(sock, ping, user);
     user.ping = ping;
     chat.connect(wsock, user);
-    media.serve(wsock, user);
   });
 }
 
 server.on('connection', function (sock) {
   sock.onmessage = function (message) {
-    verifyToken(message, function (user, err) {
-      // it looks like reason should not be too long.
-      if (err) {
-        sock.close(1000, err.toString().substr(0, 100));
+    var parsedMessage = JSON.parse(message.data);
+    if (parsedMessage.type == 'attachToRoom') {
+      var roomName = parsedMessage.data.roomName; 
+      if (!chat.roomNameExists(roomName)) {
+        sock.send(JSON.stringify({
+          type: 'attachToRoom',
+          status: 'SERVER_ERROR',
+          data: 'The room doesn\'t exist.'
+        })); 
+      } else if (chat.isRoomEmpty(roomName)) {
+        sock.send(JSON.stringify({
+          type: 'attachToRoom',
+          status: 'SERVER_ERROR',
+          data: 'Won\'t stream to an empty room.'
+        })); 
       } else {
-        sock.send(JSON.stringify(user), function () {
-          onVerified(sock, user);
-        });
+        chat.getRoomByName(roomName).attachHostSocket(sock);
+        sock.send(JSON.stringify({
+          type: 'attachToRoom',
+          status: 'OK'
+        })); 
       }
-    });
+    } else {
+      verifyToken(message, function (user, err) {
+        if (err) {
+          // It looks like the reason should not be too long.
+          sock.close(1000, err.toString().substr(0, 100));
+        } else {
+          sock.send(JSON.stringify(user), function () {
+            onVerified(sock, user);
+          });
+        }
+      });
+    }
   };
 });
 

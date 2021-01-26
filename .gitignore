@@ -21,6 +21,4 @@ media/server/config.override.js
 client/config.js
 
 # npm install artefacts
-deploy/package-lock.json
-server/package-lock.json
-
+package-lock.json

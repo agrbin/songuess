@@ -33,8 +33,12 @@ var Player = function(getTime, volumeElement, onFatal) {
     , warmUpCalled = false
     , muted = false
     , maxScheduledPoint = 0
-    , streamEnabled = true
-    , downloadDurationStat = {n: 0, sum: 0, avg:null};
+    , downloadDurationStat = {n: 0, sum: 0, avg:null}
+    , hostAudioArray = []
+    , firstHostChunkStartTime = null
+    , currentHostChunkGain = null
+    , nextSongStart = null
+    , scheduledChunkEndTime = null;
 
   try {
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -61,9 +65,6 @@ var Player = function(getTime, volumeElement, onFatal) {
     playPauseGain.connect(audioContext.destination);
     playPauseGain.gain.setValueAtTime(1, 0);
     sonicBeepGain.connect(audioContext.destination);
-    // duration of first test beep.
-    sonicBeepGain.gain.setValueAtTime(1, 0);
-    sonicBeepGain.gain.setValueAtTime(0, 0.2);
     // volumeElement can be null.
     if (volumeElement) {
       volumeElement.style.display = 'block';
@@ -71,12 +72,6 @@ var Player = function(getTime, volumeElement, onFatal) {
         masterGain.gain.value = this.value;
       });
     }
-    // play the number of the beast freq as a test note.
-    // oscillator is a long word, isn't it?
-    oscillator = audioContext.createOscillator();
-    oscillator.frequency.value = 666;
-    oscillator.connect(sonicBeepGain);
-    oscillator.start(0);
   }
 
   this.getAudioContext = function() {
@@ -129,20 +124,24 @@ var Player = function(getTime, volumeElement, onFatal) {
     return muted;
   };
 
-  this.toggleStream = function () {
-    streamEnabled = !streamEnabled;
-    return streamEnabled;
-  };
-
   // disables and enables playback.
   this.pause = function () {
+    console.log('pause called');
+
     if (!warmUpCalled) return;
     if (!playEnabled) return;
     playEnabled = false;
+    // Go to zero over ~3 seconds, starting 1 second from now.
     playPauseGain.gain.setTargetAtTime(0, audioContext.currentTime + 1, 1);
   };
 
+  this.setNextSongStart = function (songStart) {
+    nextSongStart = songStart;  
+  };
+
   this.play = function () {
+    console.log('play called');
+
     if (!warmUpCalled) return;
     if (playEnabled) return;
     playEnabled = true;
@@ -150,7 +149,7 @@ var Player = function(getTime, volumeElement, onFatal) {
     playPauseGain.gain.value = 1;
   };
 
-  // returns if ovlume is muted currently
+  // returns if volume is muted currently
   this.setVolume = function (value) {
     if (!warmUpCalled) return;
     if (value === undefined) {
@@ -163,75 +162,51 @@ var Player = function(getTime, volumeElement, onFatal) {
     return that.setVolume();
   };
 
-  // socket.onmessage will be binded to this method.
-  // when message is received, start downloading mp3 chunk and decode it.
-  this.addChunk = function(chunkInfo, secondary) {
-    if (!streamEnabled) {
-      return;
-    }
-    var request = new XMLHttpRequest(), done = false, downloadStarted;
-    if (!warmUpCalled) {
-      return;
-    }
+  // The audio comes from a MediaRecorder object living inside the Chrome
+  // extension.
+  // The first chunk it sends contains a header.
+  // The followup chunks should be concatenated with the previous ones,
+  // otherwise the decodeAudioData call would fail.
+  // The received 'chunk' is a Blob object.
+  this.addHostChunk = function(chunk) {
+    console.log('got host chunk:', chunk);
 
-    // we have timeout only on primary URL
-    request.open(
-        'GET',
-        secondary ? chunkInfo.backupUrl : chunkInfo.url
-    );
-    request.responseType = 'arraybuffer';
-
-    if (!secondary) {
-      if (downloadDurationStat.n > 2) {
-        timeout = downloadDurationStat.avg * 1.5;
-      } else {
-        timeout = window.songuess.primaryChunkDownloadTimeout;
-      }
-    } else {
-      timeout = chunkInfo.start - myClock.clock() + 500;
-    }
-
-    if (timeout < 0) {
-      console.log("chunk ignored. wont even start download.");
+    // Just an optimization, no need to decode if we don't know when to
+    // schedule.
+    if (!firstHostChunkAlreadyScheduled() && nextSongStart === null) {
+      console.log('skipping decode, first chunk schedule time unknown');
       return;
     }
 
-    // after timeout query the backupUrl only if:
-    //  this is primary query
-    //  primary query is not finished
-    //  we have backup url
-    setTimeout(function () {
-      if (!secondary && !done && chunkInfo.backupUrl) {
-        console.log("using backup URL for chunk. timeout was: " + timeout);
-        request.abort();
-        return that.addChunk(chunkInfo, true);
-      }
-      if (secondary && !done) {
-        console.log("chunk ignored. didn't finish download in time.");
-        request.abort();
-      }
-    }, timeout);
-
-    // register onload.
-    request.addEventListener('load', function(evt) {
-      done = true;
-      if (evt.target.status != 200) return;
-      // calculate avg download time
-      downloadDurationStat.n ++;
-      downloadDurationStat.sum += myClock.clock() - downloadStarted;
-      downloadDurationStat.avg =
-        downloadDurationStat.sum / downloadDurationStat.n;
+    chunk.arrayBuffer().then(function(buffer) {
+      // Concatenating type arrays (like Uint8Array) or ArrayBuffers is ugly,
+      // so hostAudioArray is a normal Array object.
+      hostAudioArray = hostAudioArray.concat(Array.from(new Uint8Array(buffer)));
 
       audioContext.decodeAudioData(
-        evt.target.response,
-        function(decoded) {
-          schedule(decoded, chunkInfo.start);
+        new Uint8Array(hostAudioArray).buffer,
+        function(audioBuffer) {
+          scheduleHostChunk(audioBuffer);
+        },
+        function (e) {
+          console.log('error decoding buffer:', e);
         }
       );
-    }, false);
+    });
+  };
 
-    downloadStarted = myClock.clock();
-    request.send();
+  // After this is called, the next chunk received should be the first chunk
+  // of the next song.
+  this.clearHostChunks = function() {
+    console.log('clearing host chunks');
+    hostAudioArray = [];
+    if (currentHostChunkGain !== null && scheduledChunkEndTime !== null) {
+      // The value will be 1e-5 at the given time, with exponential approach.
+      // "0" is not allowed as a param for this function, so we pass a small
+      // number instead.
+      currentHostChunkGain.gain.exponentialRampToValueAtTime(1e-5, scheduledChunkEndTime);
+    }
+    currentHostChunkGain = null;
   };
 
   // transponseTime transponses server time to the audioContext's time.
@@ -242,65 +217,91 @@ var Player = function(getTime, volumeElement, onFatal) {
   // synchronization with server.
   // audioContext.currentTime is sleeping on zero for some time so we must
   // check this explicitly. 
-  function transponseTime(srvTime) {
+  function transponseTime(serverTime) {
     if (timeOffset === null && audioContext.currentTime > 0) {
       timeOffset = (getTime() / 1000) - audioContext.currentTime;
     }
     if (timeOffset !== null) {
-      return (srvTime / 1000) - timeOffset;
+      return (serverTime / 1000) - timeOffset;
     } else {
       return null;
     }
   }
 
-  // to avoid 'click' sound between the chunks we did some overlaping of chunks
-  // on the server side. in the first overlapTime of the chunk we are doing
-  // fade in, and the fade out is done on the end.
-  // as a result we have cross-fade effect.
-  // server is configured for the overlaping time of 48ms, eg. 2 mp3 frames on
-  // 48khz sampling.
-  function schedule(buffer, srvTime) {
-    var source = audioContext.createBufferSource()
-      , gainNode = audioContext.createGain()
-      , duration = buffer.duration
-      , startTime = transponseTime(srvTime)
-      , currentTime = audioContext.currentTime;
+  function firstHostChunkAlreadyScheduled() {
+    return (currentHostChunkGain !== null);
+  }
 
-    // if audioContext is not ready yet.
-    if (startTime === null) {
+  function scheduleHostChunk(audioBuffer) {
+    console.log('scheduling buffer: ', audioBuffer, nextSongStart);
+
+    // The function we call checks a variable that's modified inside this
+    // current function, so it's important to store the initial value.
+    const firstChunkScheduled = firstHostChunkAlreadyScheduled();
+
+    // We don't know when to schedule the first chunk, nothing to do.
+    if (!firstChunkScheduled && nextSongStart === null) {
+      console.log('SHOULD NEVER HAPPEN');
       return;
     }
 
-    // connect the components
-    source.buffer = buffer;
-    source.connect(gainNode);
-    gainNode.connect(masterGain);
-    // to avoid click! fade in and out
-    gainNode.gain.linearRampToValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(1, startTime + overlapTime);
-    gainNode.gain.linearRampToValueAtTime(1, startTime + duration -overlapTime);
-    gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+    const acTime = audioContext.currentTime;
 
-    // play the chunk if it is in the future
-    // log the issues.
-    if (startTime > currentTime) {
-      if (startTime - currentTime < 1) {
-        console.log("chunk almost late: ", startTime - currentTime);
+    if (firstChunkScheduled) {
+      if (acTime < firstHostChunkStartTime) {
+        // It's possible we'd try to use a negative offset, this means the 2nd
+        // chunk arrived but the 1st didn't start playing yet.
+        // We'd try scheduling the 2nd one in the future, i.e. using a negative
+        // offset.
+        // It is OK just to not do anything in this case.
+        console.log('attempted to schedule a chunk with negative offset');
+        return;
       }
-      source.start(startTime);
-      maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
-    } else if (startTime + duration > currentTime) {
-      console.log("chunk played with offset. late for: ",
-          currentTime - startTime);
-      source.start(currentTime, currentTime - startTime);
-      maxScheduledPoint = Math.max(maxScheduledPoint, startTime + duration);
-    } else {
-      console.log("chunk ignored. late for: ", currentTime - startTime);
+      console.log('muting previous chunk');
+      // Mute the currently playing chunk, the new one will replace it
+      // immediately.
+      currentHostChunkGain.gain.value = 0;
     }
-  }
 
-  this.rowSound = function (row) {
-  };
+    var bufferSource = audioContext.createBufferSource();
+    currentHostChunkGain = audioContext.createGain();
+    bufferSource.buffer = audioBuffer;
+    bufferSource.connect(currentHostChunkGain);
+    currentHostChunkGain.connect(masterGain);
+
+    if (!firstChunkScheduled) {
+      // Schedule the first chunk, at the server given 'nextSongStart' but
+      // translated to our current audioContext time.
+      firstHostChunkStartTime = transponseTime(nextSongStart);
+
+      console.log('scheduling first chunk at:', firstHostChunkStartTime);
+      if (firstHostChunkStartTime < 0) {
+        // This case is possible when a client joins after the song has been
+        // playing for a while.
+        // bufferSource.start complains in this case, so we start at 0 and use
+        // an appropriate offset instead.
+        // TODO explain why this acTime offset is needed, I also don't get it
+        // currently :)
+        console.log('negative first chunk, acTime and startTime are',
+          acTime, firstHostChunkStartTime);
+        bufferSource.start(0, acTime - firstHostChunkStartTime);
+      } else {
+        bufferSource.start(firstHostChunkStartTime);
+      }
+
+      // This variable is only relevant until the first chunk is scheduled.
+      nextSongStart = null;
+    } else {
+      // Offset by how much was already played.
+      bufferSource.start(0, acTime - firstHostChunkStartTime);
+      console.log('scheduling chunk at: ', acTime,
+                  ' and offset: ', acTime - firstHostChunkStartTime);
+    }
+
+    scheduledChunkEndTime = firstHostChunkStartTime + audioBuffer.duration;
+    var end = new Date(new Date().getTime() + (scheduledChunkEndTime - acTime)*1000);
+    console.log('scheduled end time:', end.toLocaleTimeString(), end.getMilliseconds());
+  }
 
   (function() {
     if (navigator.userAgent.match(/(iPad|iPhone|iPod)/g)) {

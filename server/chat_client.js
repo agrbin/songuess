@@ -107,5 +107,12 @@ exports.ChatClient = function (wsock, user, chat) {
     });
   };
 
+  this.sendRaw = function (data) {
+    wsock.sendRaw(data, function (err) {
+      if (err) {
+        kill(err);
+      }
+    });
+  };
 };
 

@@ -24,9 +24,9 @@ function Chat(wsock, user, media, player, onFatal) {
     clients = {},
     ids = [],
     pids = [],
-    playlist,
     announceTimer,
     sonicSyncer = null,
+    roomDescription = null,
     roomState = {
       state : "dead",
       songStart : null,
@@ -88,9 +88,6 @@ function Chat(wsock, user, media, player, onFatal) {
     }
   }
 
-  function updatePlaylist() {
-  }
-
   function onCommand(cmd, callback) {
     commandCallbacks[cmd] = callback;
   }
@@ -128,11 +125,6 @@ function Chat(wsock, user, media, player, onFatal) {
     wsock.sendType("change_group", {when:myClock.clock(), group:target});
   });
 
-  onCommand("stream", function (what) {
-    ui.addNotice(player.toggleStream() ?
-                 "Streaming turned on." : "Streaming turned off.");
-  });
-
   onCommand("mute", function () {
     ui.addNotice(player.toggleMute() ?
                  "Sound turned off." : "Sound turned on.");
@@ -148,7 +140,7 @@ function Chat(wsock, user, media, player, onFatal) {
     ui.addNotice("Available commands are ");
     ui.addNotice("- /clear, /join #room, /mute, /vol [0-10]");
     ui.addNotice("- /sync, /reset, /who [#room], /group [0,1,2,...]");
-    ui.addNotice("- /playlist, /stream, /info, /next");
+    ui.addNotice("- /desc, /info, /idk");
     ui.addNotice("- /reset (will reset your score), /honor");
   });
 
@@ -222,8 +214,8 @@ function Chat(wsock, user, media, player, onFatal) {
     );
   });
 
-  onCommand("playlist", function () {
-    ui.displayPlaylist(playlist);
+  onCommand("desc", function () {
+    ui.displayRoomDescription(roomDescription);
   });
 
   // used as a wrapper to Syncer class.
@@ -241,7 +233,7 @@ function Chat(wsock, user, media, player, onFatal) {
   }
 
   onCommand("sync", function () {
-      ui.addNotice("sync is deprecated");
+    ui.addNotice("sync is deprecated");
     wsock.sendType("sync_start", {});
     new Syncer(
       new SyncSocketWrap(wsock),
@@ -252,9 +244,9 @@ function Chat(wsock, user, media, player, onFatal) {
     );
   });
 
-  onCommand("next", function () {
+  onCommand("idk", function () {
     if (roomState.state === "playing" || roomState.state === "playon") {
-      wsock.sendType("next", {when: myClock.clock()});
+      wsock.sendType("idk", {when: myClock.clock()});
     }
   });
 
@@ -300,25 +292,35 @@ function Chat(wsock, user, media, player, onFatal) {
     });
   });
 
-  wsock.onMessage("chunk", function (chunk) {
-    player.addChunk(chunk);
+  wsock.onRawData(function (data) {
+    player.addHostChunk(data);
+  });
+
+  wsock.onMessage("clear_host_chunks", function (chunk) {
+    player.clearHostChunks();
   });
 
   wsock.onMessage("room_state", function (data) {
+    console.log('room_state:', data);
+
     location.hash = data.desc.name;
+    roomDescription = data.desc.desc;
     roomState = data.state;
     clearTimeout(announceTimer);
     document.title = "songuess " + data.desc.name;
     ui.clear();
+
+    if (roomState.songStart !== null) {
+      player.setNextSongStart(roomState.songStart);
+    }
     if (roomState.state !== "playing" && roomState.state !== "playon") {
       player.pause();
     } else {
       player.play();
     }
+
     ui.youEntered(data);
-    playlist = data.desc.playlist;
     clients = data.users;
-    updatePlaylist();
     updateClientIds();
     ui.updateList();
   });
@@ -332,6 +334,7 @@ function Chat(wsock, user, media, player, onFatal) {
     roomState.state = data.state;
     copySharedToPidPeers(client);
     ui.correctAnswer(data);
+    console.log('correct answer');
   });
 
   wsock.onMessage("honored", function (data) {
@@ -371,6 +374,7 @@ function Chat(wsock, user, media, player, onFatal) {
     var interval, when = state.songStart;
     roomState = state;
     player.pause();
+    player.setNextSongStart(state.songStart);
     clearTimeout(announceTimer);
     announceTimer = setTimeout(function () {
       ui.announceSong(when);
@@ -381,13 +385,15 @@ function Chat(wsock, user, media, player, onFatal) {
     }, myClock.timeTo(when - 3010));
   });
 
-  wsock.onMessage("called_next", function (data) {
-    if (data.hasOwnProperty('answer')) {
+  wsock.onMessage("called_i_dont_know", function (data) {
+    if (data.hasOwnProperty('hint')) {
+      ui.showHint(data.hint);
+    } else if (data.hasOwnProperty('answer')) {
       roomState.lastSong = data.answer;
       setTimeout(pretty.relativeTime, 3000);
       setTimeout(player.pause, 3000);
     }
-    ui.calledNext(data);
+    ui.calledIDontKnow(data);
   });
 
   wsock.onMessage("song_ended", ui.songEnded);
@@ -422,9 +428,9 @@ function Chat(wsock, user, media, player, onFatal) {
 
   wsock.onClose(function (e) {
     if (e.reason) {
-      onFatal("server closed connection: " + e.reason);
+      onFatal("Server closed the connection: " + e.reason);
     } else {
-      onFatal("server closed connection with no reason.");
+      onFatal("Server closed the connection.");
     }
   });
 

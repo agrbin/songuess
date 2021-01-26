@@ -39,30 +39,6 @@ exports.socket = {
   sleepyPeriod : 30 * 60
 };
 
-exports.streamer = {
-  // server and client have synced clocks. if chunk is to be played less than
-  // sendAhead seconds in the future, dispatch process for that chunk will begin
-  sendAhead     : 8,
-
-  // every setTimeout-ed checkInterval seconds streamer will check above
-  // condition. note that if proxy is available this time will be cutted for
-  // proxy.throttleStream random noise.
-  checkInterval : 0.5,
-
-  // chunkDuration is chunk duration! it is copied to lib/frames.cpp.
-  chunkDuration : 2.448,
-
-  // overlapping between chunks to make seamless playback on
-  // client. this constant is copied to ../client/player.js
-  overlapTime   : 0.048,
-
-  // when streaming from middle option is on for a room this is
-  // a percentage of padding which is not treated as 'middle'.
-  // starting chunk is determined uniformly from the center
-  // of the song
-  streamFromMiddleRangePercentage : 20
-};
-
 exports.sync = {
   // number of sync request sent to client
   numberOfSamples   : 10,
@@ -122,8 +98,7 @@ exports.client = {
 
   // copied values from server config to client config
   authClientID : exports.auth.clientID,
-  authScope : exports.auth.scope,
-  overlapTime : exports.streamer.overlapTime
+  authScope : exports.auth.scope
 };
 
 exports.proxy = {

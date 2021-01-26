@@ -6,10 +6,9 @@ var
   proxyConfig = require('./config.js').proxy,
   Syncer = require('./syncer.js').Syncer,
   randomRange = require('./statistics.js').randomRange,
-  Streamer = require('./streamer.js').Streamer,
   AnswerChecker = require('./answer_checker.js'),
-  PlaylistIterator = require('./shuffle_playlist_iterator.js'),
-  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)();
+  mediaAuthenticator = new (require('./auth.js').MediaAuthenticator)(),
+  HostSocket = require('./host_socket.js').HostSocket;
 
 exports.ChatRoom = function (desc, chat, proxy) {
 
@@ -18,13 +17,12 @@ exports.ChatRoom = function (desc, chat, proxy) {
     clients = {},
     localPersonData = {},
     numberOfClients = 0,
-    playlistIterator,
     answerChecker,
-    streamer,
-    fixed_id3_tags = chat.media.getFixedId3Tags(),
+    currentItem = null,
+    hostSocket = null,
 
     // "dead", "playing", "playon", "after", "suspense"
-    // if state is playing, when did the song started?
+    // if state is playing, when did the song start?
     // if state is suspense, when will the next song start?
     // if state is playing or playon, how many and who voted next?
     roomState = {
@@ -33,33 +31,15 @@ exports.ChatRoom = function (desc, chat, proxy) {
       lastSong : null,
       lastScore : null,
       nextVotes : null,
-      whoNextVotes : null
+      whoNextVotes : null,
+      hintShowed : null
     };
-
-  function packPlaylist() {
-    var playlist = desc.playlist, sol = [], it = 0, bio = {}, key;
-    for (it = 0; it < playlist.length; ++it) {
-      key = JSON.stringify([playlist[it].artist, playlist[it].album]);
-      if (!bio.hasOwnProperty(key)) {
-        bio[key] = 0;
-      }
-      ++bio[key];
-    }
-    for (key in bio) {
-      sol.push( [JSON.parse(key), bio[key]] );
-    }
-    return sol;
-  }
 
   function packRoomState() {
     var id, sol = {
       desc : {
         name : desc.name,
         desc : desc.desc,
-        playlist : {
-          length : desc.playlist.length,
-          content : packPlaylist()
-        },
         streamFromMiddle: desc.streamFromMiddle
       },
       users : {},
@@ -74,31 +54,30 @@ exports.ChatRoom = function (desc, chat, proxy) {
   }
 
   function playNext() {
-    if (!desc.playlist.length) {
+    if (hostSocket == null) {
       return;
     }
+
     roomState.state = "after";
-    roomState.lastSong = playlistIterator.currentItem();
     roomState.songStart = null;
+    
+    hostSocket.playNext(function(err, nextSongItem) {
+      var startTime = clock.clock() + 8000;
 
-    streamer.play(playlistIterator.nextItem(), function (startTime, err) {
-      if (err) {
-        console.log("tried to play next: " + err);
-        info("Tried to play next with error (retry in 5s): " + err);
-        setTimeout(playNext, 5000);
-      } else {
-        setTimeout(function() {
-          roomState.state = "suspense";
-          roomState.songStart = startTime;
-          that.broadcast('next_song_announce', roomState);
-        }, Math.max(0, startTime - clock.clock() - 6000));
+      currentItem = nextSongItem;
 
-        setTimeout(function() {
-          roomState.state = "playing";
-          roomState.nextVotes = 0;
-          roomState.whoNextVotes = {};
-        }, Math.max(0, startTime - clock.clock()));
-      }
+      setTimeout(function() {
+        roomState.state = "suspense";
+        roomState.songStart = startTime;
+        that.broadcast('next_song_announce', roomState);
+      }, Math.max(0, startTime - clock.clock() - 6000));
+
+      setTimeout(function() {
+        roomState.state = "playing";
+        roomState.nextVotes = 0;
+        roomState.whoNextVotes = {};
+        roomState.hintShowed = false;
+      }, Math.max(0, startTime - clock.clock()));
     });
   }
 
@@ -184,7 +163,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
     if (roomState.state !== "playing") {
       return;
     }
-    if (answerChecker.checkAnswer(playlistIterator.currentItem(), data.what)) {
+    if (answerChecker.checkAnswer(currentItem, data.what)) {
       var next_state = "after";
       grantScore(client);
       if (data.what.indexOf('#playon') != -1) {
@@ -192,7 +171,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
       }
       that.broadcast('correct_answer', {
         who: client.id(),
-        answer: playlistIterator.currentItem(),
+        answer: currentItem,
         when : data.when,
         state : next_state
       });
@@ -206,12 +185,31 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   function onNewRoom(data, client) {
     if (!chat.roomNameExists(data)) {
-      return client.error("no such room " + data + ".", 1);
+      return client.error("No such room: " + data, 1);
     }
     chat.move(client, chat.whereIs(client), chat.getRoomByName(data));
   }
 
-  function onNext(data, client) {
+  // Hides all alphabetic characters except for vowels.
+  function calcWordHint(word) {
+    word = word.toLowerCase();
+    // Start the hint by removing all the alphabetic characters.
+    let hint = word.replace(/[a-z]/g, '.');
+    for (let i = 0; i < word.length; ++i) {
+      // If this was a vowel, bring it back from the original string.
+      if (/[aeiouäëöü]/.test(word[i])) {
+        hint[i] = word[i];
+      }
+    }
+    return hint;
+  }
+
+  function calcHint(currentItem) {
+    let words = currentItem.title.split(' ');
+    return words.map(w => calcWordHint(w)).join(' ');
+  }
+
+  function onIDontKnow(data, client) {
     if (roomState.state !== "playing" && roomState.state !== "playon") {
       return;
     }
@@ -221,16 +219,30 @@ exports.ChatRoom = function (desc, chat, proxy) {
     roomState.whoNextVotes[client.id()] = 1;
     ++roomState.nextVotes;
     if (roomState.nextVotes >= 1 + Math.floor(numberOfClients / 2)) {
-      that.broadcast('called_next', {
-        who: client.id(),
-        answer: playlistIterator.currentItem(),
-        when : data.when,
-        state : roomState.state
-      });
-      roomState.lastScore = null;
-      playNext();
+      if (roomState.hintShowed === false) {
+        that.broadcast('called_i_dont_know', {
+          who: client.id(),
+          hint: calcHint(currentItem),
+          when : data.when,
+          state : roomState.state
+        });
+        roomState.hintShowed = true;
+        // Reset the voting. We want another majority in order to skip the song
+        // after the hint was displayed.
+        roomState.whoNextVotes = {};
+        roomState.nextVotes = 0;
+      } else {
+        that.broadcast('called_i_dont_know', {
+          who: client.id(),
+          answer: currentItem,
+          when : data.when,
+          state : roomState.state
+        });
+        roomState.lastScore = null;
+        playNext();
+      }
     } else {
-      that.broadcast('called_next', {
+      that.broadcast('called_i_dont_know', {
         who: client.id(),
         when : data.when
       });
@@ -251,59 +263,6 @@ exports.ChatRoom = function (desc, chat, proxy) {
       who: client.id(),
       when: data.when
     });
-  }
-
-  function chunkHandler(chunkInfo) {
-    proxy.proxify(chunkInfo.url, function (url, url2) {
-      var id;
-      chunkInfo.url = url;
-      chunkInfo.backupUrl = url2;
-      for (id in clients) {
-        if (clients.hasOwnProperty(id)) {
-          setTimeout(
-            clients[id].send.bind(this, "chunk", chunkInfo),
-            1000 * randomRange(
-              proxyConfig.throttleStreamOff,
-              proxyConfig.throttleStreamAmp
-            )
-          );
-        }
-      }
-    });
-  }
-
-  function onFixLast(data, client) {
-    if (!data.fixed_item ||
-        !data.fixed_item.server || !data.fixed_item.id) {
-      return info("Fixed message is broken.", client);
-    }
-    // Remove empty strings.
-    data.fixed_item = fixed_id3_tags.sanitizeItem(data.fixed_item);
-    // Check that alt titles are in order.
-    if (!fixed_id3_tags.validAltTitle(data.fixed_item)) {
-      return info("Add alternate titles in order: title, title2, title3, ...",
-          client);
-    }
-    if (!fixed_id3_tags.fixItem(client, data.fixed_item)) {
-      return info(
-          "You don't have permissions for fixing song on this media server.",
-          client);
-    } else {
-      // Fix the reference to the lastSong in the room state.
-      // This fix was added because of the following bug:
-      // song plays
-      // > /next
-      // Correct answer was A.
-      // > /ch title  B
-      // > /info (shows that last answer was B)
-      // Get ready!
-      // > /info (shows that last answer was A) <-- bug!
-      if (roomState.lastSong) {
-        roomState.lastSong = fixed_id3_tags.getFixedItem(roomState.lastSong);
-      }
-      that.broadcast('fixed_last',
-          {who: client.id(), fixed_item: data.fixed_item});
-    }
   }
 
   function onHonor(data, client) {
@@ -329,7 +288,7 @@ exports.ChatRoom = function (desc, chat, proxy) {
 
   function songEndedHandler() {
     that.broadcast('song_ended', {
-      answer : playlistIterator.currentItem(),
+      answer : currentItem,
       when : clock.clock(),
       state : roomState.state
     });
@@ -379,6 +338,13 @@ exports.ChatRoom = function (desc, chat, proxy) {
     }
   };
 
+  this.broadcastRaw = function (data) {
+    var id;
+    for (id in clients) {
+      clients[id].sendRaw(data);
+    }
+  };
+
   // this is triggered from ChatClient::local
   // function will copy local data to all other clients
   // with same pid and to room's localPersonData
@@ -398,30 +364,38 @@ exports.ChatRoom = function (desc, chat, proxy) {
   // notify all clients about the adding.
   this.enter = function (client) {
     numberOfClients++;
-    if (numberOfClients === 1) {
-      playNext();
-    }
     clients[client.id()] = client;
     client.setRoom(that);
     initLocalData(client);
     client.local('num', client.local('num') + 1);
     if (client.local('num') > 3) {
-      return client.error("too many accounts in room");
+      return client.error("An account present too many times in a room.");
     }
 
     this.broadcast('new_client', client.publicInfo(), client);
+
     client.send('room_state', packRoomState());
     client.onMessage('say', onSay);
     client.onMessage('sbeep', onSBeep);
     client.onMessage('sskew', onSSkew);
     client.onMessage('new_room', onNewRoom);
-    client.onMessage('next', onNext);
+    client.onMessage('idk', onIDontKnow);
     client.onMessage('token', onToken);
     client.onMessage('reset_score', onResetScore);
     client.onMessage('honor', onHonor);
     client.onMessage('sync_start', onStartSync);
     client.onMessage('change_group', onChangeGroup);
-    client.onMessage('fix_last', onFixLast);
+
+    if (hostSocket === null) {
+      console.log('enter: hostSocket is null');
+    } else {
+      if (hostSocket.currentAudioData().length > 0) {
+        console.log('enter: sending currentAudioData to new client');
+        client.sendRaw(hostSocket.currentAudioData());
+      } else {
+        console.log('enter: currentAudioData is empty');
+      }
+    }
   };
 
   // pop a client from a list of clients and
@@ -430,11 +404,14 @@ exports.ChatRoom = function (desc, chat, proxy) {
     numberOfClients--;
     client.local('num', client.local('num') - 1);
     delete clients[client.id()];
-    if (!numberOfClients) {
+    if (numberOfClients == 0) {
       roomState.state = "dead";
       roomState.songStart = null;
       roomState.lastSong = null;
-      streamer.stop();
+      if (hostSocket !== null) {
+        hostSocket.closeSocket();
+        this.detachHostSocket();
+      }
     }
     this.broadcast('old_client', [client.id(), reason]);
   };
@@ -444,19 +421,28 @@ exports.ChatRoom = function (desc, chat, proxy) {
     for (id in clients) {
       if (clients.hasOwnProperty(id)) {
         client = clients[id];
-        sol[ client.desc('display') ]
-          = client.local('score');
+        sol[ client.desc('display') ] = client.local('score');
       }
     }
     return sol;
   };
 
+  this.attachHostSocket = function(socket) {
+    hostSocket = new HostSocket(socket, that, playNext, songEndedHandler);
+  };
+
+  this.detachHostSocket = function() {
+    hostSocket = null;
+    // This will also make sure the music fades out gradually on the clients.
+    this.broadcast('clear_host_chunks');
+    info("The connection to host was broken.");
+  };
+
+  this.isEmpty = function() {
+    return numberOfClients == 0;
+  };
+
   (function () {
-    playlistIterator = new PlaylistIterator(
-      desc.playlist,
-      fixed_id3_tags);
     answerChecker = new AnswerChecker({});
-    streamer = new Streamer(chat.media, chunkHandler,
-      songEndedHandler, desc.streamFromMiddle);
   }());
 };

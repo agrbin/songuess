@@ -3,7 +3,8 @@ function SockWrapper(sock, onFatal) {
   var that = this,
     messageCallbacks = {},
     closeCallbacks = [],
-    errorCallbacks = {};
+    errorCallbacks = {},
+    rawDataCallback = null;
 
   this.onClose = function (callback) {
     closeCallbacks.push(callback);
@@ -11,6 +12,10 @@ function SockWrapper(sock, onFatal) {
 
   this.onMessage = function (type, callback) {
     messageCallbacks[type] = callback;
+  };
+
+  this.onRawData = function (callback) {
+    rawDataCallback = callback;
   };
 
   this.onError = function (code, callback) {
@@ -30,10 +35,19 @@ function SockWrapper(sock, onFatal) {
     }
   };
 
-  sock.onmessage = function (message) {
+  sock.onmessage = function (event) {
+    // Audio chunk for host room mode is the only binary message we get.
+    // Everything else should be JSON.
+    if (event.data instanceof Blob) {
+      if (rawDataCallback) {
+        rawDataCallback(event.data);
+      }
+      return;
+    }
+
     var data;
     try {
-      data = JSON.parse(message.data);
+      data = JSON.parse(event.data);
     } catch (err) {
       return onFatal("received message is not json");
     }

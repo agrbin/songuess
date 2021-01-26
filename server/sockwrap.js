@@ -113,6 +113,18 @@ exports.SockWrapper = function (sock, syncRtt, user) {
     }
   };
 
+  this.sendRaw = function (data, done) {
+    try {
+      sock.send(data, done);
+    } catch (err) {
+      if (done) {
+        setTimeout(function () {
+          done(null, err);
+        }, 0);
+      }
+    }
+  };
+
   this.close = function (reason) {
     sock.close(1000, reason.substr(0, 100));
   };

@@ -4,11 +4,10 @@
 var
   clock = require("./clock.js"),
   config = require("./config.js").chat,
-  mediaConfig = require("./config.js").media,
   ChatRoom = require("./chat_room.js").ChatRoom,
   ChatClient = require("./chat_client.js").ChatClient;
 
-exports.Chat = function (media, proxy) {
+exports.Chat = function (proxy) {
   var
     that = this,
     rooms = {},
@@ -36,8 +35,6 @@ exports.Chat = function (media, proxy) {
     client.send("who", sol);
   }
 
-  this.media = media;
-
   this.getRoomByName = function (name) {
     return rooms[name];
   };
@@ -49,7 +46,14 @@ exports.Chat = function (media, proxy) {
     return false;
   };
 
-  // add room to a list of rooms.
+  this.isRoomEmpty = function (name) {
+    if (!that.roomNameExists(name)) {
+      return true;
+    }
+    return rooms[name].isEmpty();
+  }
+
+  // Add room to a list of rooms.
   this.createRoom = function (roomDescriptor) {
     var name = roomDescriptor.name, room;
     if (that.roomNameExists(name)) {
@@ -58,18 +62,6 @@ exports.Chat = function (media, proxy) {
     room = new ChatRoom(roomDescriptor, that, proxy);
     rooms[name] = room;
     console.log("new room created " + name);
-  };
-
-  // pop room from a list of rooms (when user requests so.)
-  this.removeRoom = function (room) {
-    assertType(room, ChatRoom);
-    if (!room.isEmpty()) {
-      throw "removing non empty room";
-    }
-    if (that.roomNameExists(room.name)) {
-      throw "room doesn't exists";
-    }
-    delete rooms[room.name];
   };
 
   // when client requests moving to another room.
@@ -114,43 +106,9 @@ exports.Chat = function (media, proxy) {
       bio = true;
     });
     wsock.onMessageType("create_room", function (data) {
-      media.expandPlaylist(data, function (playlist, err) {
-        if (err) {
-          wsock.sendError(err);
-        } else {
-          data.room.playlist = playlist;
-          that.createRoom(data.room);
-          wsock.sendType("create_room", true);
-        }
-      });
+      that.createRoom(data.room);
+      wsock.sendType("create_room", true);
     });
-  };
-
-  media.onDefaultMedia = function (rootDirEntries) {
-    var it = 0, entries = [], query;
-    if (rooms.hasOwnProperty('#default')) {
-      return;
-    }
-    for (it = 0; it < rootDirEntries.length; ++it) {
-      entries.push([mediaConfig.defaultMedia, rootDirEntries[it].name]);
-    }
-    query = {
-      room : {name : '#default', desc : 'default room'},
-      playlist : entries
-    };
-    try {
-      media.expandPlaylist(query, function (playlist, err) {
-        if (!err) {
-          query.room.playlist = playlist;
-          that.createRoom(query.room);
-        } else {
-          throw err;
-        }
-      });
-    } catch (err) {
-      console.log(err);
-      // dont crush the server.
-    }
   };
 
   // @param client ChatClient
@@ -168,7 +126,6 @@ exports.Chat = function (media, proxy) {
     that.createRoom({
       name: "#root",
       desc: "root room",
-      playlist: []
     });
   }());
 
